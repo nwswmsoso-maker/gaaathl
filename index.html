@@ -3,136 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>غرف صوتية - مكالمات جماعية</title>
+    <title>غرفة صوتية - 10 مايكات</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #0B0C10; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
-        .container { background: #1F2833; border-radius: 25px; width: 100%; max-width: 600px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        .header { background: #45A29E; color: white; padding: 18px; text-align: center; }
-        .header h2 { font-size: 1.3rem; }
-        .login-box, .chat-box { padding: 20px; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 25px; font-size: 16px; }
-        button { background: #45A29E; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:active { transform: scale(0.97); }
-        .hidden { display: none; }
-        
-        /* تنسيق الغرف */
-        .rooms-list { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .room-btn { background: #2C3E50; padding: 10px; border-radius: 15px; text-align: center; cursor: pointer; flex: 1; }
-        .room-btn.active { background: #45A29E; }
-        .room-btn span { font-size: 20px; display: block; }
-        
-        /* المشاركين */
-        .participants { background: #2C3E50; border-radius: 15px; padding: 10px; margin-bottom: 15px; }
-        .participant { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #3a4a5a; }
-        .participant:last-child { border-bottom: none; }
-        .participant-name { color: white; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-        .speaking { color: #4CAF50; animation: pulse 0.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .mic-btn { background: #45A29E; border: none; padding: 5px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 12px; }
-        .mic-btn.muted { background: #f44336; }
-        .hand-btn { background: #ff9800; border: none; padding: 5px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 12px; margin-left: 5px; }
-        
-        /* الدردشة النصية */
-        .messages { height: 250px; overflow-y: auto; background: #0B0C10; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
-        .msg { padding: 6px 10px; margin: 4px; border-radius: 12px; max-width: 80%; word-wrap: break-word; font-size: 13px; }
-        .my-msg { background: #45A29E; color: white; margin-left: auto; text-align: right; }
-        .other-msg { background: #2C3E50; color: white; margin-right: auto; }
-        .system-msg { background: #FFC107; color: #333; text-align: center; margin: 5px auto; font-size: 10px; width: fit-content; }
-        .sender { font-size: 10px; font-weight: bold; margin-bottom: 2px; }
-        .time { font-size: 8px; opacity: 0.6; margin-top: 2px; }
-        .input-area { display: flex; gap: 8px; }
-        .input-area input { flex: 1; margin: 0; background: #2C3E50; color: white; font-size: 14px; }
-        .input-area button { width: auto; padding: 12px 20px; }
-        .logout-btn { background: #f44336; margin-top: 10px; }
-        
-        .call-controls { display: flex; gap: 10px; margin-bottom: 15px; }
-        .call-controls button { flex: 1; background: #2C3E50; }
-        .leave-room { background: #f44336 !important; }
-        
-        .online-count { font-size: 12px; color: #888; text-align: center; margin-bottom: 10px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* الحاوية الرئيسية */
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: #0f3460;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 2px solid #e94560;
+        }
+
+        /* رأس التطبيق */
+        .header {
+            background: #e94560;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .header p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        /* منطقة تسجيل الدخول */
+        .login-box {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            text-align: center;
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 15px;
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* شبكة المايكات - 10 أماكن */
+        .mics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background: #0f3460;
+        }
+
+        /* كل مايك */
+        .mic-card {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 15px 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid #533483;
+            position: relative;
+        }
+
+        .mic-card.speaking {
+            border-color: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+            animation: borderPulse 0.5s infinite;
+        }
+
+        @keyframes borderPulse {
+            0% { border-color: #4CAF50; box-shadow: 0 0 5px #4CAF50; }
+            100% { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; }
+        }
+
+        .mic-card.empty {
+            opacity: 0.6;
+            border-color: #666;
+        }
+
+        /* أيقونة المايك */
+        .mic-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .mic-icon.muted {
+            opacity: 0.3;
+        }
+
+        /* رقم المايك */
+        .mic-number {
+            background: #e94560;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* اسم المستخدم */
+        .mic-name {
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 8px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* أزرار التحكم */
+        .mic-controls {
+            margin-top: 8px;
+        }
+
+        .mic-btn {
+            background: #533483;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .mic-btn.muted {
+            background: #f44336;
+        }
+
+        /* مؤشر الصوت */
+        .voice-indicator {
+            width: 100%;
+            height: 3px;
+            background: #333;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .voice-level {
+            height: 100%;
+            width: 0%;
+            background: #4CAF50;
+            transition: width 0.05s;
+        }
+
+        /* منطقة الدردشة النصية */
+        .chat-area {
+            background: #1a1a2e;
+            margin: 0 20px 20px;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #0d0d1a;
+        }
+
+        .chat-msg {
+            padding: 5px 10px;
+            margin: 3px 0;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .chat-msg.my {
+            background: #e94560;
+            color: white;
+            text-align: right;
+            margin-left: 20px;
+        }
+
+        .chat-msg.other {
+            background: #533483;
+            color: white;
+            margin-right: 20px;
+        }
+
+        .chat-msg.system {
+            background: #ff9800;
+            color: #333;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            gap: 8px;
+            background: #1a1a2e;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            background: #0d0d1a;
+            color: white;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            background: #e94560;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* أزرار عامة */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 0 20px 20px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 12px;
+            background: #533483;
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* رسالة الحالة */
+        .status {
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #ff9800;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2>🎙️ غرف صوتية جماعية</h2>
-        <p>تكلم مع 10 أشخاص بنفس الوقت</p>
+        <h1>🎙️ غرفة المايكات</h1>
+        <p>10 مايكات - كل واحد يتكلم من مايكه</p>
     </div>
 
     <!-- شاشة الدخول -->
     <div id="loginScreen" class="login-box">
         <input type="text" id="username" placeholder="اسم المستخدم">
-        <button onclick="login()">دخول</button>
-        <div id="loginStatus" style="font-size:12px; text-align:center; margin-top:10px; color:#888;"></div>
+        <input type="number" id="micNumber" placeholder="رقم المايك (1-10)" min="1" max="10">
+        <button onclick="login()">دخول إلى الغرفة</button>
+        <div id="loginStatus" class="status"></div>
     </div>
 
-    <!-- شاشة الدردشة -->
-    <div id="chatScreen" class="chat-box hidden">
-        <!-- الغرف المتاحة -->
-        <div class="rooms-list">
-            <div class="room-btn" onclick="joinRoom('عامة')">
-                <span>🎙️</span>
-                <small>عامة</small>
-            </div>
-            <div class="room-btn" onclick="joinRoom('ألعاب')">
-                <span>🎮</span>
-                <small>ألعاب</small>
-            </div>
-            <div class="room-btn" onclick="joinRoom('رياضة')">
-                <span>⚽</span>
-                <small>رياضة</small>
-            </div>
-            <div class="room-btn" onclick="joinRoom('تكنولوجيا')">
-                <span>💻</span>
-                <small>تقنية</small>
+    <!-- شاشة الغرفة -->
+    <div id="roomScreen" class="hidden">
+        <!-- شبكة المايكات 10 -->
+        <div class="mics-grid" id="micsGrid">
+            <!-- سيتم إنشاء 10 مايكات بالجافاسكريبت -->
+        </div>
+
+        <!-- منطقة الدردشة -->
+        <div class="chat-area">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="رسالة نصية..." onkeypress="if(event.key==='Enter') sendChat()">
+                <button onclick="sendChat()">إرسال</button>
             </div>
         </div>
-        
-        <div class="online-count" id="onlineCount">🟢 0 متصل</div>
-        
-        <!-- المشاركين -->
-        <div class="participants" id="participantsList">
-            <div style="color:#888; text-align:center;">اختر غرفة للانضمام</div>
+
+        <!-- أزرار التحكم -->
+        <div class="action-buttons">
+            <button id="globalMuteBtn" onclick="toggleGlobalMute()">🔇 كتم مايكي</button>
+            <button onclick="leaveRoom()">🚪 مغادرة</button>
         </div>
-        
-        <!-- أزرار التحكم بالمكالمة -->
-        <div class="call-controls" id="callControls" style="display:none;">
-            <button id="muteBtn" onclick="toggleMute()">🔊 كتم المايك</button>
-            <button id="handBtn" onclick="raiseHand()">✋ ارفع يد</button>
-            <button class="leave-room" onclick="leaveRoom()">🚪 مغادرة الغرفة</button>
-        </div>
-        
-        <!-- الدردشة النصية -->
-        <div class="messages" id="messages"></div>
-        <div class="input-area">
-            <input type="text" id="msgInput" placeholder="رسالة نصية..." onkeypress="if(event.key==='Enter') sendChatMsg()">
-            <button onclick="sendChatMsg()">📤</button>
-        </div>
-        <button class="logout-btn" onclick="logout()">🚪 خروج من التطبيق</button>
+        <div id="roomStatus" class="status"></div>
     </div>
 </div>
 
 <script>
     const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
     
-    let ably, mainChannel, currentUser;
+    let ably, channel;
+    let currentUser = null;
+    let myMicNumber = null;
     let localStream = null;
-    let peers = new Map(); // تخزين اتصالات المشاركين
-    let currentRoom = null;
-    let isMuted = false;
-    let processedMessages = new Set(); // منع تكرار الرسائل
-    let hands = []; // قائمة رفع اليد
-    
+    let peers = new Map(); // تخزين اتصالات المايكات الأخرى
+    let micsData = {}; // { micNumber: { user: name, speaking: false, muted: false } }
+    let isMyMuted = false;
+    let processedMessages = new Set();
+
+    // إنشاء المايكات الـ 10
+    function createMicsGrid() {
+        const grid = document.getElementById('micsGrid');
+        grid.innerHTML = '';
+        
+        for (let i = 1; i <= 10; i++) {
+            const micCard = document.createElement('div');
+            micCard.className = 'mic-card empty';
+            micCard.id = `mic_${i}`;
+            micCard.setAttribute('data-mic', i);
+            
+            micCard.innerHTML = `
+                <div class="mic-number">🎤 ${i}</div>
+                <div class="mic-icon">🎙️</div>
+                <div class="mic-name">مايك ${i}</div>
+                <div class="voice-indicator"><div class="voice-level" id="voice_${i}"></div></div>
+                <div class="mic-controls">
+                    <button class="mic-btn" id="muteBtn_${i}" onclick="toggleMicMute(${i})" style="display:none;">🔇 كتم</button>
+                </div>
+            `;
+            
+            grid.appendChild(micCard);
+            micsData[i] = { user: null, speaking: false, muted: false };
+        }
+    }
+
     async function login() {
-        currentUser = document.getElementById('username').value.trim();
-        if (!currentUser) {
-            document.getElementById('loginStatus').innerHTML = '❌ اكتب اسمك';
+        const username = document.getElementById('username').value.trim();
+        const micNumber = parseInt(document.getElementById('micNumber').value);
+        
+        if (!username) {
+            document.getElementById('loginStatus').innerHTML = '❌ اكتب اسم المستخدم';
             return;
         }
+        
+        if (isNaN(micNumber) || micNumber < 1 || micNumber > 10) {
+            document.getElementById('loginStatus').innerHTML = '❌ اختر رقم مايك من 1 إلى 10';
+            return;
+        }
+        
+        currentUser = username;
+        myMicNumber = micNumber;
         
         document.getElementById('loginStatus').innerHTML = '🔄 جاري الاتصال...';
         
@@ -141,23 +390,28 @@
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             console.log('🎤 ميكروفون جاهز');
         } catch (err) {
-            document.getElementById('loginStatus').innerHTML = '⚠️ لا يمكن الوصول للميكروفون';
+            document.getElementById('loginStatus').innerHTML = '⚠️ لا يمكن الوصول للميكروفون - لن يتمكن أحد من سماعك';
         }
         
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
         
         ably.connection.on('connected', () => {
-            document.getElementById('loginStatus').innerHTML = '✅ متصل! اختر غرفة';
+            document.getElementById('loginStatus').innerHTML = '✅ متصل! جاري الدخول...';
             
-            mainChannel = ably.channels.get('main_signals');
+            channel = ably.channels.get('voice_room');
             
             // استقبال إشارات WebRTC
-            mainChannel.subscribe('webrtc', (signal) => {
+            channel.subscribe('webrtc', (signal) => {
                 handleSignal(signal.data);
             });
             
-            // استقبال رسائل الدردشة النصية
-            mainChannel.subscribe('chat', (msg) => {
+            // استقبال تحديثات المايكات
+            channel.subscribe('mic_update', (update) => {
+                handleMicUpdate(update.data);
+            });
+            
+            // استقبال رسائل الدردشة
+            channel.subscribe('chat', (msg) => {
                 const msgId = `${msg.data.sender}_${msg.data.text}_${msg.data.time}`;
                 if (!processedMessages.has(msgId)) {
                     processedMessages.add(msgId);
@@ -165,20 +419,23 @@
                 }
             });
             
-            // استقبال رفع اليد
-            mainChannel.subscribe('hand', (hand) => {
-                if (hand.data.room === currentRoom && hand.data.user !== currentUser) {
-                    if (hand.data.action === 'raise') {
-                        if (!hands.includes(hand.data.user)) hands.push(hand.data.user);
-                    } else {
-                        hands = hands.filter(h => h !== hand.data.user);
-                    }
-                    updateParticipantsList();
-                }
-            });
+            // إعلان المايك الخاص بي
+            announceMyMic();
+            
+            // الحضور
+            channel.presence.enter({ user: currentUser, mic: myMicNumber });
+            channel.presence.subscribe(() => updateMicsFromPresence());
+            updateMicsFromPresence();
+            
+            // إنشاء واجهة المايكات
+            createMicsGrid();
             
             document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('chatScreen').classList.remove('hidden');
+            document.getElementById('roomScreen').classList.remove('hidden');
+            
+            // إظهار زر كتم المايك الخاص بي
+            document.getElementById(`muteBtn_${myMicNumber}`).style.display = 'block';
+            document.getElementById('roomStatus').innerHTML = `✅ أنت في مايك رقم ${myMicNumber} - اسمك: ${currentUser}`;
         });
         
         ably.connection.on('failed', () => {
@@ -186,71 +443,105 @@
         });
     }
     
-    async function joinRoom(roomName) {
-        if (currentRoom) {
-            leaveRoom();
-        }
+    function announceMyMic() {
+        const update = {
+            micNumber: myMicNumber,
+            user: currentUser,
+            action: 'join',
+            muted: false
+        };
+        channel.publish('mic_update', update);
         
-        currentRoom = roomName;
-        
-        // تحديث واجهة الغرف
-        document.querySelectorAll('.room-btn').forEach(btn => btn.classList.remove('active'));
-        event.target.closest('.room-btn').classList.add('active');
-        
-        document.getElementById('callControls').style.display = 'flex';
-        
-        // الإعلان عن الدخول للغرفة
-        mainChannel.publish('chat', {
+        // رسالة ترحيب
+        channel.publish('chat', {
             sender: 'system',
-            text: `🎉 ${currentUser} دخل غرفة ${roomName}`,
+            text: `🎉 ${currentUser} دخل على مايك رقم ${myMicNumber}`,
             time: getTime(),
-            isSystem: true,
-            room: currentRoom
+            isSystem: true
         });
-        
-        // تحديث قائمة المشاركين
-        updateParticipantsList();
-        
-        // بدء الاتصال بجميع المشاركين
-        connectToAllParticipants();
     }
     
-    function connectToAllParticipants() {
-        // طلب قائمة المشاركين من Ably Presence
-        const roomChannel = ably.channels.get(`room_${currentRoom}`);
+    function handleMicUpdate(data) {
+        if (data.micNumber === myMicNumber && data.action !== 'join') return;
         
-        roomChannel.presence.enter({ name: currentUser, room: currentRoom });
-        
-        roomChannel.presence.subscribe('enter', (member) => {
-            if (member.data.name !== currentUser && !peers.has(member.data.name)) {
-                createPeerConnection(member.data.name, true);
+        if (data.action === 'join') {
+            micsData[data.micNumber] = { user: data.user, speaking: false, muted: data.muted || false };
+            updateMicUI(data.micNumber);
+            
+            // إنشاء اتصال WebRTC مع المايك الجديد
+            if (data.user !== currentUser && !peers.has(data.user)) {
+                createPeerConnection(data.user, true);
             }
-            updateParticipantsList();
-        });
-        
-        roomChannel.presence.subscribe('leave', (member) => {
-            if (peers.has(member.data.name)) {
-                peers.get(member.data.name).destroy();
-                peers.delete(member.data.name);
+        } else if (data.action === 'leave') {
+            micsData[data.micNumber] = { user: null, speaking: false, muted: false };
+            updateMicUI(data.micNumber);
+            
+            if (peers.has(data.user)) {
+                peers.get(data.user).destroy();
+                peers.delete(data.user);
             }
-            updateParticipantsList();
-        });
-        
-        // جلب المشاركين الحاليين
-        roomChannel.presence.get((err, members) => {
-            if (!err && members) {
-                members.forEach(member => {
-                    if (member.data.name !== currentUser && !peers.has(member.data.name)) {
-                        createPeerConnection(member.data.name, true);
-                    }
-                });
+        } else if (data.action === 'mute_toggle') {
+            if (micsData[data.micNumber]) {
+                micsData[data.micNumber].muted = data.muted;
+                updateMicUI(data.micNumber);
             }
+        }
+    }
+    
+    function updateMicsFromPresence() {
+        channel.presence.get((err, members) => {
+            if (err || !members) return;
+            
+            // إعادة تعيين بيانات المايكات
+            for (let i = 1; i <= 10; i++) {
+                micsData[i] = { user: null, speaking: false, muted: false };
+            }
+            
+            members.forEach(member => {
+                const data = member.data;
+                if (data && data.mic) {
+                    micsData[data.mic] = { user: data.user, speaking: false, muted: false };
+                    updateMicUI(data.mic);
+                }
+            });
+            
+            // الاتصال بجميع المستخدمين
+            members.forEach(member => {
+                if (member.data.user !== currentUser && !peers.has(member.data.user)) {
+                    createPeerConnection(member.data.user, true);
+                }
+            });
         });
+    }
+    
+    function updateMicUI(micNumber) {
+        const micCard = document.getElementById(`mic_${micNumber}`);
+        const data = micsData[micNumber];
         
-        setInterval(() => updateParticipantsList(), 3000);
+        if (!micCard) return;
+        
+        if (data.user) {
+            micCard.classList.remove('empty');
+            micCard.querySelector('.mic-name').innerHTML = data.user;
+            micCard.querySelector('.mic-icon').innerHTML = data.muted ? '🔇' : '🎙️';
+            micCard.querySelector('.mic-icon').classList.toggle('muted', data.muted);
+            
+            if (data.speaking) {
+                micCard.classList.add('speaking');
+            } else {
+                micCard.classList.remove('speaking');
+            }
+        } else {
+            micCard.classList.add('empty');
+            micCard.querySelector('.mic-name').innerHTML = `مايك ${micNumber} - فارغ`;
+            micCard.querySelector('.mic-icon').innerHTML = '🎙️';
+            micCard.classList.remove('speaking');
+        }
     }
     
     function createPeerConnection(remoteUser, initiator = true) {
+        if (!localStream) return null;
+        
         const peer = new SimplePeer({
             initiator: initiator,
             stream: localStream,
@@ -258,28 +549,22 @@
         });
         
         peer.on('signal', signalData => {
-            mainChannel.publish('webrtc', {
+            channel.publish('webrtc', {
                 to: remoteUser,
                 from: currentUser,
-                signal: signalData,
-                type: 'signal',
-                room: currentRoom
+                signal: signalData
             });
         });
         
         peer.on('stream', stream => {
-            // تشغيل صوت المتحدث (ارتفاع الصوت تلقائي حسب قوة الصوت)
-            const audio = new Audio();
-            audio.srcObject = stream;
-            audio.autoplay = true;
-            
-            // إضافة مؤشر أن هذا الشخص يتكلم
-            const audioContext = new AudioContext();
+            // تحليل مستوى الصوت
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const source = audioContext.createMediaStreamSource(stream);
             const analyser = audioContext.createAnalyser();
             source.connect(analyser);
-            
+            analyser.fftSize = 256;
             const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            
             const checkVolume = setInterval(() => {
                 analyser.getByteTimeDomainData(dataArray);
                 let max = 0;
@@ -287,10 +572,22 @@
                     const v = Math.abs(dataArray[i] - 128) / 128;
                     if (v > max) max = v;
                 }
-                if (max > 0.1) {
-                    document.querySelector(`.participant[data-user="${remoteUser}"]`)?.classList.add('speaking');
-                } else {
-                    document.querySelector(`.participant[data-user="${remoteUser}"]`)?.classList.remove('speaking');
+                
+                // إظهار مستوى الصوت في المايك المناسب
+                const micNumber = Object.keys(micsData).find(key => micsData[key]?.user === remoteUser);
+                if (micNumber) {
+                    const voiceLevel = document.getElementById(`voice_${micNumber}`);
+                    if (voiceLevel) {
+                        voiceLevel.style.width = (max * 100) + '%';
+                    }
+                    
+                    if (max > 0.05 && !micsData[micNumber]?.speaking) {
+                        micsData[micNumber].speaking = true;
+                        updateMicUI(micNumber);
+                    } else if (max <= 0.05 && micsData[micNumber]?.speaking) {
+                        micsData[micNumber].speaking = false;
+                        updateMicUI(micNumber);
+                    }
                 }
             }, 100);
             
@@ -304,166 +601,109 @@
     }
     
     function handleSignal(data) {
-        if (data.room !== currentRoom) return;
         if (data.to !== currentUser) return;
         
         if (peers.has(data.from)) {
             peers.get(data.from).signal(data.signal);
         } else {
             const peer = createPeerConnection(data.from, false);
-            peer.signal(data.signal);
+            if (peer) peer.signal(data.signal);
         }
     }
     
-    function toggleMute() {
+    function toggleMicMute(micNumber) {
+        if (micNumber !== myMicNumber) return;
+        
+        isMyMuted = !isMyMuted;
         if (localStream) {
-            const audioTrack = localStream.getAudioTracks()[0];
-            audioTrack.enabled = !audioTrack.enabled;
-            isMuted = !audioTrack.enabled;
-            document.getElementById('muteBtn').innerHTML = isMuted ? '🔇 فتح المايك' : '🔊 كتم المايك';
-            document.getElementById('muteBtn').style.background = isMuted ? '#f44336' : '#45A29E';
+            localStream.getAudioTracks()[0].enabled = !isMyMuted;
         }
-    }
-    
-    function raiseHand() {
-        mainChannel.publish('hand', {
+        
+        const btn = document.getElementById(`muteBtn_${myMicNumber}`);
+        btn.innerHTML = isMyMuted ? '🔇 مكتوم' : '🎤 فتح';
+        btn.classList.toggle('muted', isMyMuted);
+        
+        // إعلان حالة الكتم للجميع
+        channel.publish('mic_update', {
+            micNumber: myMicNumber,
             user: currentUser,
-            room: currentRoom,
-            action: 'raise'
-        });
-        
-        document.getElementById('handBtn').innerHTML = '✋ يد مرفوعة ✓';
-        document.getElementById('handBtn').style.background = '#4CAF50';
-        
-        setTimeout(() => {
-            document.getElementById('handBtn').innerHTML = '✋ ارفع يد';
-            document.getElementById('handBtn').style.background = '#ff9800';
-        }, 3000);
-    }
-    
-    function updateParticipantsList() {
-        const roomChannel = ably.channels.get(`room_${currentRoom}`);
-        
-        roomChannel.presence.get((err, members) => {
-            if (err || !members) return;
-            
-            const users = members.map(m => m.data.name);
-            const uniqueUsers = [...new Set(users)];
-            
-            document.getElementById('onlineCount').innerHTML = `🟢 ${uniqueUsers.length} متصل`;
-            
-            const container = document.getElementById('participantsList');
-            container.innerHTML = '<div style="color:#888; margin-bottom:5px;">👥 المشاركين:</div>';
-            
-            uniqueUsers.forEach(user => {
-                const isMe = (user === currentUser);
-                const hasHand = hands.includes(user);
-                
-                const div = document.createElement('div');
-                div.className = 'participant';
-                div.setAttribute('data-user', user);
-                div.innerHTML = `
-                    <div class="participant-name">
-                        ${isMe ? '👤' : '👥'} ${escapeHtml(user)}
-                        ${hasHand ? '<span style="background:#ff9800; padding:2px 6px; border-radius:10px; font-size:10px;">✋ يد مرفوعة</span>' : ''}
-                        ${!isMe ? '<span style="font-size:10px; color:#4CAF50;">🎙️</span>' : ''}
-                    </div>
-                    ${isMe ? `<button class="mic-btn ${isMuted ? 'muted' : ''}" onclick="toggleMute()">${isMuted ? '🔇 كتم' : '🔊 فتح'}</button>` : ''}
-                `;
-                container.appendChild(div);
-            });
+            action: 'mute_toggle',
+            muted: isMyMuted
         });
     }
     
-    function sendChatMsg() {
-        const input = document.getElementById('msgInput');
+    function toggleGlobalMute() {
+        toggleMicMute(myMicNumber);
+    }
+    
+    function sendChat() {
+        const input = document.getElementById('chatInput');
         const text = input.value.trim();
-        if (!text || !currentRoom) return;
+        if (!text) return;
         
         const msg = {
             sender: currentUser,
             text: text,
             time: getTime(),
-            isSystem: false,
-            room: currentRoom,
-            id: Date.now()
+            mic: myMicNumber
         };
         
-        mainChannel.publish('chat', msg);
+        channel.publish('chat', msg);
         displayChatMessage(msg, true);
         input.value = '';
     }
     
     function displayChatMessage(msg, isMe = false) {
-        if (msg.room && msg.room !== currentRoom) return;
-        
-        const container = document.getElementById('messages');
+        const container = document.getElementById('chatMessages');
         const div = document.createElement('div');
         
         if (msg.isSystem || msg.sender === 'system') {
-            div.className = 'msg system-msg';
+            div.className = 'chat-msg system';
             div.innerHTML = msg.text;
         } else {
-            const isCurrent = (msg.sender === currentUser);
-            div.className = `msg ${isCurrent ? 'my-msg' : 'other-msg'}`;
-            div.innerHTML = `
-                ${!isCurrent ? `<div class="sender">${escapeHtml(msg.sender)}</div>` : ''}
-                <div>${escapeHtml(msg.text)}</div>
-                <div class="time">${msg.time}</div>
-            `;
+            div.className = `chat-msg ${isMe ? 'my' : 'other'}`;
+            div.innerHTML = `<strong>${msg.sender}</strong> (مايك ${msg.mic || '?'}): ${msg.text} <span style="font-size:9px;">${msg.time}</span>`;
         }
         
         container.appendChild(div);
-        div.scrollIntoView({ behavior: 'smooth' });
+        div.scrollIntoView();
         
-        // حذف الرسائل القديمة
-        if (container.children.length > 100) {
+        while (container.children.length > 50) {
             container.removeChild(container.children[0]);
         }
     }
     
     function leaveRoom() {
-        if (currentRoom) {
-            // إغلاق جميع الاتصالات
-            peers.forEach((peer, userId) => {
-                peer.destroy();
-            });
-            peers.clear();
-            
-            mainChannel.publish('chat', {
-                sender: 'system',
-                text: `🔴 ${currentUser} غادر غرفة ${currentRoom}`,
-                time: getTime(),
-                isSystem: true,
-                room: currentRoom
-            });
-            
-            const roomChannel = ably.channels.get(`room_${currentRoom}`);
-            roomChannel.presence.leave();
-            
-            currentRoom = null;
-            document.getElementById('callControls').style.display = 'none';
-            document.getElementById('participantsList').innerHTML = '<div style="color:#888; text-align:center;">اختر غرفة للانضمام</div>';
-            document.getElementById('onlineCount').innerHTML = '🟢 0 متصل';
-            document.getElementById('messages').innerHTML = '';
+        // إعلان المغادرة
+        channel.publish('mic_update', {
+            micNumber: myMicNumber,
+            user: currentUser,
+            action: 'leave'
+        });
+        
+        channel.publish('chat', {
+            sender: 'system',
+            text: `🔴 ${currentUser} غادر مايك ${myMicNumber}`,
+            time: getTime(),
+            isSystem: true
+        });
+        
+        // إغلاق الاتصالات
+        peers.forEach(peer => peer.destroy());
+        peers.clear();
+        
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
         }
-    }
-    
-    function logout() {
-        leaveRoom();
-        if (localStream) localStream.getTracks().forEach(t => t.stop());
+        
+        if (channel) channel.presence.leave();
         if (ably) ably.close();
+        
         location.reload();
     }
     
     function getTime() {
         return new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 </script>
 
