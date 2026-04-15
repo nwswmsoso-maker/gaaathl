@@ -3,156 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>غرفة لودو - اتصال صوتي</title>
+    <title>لودو - دردشة وصوت ولعبة</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background: #0a3d2f; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
         
-        /* نفس التصميم الأصلي */
-        .game-room { max-width: 450px; width: 100%; background: #f5e6ca; border-radius: 30px; overflow: hidden; border: 5px solid #ffd700; }
+        .game-room { max-width: 500px; width: 100%; background: #f5e6ca; border-radius: 30px; overflow: hidden; border: 5px solid #ffd700; }
         .room-header { background: #ffd700; padding: 15px; text-align: center; color: #8B0000; }
         .login-box, .chat-box { padding: 20px; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 25px; font-size: 16px; }
-        button { background: #8B0000; color: white; cursor: pointer; }
+        button { background: #8B0000; color: white; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.97); }
         .hidden { display: none; }
         
-        .online-users { background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
-        .user-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; margin: 5px 0; border-radius: 25px; }
-        .call-btn { background: #4CAF50; padding: 8px 20px; border-radius: 25px; font-size: 13px; width: auto; margin: 0; }
-        .call-btn.in-call { background: #f44336; }
+        /* تبويبات */
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab { flex: 1; text-align: center; padding: 10px; background: #e8d5a8; border-radius: 25px; cursor: pointer; }
+        .tab.active { background: #8B0000; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         
-        .messages { height: 250px; overflow-y: auto; background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
+        /* قائمة المستخدمين */
+        .users-list { background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; margin: 5px 0; border-radius: 25px; }
+        .friend-btn { background: #4CAF50; padding: 5px 15px; border-radius: 20px; font-size: 12px; width: auto; margin: 0; }
+        .friend-btn.pending { background: #ff9800; }
+        .friend-btn.accepted { background: #666; }
+        
+        /* الدردشة */
+        .messages { height: 200px; overflow-y: auto; background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
         .msg { padding: 8px 12px; margin: 5px; border-radius: 15px; max-width: 80%; font-size: 13px; }
         .my-msg { background: #8B0000; color: white; margin-left: auto; text-align: right; }
         .other-msg { background: white; margin-right: auto; }
         .system-msg { background: #ffd700; text-align: center; margin: 5px auto; font-size: 11px; width: fit-content; }
-        
         .input-area { display: flex; gap: 8px; }
         .input-area input { flex: 1; margin: 0; background: white; }
         .input-area button { width: auto; padding: 12px 20px; }
+        
+        /* لعبة لودو */
+        .ludo-board { background: #e8d5a8; border-radius: 20px; padding: 15px; margin-bottom: 10px; }
+        .board { display: grid; grid-template-columns: repeat(15, 1fr); gap: 2px; background: #ffd700; padding: 5px; border-radius: 15px; }
+        .cell { aspect-ratio: 1; background: #f5e6ca; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .cell.player1 { background: #4CAF50; color: white; }
+        .cell.player2 { background: #f44336; color: white; }
+        .dice { text-align: center; margin-top: 10px; }
+        .dice-btn { background: #8B0000; padding: 10px; border-radius: 15px; width: auto; display: inline-block; margin: 5px; }
+        .dice-value { font-size: 30px; font-weight: bold; background: white; display: inline-block; padding: 10px 20px; border-radius: 15px; }
+        
+        /* أزرار */
         .mic-control { display: flex; gap: 10px; margin-top: 10px; }
         .mic-control button { background: #666; }
         
-        /* لوحة الاتصال المنفصلة - حترافية */
-        .call-panel {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: all 0.3s;
-        }
-        .call-panel.show {
-            visibility: visible;
-            opacity: 1;
-        }
-        .call-card {
-            background: #f5e6ca;
-            border-radius: 60px;
-            padding: 40px;
-            text-align: center;
-            width: 300px;
-            border: 5px solid #ffd700;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-        .call-avatar {
-            font-size: 90px;
-            margin-bottom: 15px;
-        }
-        .call-name {
-            font-size: 28px;
-            font-weight: bold;
-            color: #8B0000;
-            margin-bottom: 10px;
-        }
-        .call-status {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .call-actions {
-            display: flex;
-            gap: 25px;
-            justify-content: center;
-        }
-        .call-actions button {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            font-size: 28px;
-            margin: 0;
-            border: none;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .call-actions button:active {
-            transform: scale(0.95);
-        }
-        .accept-call {
-            background: #4CAF50;
-            color: white;
-        }
-        .reject-call {
-            background: #f44336;
-            color: white;
-        }
-        .end-call {
-            background: #f44336;
-            color: white;
-            width: 120px !important;
-            border-radius: 40px !important;
-        }
-        @keyframes vibrate {
-            0% { transform: translate(0); }
-            25% { transform: translate(-5px); }
-            75% { transform: translate(5px); }
-            100% { transform: translate(0); }
-        }
-        .ringing {
-            animation: vibrate 0.3s infinite;
-        }
+        /* لوحة الاتصال */
+        .call-panel { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; visibility: hidden; opacity: 0; transition: 0.3s; }
+        .call-panel.show { visibility: visible; opacity: 1; }
+        .call-card { background: #f5e6ca; border-radius: 60px; padding: 40px; text-align: center; width: 280px; border: 5px solid #ffd700; }
+        .call-avatar { font-size: 80px; }
+        .call-name { font-size: 24px; font-weight: bold; color: #8B0000; }
+        .call-status { font-size: 14px; color: #666; margin: 15px 0; }
+        .call-actions { display: flex; gap: 20px; justify-content: center; }
+        .call-actions button { width: 60px; height: 60px; border-radius: 50%; font-size: 24px; margin: 0; }
+        .accept-call { background: #4CAF50; }
+        .reject-call { background: #f44336; }
+        .end-call { background: #f44336; width: 100px !important; border-radius: 40px !important; }
+        
+        .requests-list { background: #e8d5a8; padding: 10px; border-radius: 15px; max-height: 150px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
 <div class="game-room">
     <div class="room-header">
-        <h2>🎙️ اتصال صوتي</h2>
-        <p>اتصل مع الأصدقاء</p>
+        <h2>🎲 لودو | 🎙️ صوت | 💬 دردشة</h2>
+        <p>العب وتكلم مع أصدقائك</p>
     </div>
 
+    <!-- تسجيل الدخول -->
     <div id="loginScreen" class="login-box">
-        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="text" id="loginUsername" placeholder="اسم المستخدم">
+        <input type="password" id="loginPassword" placeholder="كلمة المرور">
         <button onclick="login()">دخول</button>
+        <button onclick="showRegister()" style="background:#666;">تسجيل جديد</button>
         <div id="loginStatus" style="font-size:12px; text-align:center; margin-top:10px;"></div>
     </div>
 
-    <div id="chatScreen" class="chat-box hidden">
-        <div class="online-users" id="onlineUsers">🟢 جاري التحميل...</div>
-        <div class="messages" id="messages"></div>
-        <div class="input-area">
-            <input type="text" id="msgInput" placeholder="رسالة..." onkeypress="if(event.key==='Enter') sendMsg()">
-            <button onclick="sendMsg()">إرسال</button>
+    <!-- تسجيل جديد -->
+    <div id="registerScreen" class="login-box hidden">
+        <input type="text" id="regUsername" placeholder="اسم المستخدم">
+        <input type="password" id="regPassword" placeholder="كلمة المرور">
+        <button onclick="register()">تسجيل</button>
+        <button onclick="showLogin()" style="background:#666;">رجوع</button>
+        <div id="regStatus" style="font-size:12px; text-align:center; margin-top:10px;"></div>
+    </div>
+
+    <!-- التطبيق الرئيسي -->
+    <div id="appScreen" class="chat-box hidden">
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('chat')">💬 دردشة</div>
+            <div class="tab" onclick="showTab('friends')">👥 أصدقاء</div>
+            <div class="tab" onclick="showTab('ludo')">🎲 لودو</div>
         </div>
-        <div class="mic-control">
-            <button id="muteBtn" onclick="toggleMute()">🔇 كتم مايكي</button>
-            <button onclick="logout()" style="background:#666;">🚪 خروج</button>
+
+        <!-- تبويب الدردشة -->
+        <div id="chatTab" class="tab-content active">
+            <div class="online-users" id="onlineUsers">🟢 جاري التحميل...</div>
+            <div class="messages" id="messages"></div>
+            <div class="input-area">
+                <input type="text" id="msgInput" placeholder="رسالة..." onkeypress="if(event.key==='Enter') sendMsg()">
+                <button onclick="sendMsg()">إرسال</button>
+            </div>
+            <div class="mic-control">
+                <button id="muteBtn" onclick="toggleMute()">🔇 كتم مايكي</button>
+                <button onclick="logout()" style="background:#666;">🚪 خروج</button>
+            </div>
+        </div>
+
+        <!-- تبويب الأصدقاء -->
+        <div id="friendsTab" class="tab-content">
+            <div style="margin-bottom:10px;">
+                <h4>📨 طلبات الصداقة</h4>
+                <div id="requestsList" class="requests-list"></div>
+            </div>
+            <div>
+                <h4>👥 جميع المستخدمين</h4>
+                <div id="allUsersList" class="users-list"></div>
+            </div>
+            <div>
+                <h4>⭐ أصدقائي</h4>
+                <div id="myFriendsList" class="users-list"></div>
+            </div>
+        </div>
+
+        <!-- تبويب لعبة لودو -->
+        <div id="ludoTab" class="tab-content">
+            <div class="ludo-board">
+                <div class="board" id="ludoBoard"></div>
+                <div class="dice">
+                    <span class="dice-value" id="diceValue">🎲</span>
+                    <button class="dice-btn" onclick="rollDice()">رمي النرد</button>
+                </div>
+                <div id="gameStatus" style="text-align:center; margin-top:10px; font-size:12px;"></div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- لوحة الاتصال المنفصلة -->
+<!-- لوحة المكالمة -->
 <div id="callPanel" class="call-panel">
-    <div class="call-card" id="callCard">
+    <div class="call-card">
         <div class="call-avatar" id="callAvatar">🎤</div>
         <div class="call-name" id="callName">...</div>
         <div class="call-status" id="callStatusText">...</div>
@@ -163,250 +163,231 @@
 <script>
     const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
     
-    let ably, channel, currentUser;
-    let localStream = null;
-    let currentCall = null;
-    let callWithUser = null;
-    let isMuted = false;
-    let processedMessages = new Set();
-    let pendingCaller = null;
-    let ringInterval = null;
+    let ably, channel, currentUser, currentPassword;
+    let localStream = null, currentCall = null, callWithUser = null;
+    let isMuted = false, processedMessages = new Set(), pendingCaller = null, ringInterval = null;
+    
+    let users = JSON.parse(localStorage.getItem('lodo_users') || '{}');
+    let friends = JSON.parse(localStorage.getItem(`lodo_friends_${currentUser}`) || '[]');
+    let pendingRequests = [];
+    
+    // لعبة لودو
+    let gameState = { positions: { player1: 0, player2: 0 }, turn: 'player1', dice: null };
 
     function playRingtone() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.frequency.value = 440;
-            gain.gain.value = 0.2;
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.value = 440; gain.gain.value = 0.2;
             osc.start();
             gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 1);
             setTimeout(() => {
                 const osc2 = ctx.createOscillator();
                 const gain2 = ctx.createGain();
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc2.frequency.value = 880;
-                gain2.gain.value = 0.2;
+                osc2.connect(gain2); gain2.connect(ctx.destination);
+                osc2.frequency.value = 880; gain2.gain.value = 0.2;
                 osc2.start();
                 gain2.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 1);
             }, 1000);
         } catch(e) {}
     }
     
-    function startRing() {
-        playRingtone();
-        ringInterval = setInterval(() => playRingtone(), 3000);
-        if (navigator.vibrate) navigator.vibrate([500, 300, 500]);
-        document.getElementById('callCard').classList.add('ringing');
+    function startRing() { playRingtone(); ringInterval = setInterval(playRingtone, 3000); if(navigator.vibrate) navigator.vibrate([500,300,500]); }
+    function stopRing() { if(ringInterval) clearInterval(ringInterval); if(navigator.vibrate) navigator.vibrate(0); }
+
+    function showRegister() { document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('registerScreen').classList.remove('hidden'); }
+    function showLogin() { document.getElementById('registerScreen').classList.add('hidden'); document.getElementById('loginScreen').classList.remove('hidden'); }
+    
+    function register() {
+        let u = document.getElementById('regUsername').value.trim();
+        let p = document.getElementById('regPassword').value;
+        if(!u || !p) { document.getElementById('regStatus').innerHTML = '❌ اكتب اسم وكلمة مرور'; return; }
+        if(users[u]) { document.getElementById('regStatus').innerHTML = '❌ الاسم موجود'; return; }
+        users[u] = p;
+        localStorage.setItem('lodo_users', JSON.stringify(users));
+        document.getElementById('regStatus').innerHTML = '✅ تم التسجيل! الرجاء الدخول';
+        setTimeout(showLogin, 1500);
     }
     
-    function stopRing() {
-        if (ringInterval) clearInterval(ringInterval);
-        if (navigator.vibrate) navigator.vibrate(0);
-        document.getElementById('callCard').classList.remove('ringing');
-    }
-
     async function login() {
-        currentUser = document.getElementById('username').value.trim();
-        if (!currentUser) { alert('اكتب اسمك'); return; }
+        let u = document.getElementById('loginUsername').value.trim();
+        let p = document.getElementById('loginPassword').value;
+        if(!u || !p) { document.getElementById('loginStatus').innerHTML = '❌ اكتب اسم وكلمة مرور'; return; }
+        if(!users[u] || users[u] !== p) { document.getElementById('loginStatus').innerHTML = '❌ اسم أو كلمة مرور خطأ'; return; }
         
+        currentUser = u; currentPassword = p;
         document.getElementById('loginStatus').innerHTML = '🎤 جاري طلب الميكروفون...';
         
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            document.getElementById('loginStatus').innerHTML = '✅ جاهز';
-        } catch(err) {
-            document.getElementById('loginStatus').innerHTML = '⚠️ ميكروفون غير متاح';
-        }
+        try { localStream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+        catch(err) { document.getElementById('loginStatus').innerHTML = '⚠️ ميكروفون غير متاح'; }
         
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
-        
         ably.connection.on('connected', () => {
-            channel = ably.channels.get('lodo_call');
-            
-            channel.subscribe('msg', (m) => {
-                let id = `${m.data.sender}_${m.data.text}_${m.data.time}`;
-                if (!processedMessages.has(id)) {
-                    processedMessages.add(id);
-                    showMsg(m.data);
-                }
-            });
-            
+            channel = ably.channels.get('lodo_main');
+            channel.subscribe('msg', (m) => { let id = `${m.data.sender}_${m.data.text}_${m.data.time}`; if(!processedMessages.has(id)){ processedMessages.add(id); showMsg(m.data); } });
             channel.subscribe('signal', (s) => handleSignal(s.data));
             channel.subscribe('call', (c) => handleCall(c.data));
-            
+            channel.subscribe('game', (g) => handleGame(g.data));
             channel.presence.enter({ name: currentUser });
             channel.presence.subscribe(() => updateUsers());
             updateUsers();
-            
+            loadFriendsData();
+            initLudoBoard();
             document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('chatScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
         });
     }
+    
+    function loadFriendsData() {
+        let saved = localStorage.getItem(`lodo_friends_${currentUser}`);
+        friends = saved ? JSON.parse(saved) : [];
+        let reqSaved = localStorage.getItem(`lodo_requests_${currentUser}`);
+        pendingRequests = reqSaved ? JSON.parse(reqSaved) : [];
+        updateFriendsUI();
+    }
+    
+    function saveFriendsData() { localStorage.setItem(`lodo_friends_${currentUser}`, JSON.stringify(friends)); localStorage.setItem(`lodo_requests_${currentUser}`, JSON.stringify(pendingRequests)); }
     
     function updateUsers() {
         channel.presence.get((err, members) => {
-            if (err) return;
-            let users = [...new Set(members.map(m => m.data.name))];
-            let others = users.filter(u => u !== currentUser);
+            if(err) return;
+            let allUsers = [...new Set(members.map(m => m.data.name))];
+            let others = allUsers.filter(u => u !== currentUser);
             let container = document.getElementById('onlineUsers');
-            if (others.length === 0) {
-                container.innerHTML = '👥 لا يوجد متصلين';
-                return;
+            if(others.length === 0) container.innerHTML = '👥 لا يوجد متصلين';
+            else {
+                container.innerHTML = '<div style="margin-bottom:8px;">👥 المتصلون:</div>';
+                others.forEach(user => {
+                    let div = document.createElement('div'); div.className = 'user-item';
+                    div.innerHTML = `<span>${user}</span><button class="call-btn" onclick="startCall('${user}')">🎤 اتصل</button>`;
+                    container.appendChild(div);
+                });
             }
-            container.innerHTML = '<div style="margin-bottom:8px;">👥 المتصلون:</div>';
-            others.forEach(user => {
-                let div = document.createElement('div');
-                div.className = 'user-item';
-                div.innerHTML = `
-                    <span>${user}</span>
-                    <button class="call-btn" onclick="startCall('${user}')">🎤 اتصل</button>
-                `;
-                container.appendChild(div);
-            });
+            // تحديث قائمة جميع المستخدمين
+            let allContainer = document.getElementById('allUsersList');
+            if(allContainer) {
+                allContainer.innerHTML = '';
+                others.forEach(user => {
+                    let isFriend = friends.includes(user);
+                    let isPending = pendingRequests.includes(user);
+                    let div = document.createElement('div'); div.className = 'user-item';
+                    div.innerHTML = `<span>${user}</span>${!isFriend && !isPending ? `<button class="friend-btn" onclick="sendFriendRequest('${user}')">➕ أضف</button>` : isPending ? `<button class="friend-btn pending">⏳ مرسل</button>` : `<button class="friend-btn accepted">✓ صديق</button>`}`;
+                    allContainer.appendChild(div);
+                });
+            }
+            // تحديث قائمة الأصدقاء
+            let friendsContainer = document.getElementById('myFriendsList');
+            if(friendsContainer) {
+                friendsContainer.innerHTML = '';
+                friends.forEach(friend => {
+                    let div = document.createElement('div'); div.className = 'user-item';
+                    div.innerHTML = `<span>${friend}</span><button class="call-btn" onclick="startCall('${friend}')">🎤 اتصل</button>`;
+                    friendsContainer.appendChild(div);
+                });
+            }
+            // تحديث طلبات الصداقة
+            let reqContainer = document.getElementById('requestsList');
+            if(reqContainer) {
+                reqContainer.innerHTML = '';
+                let received = JSON.parse(localStorage.getItem(`lodo_requests_to_${currentUser}`) || '[]');
+                received.forEach(req => {
+                    let div = document.createElement('div'); div.className = 'user-item';
+                    div.innerHTML = `<span>${req}</span><button class="friend-btn" onclick="acceptFriendRequest('${req}')">✅ قبول</button><button class="friend-btn" style="background:#f44336;" onclick="rejectFriendRequest('${req}')">❌ رفض</button>`;
+                    reqContainer.appendChild(div);
+                });
+            }
         });
     }
     
+    function sendFriendRequest(to) {
+        pendingRequests.push(to);
+        saveFriendsData();
+        let received = JSON.parse(localStorage.getItem(`lodo_requests_to_${to}`) || '[]');
+        if(!received.includes(currentUser)) received.push(currentUser);
+        localStorage.setItem(`lodo_requests_to_${to}`, JSON.stringify(received));
+        updateUsers();
+        channel.publish('msg', { sender: 'system', text: `📨 ${currentUser} أرسل طلب صداقة إلى ${to}`, time: getTime() });
+    }
+    
+    function acceptFriendRequest(from) {
+        if(!friends.includes(from)) friends.push(from);
+        let received = JSON.parse(localStorage.getItem(`lodo_requests_to_${currentUser}`) || '[]');
+        received = received.filter(r => r !== from);
+        localStorage.setItem(`lodo_requests_to_${currentUser}`, JSON.stringify(received));
+        saveFriendsData();
+        updateUsers();
+        channel.publish('msg', { sender: 'system', text: `✅ ${currentUser} قبل طلب صداقة ${from}`, time: getTime() });
+    }
+    
+    function rejectFriendRequest(from) {
+        let received = JSON.parse(localStorage.getItem(`lodo_requests_to_${currentUser}`) || '[]');
+        received = received.filter(r => r !== from);
+        localStorage.setItem(`lodo_requests_to_${currentUser}`, JSON.stringify(received));
+        updateUsers();
+    }
+    
+    function updateFriendsUI() { updateUsers(); }
+    
     function startCall(target) {
-        if (!localStream) { alert('الميكروفون غير متاح'); return; }
-        if (currentCall) { endCall(); }
-        
+        if(!localStream) { alert('الميكروفون غير متاح'); return; }
+        if(currentCall) endCall();
         callWithUser = target;
-        
         document.getElementById('callPanel').classList.add('show');
         document.getElementById('callName').innerHTML = target;
         document.getElementById('callStatusText').innerHTML = 'جاري الاتصال...';
         document.getElementById('callAvatar').innerHTML = '📞';
         document.getElementById('callActions').innerHTML = '<button class="end-call" onclick="endCall()">🔴 إنهاء</button>';
-        
         channel.publish('call', { type: 'ring', from: currentUser, to: target });
-        
         createPeer(target, true);
     }
     
     function handleCall(data) {
-        if (data.to !== currentUser) return;
-        
-        if (data.type === 'ring' && !currentCall && !pendingCaller) {
+        if(data.to !== currentUser) return;
+        if(data.type === 'ring' && !currentCall && !pendingCaller) {
             pendingCaller = data.from;
-            
             document.getElementById('callPanel').classList.add('show');
             document.getElementById('callName').innerHTML = data.from;
             document.getElementById('callStatusText').innerHTML = 'يتصل بك...';
             document.getElementById('callAvatar').innerHTML = '🎤';
-            document.getElementById('callActions').innerHTML = `
-                <button class="accept-call" onclick="acceptCall()">✅</button>
-                <button class="reject-call" onclick="rejectCall()">❌</button>
-            `;
-            
+            document.getElementById('callActions').innerHTML = `<button class="accept-call" onclick="acceptCall()">✅</button><button class="reject-call" onclick="rejectCall()">❌</button>`;
             startRing();
         }
     }
     
-    function acceptCall() {
-        stopRing();
-        callWithUser = pendingCaller;
-        document.getElementById('callStatusText').innerHTML = 'جاري الرد...';
-        document.getElementById('callActions').innerHTML = '<button class="end-call" onclick="endCall()">🔴 إنهاء</button>';
-        createPeer(pendingCaller, false);
-        pendingCaller = null;
-    }
-    
-    function rejectCall() {
-        stopRing();
-        document.getElementById('callPanel').classList.remove('show');
-        channel.publish('signal', { to: pendingCaller, from: currentUser, type: 'reject' });
-        pendingCaller = null;
-    }
+    function acceptCall() { stopRing(); callWithUser = pendingCaller; document.getElementById('callStatusText').innerHTML = 'جاري الرد...'; document.getElementById('callActions').innerHTML = '<button class="end-call" onclick="endCall()">🔴 إنهاء</button>'; createPeer(pendingCaller, false); pendingCaller = null; }
+    function rejectCall() { stopRing(); document.getElementById('callPanel').classList.remove('show'); channel.publish('signal', { to: pendingCaller, from: currentUser, type: 'reject' }); pendingCaller = null; }
     
     function createPeer(remote, init) {
-        let peer = new SimplePeer({
-            initiator: init,
-            stream: localStream,
-            trickle: false,
-            config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
-        });
-        
-        peer.on('signal', sig => {
-            channel.publish('signal', { to: remote, from: currentUser, signal: sig });
-        });
-        
-        peer.on('stream', stream => {
-            let audio = new Audio();
-            audio.srcObject = stream;
-            audio.autoplay = true;
-            document.getElementById('callStatusText').innerHTML = 'متصل';
-            document.getElementById('callAvatar').innerHTML = '🎙️';
-        });
-        
-        peer.on('error', () => endCall());
-        peer.on('close', () => endCall());
-        
+        let peer = new SimplePeer({ initiator: init, stream: localStream, trickle: false, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
+        peer.on('signal', sig => channel.publish('signal', { to: remote, from: currentUser, signal: sig }));
+        peer.on('stream', stream => { let audio = new Audio(); audio.srcObject = stream; audio.autoplay = true; document.getElementById('callStatusText').innerHTML = 'متصل'; document.getElementById('callAvatar').innerHTML = '🎙️'; });
+        peer.on('error', () => endCall()); peer.on('close', () => endCall());
         currentCall = peer;
     }
     
     function handleSignal(data) {
-        if (data.to !== currentUser) return;
-        if (data.type === 'reject') {
-            endCall();
-            showMsg({ sender: 'system', text: `📞 ${data.from} رفض المكالمة`, time: getTime() });
-            return;
-        }
-        if (data.signal && currentCall) {
-            currentCall.signal(data.signal);
-        }
+        if(data.to !== currentUser) return;
+        if(data.type === 'reject') { endCall(); showMsg({ sender: 'system', text: `📞 ${data.from} رفض المكالمة`, time: getTime() }); return; }
+        if(data.signal && currentCall) currentCall.signal(data.signal);
     }
     
-    function endCall() {
-        stopRing();
-        if (currentCall) { currentCall.destroy(); currentCall = null; }
-        document.getElementById('callPanel').classList.remove('show');
-        callWithUser = null;
-        pendingCaller = null;
-        updateUsers();
-    }
+    function endCall() { stopRing(); if(currentCall) currentCall.destroy(); currentCall = null; document.getElementById('callPanel').classList.remove('show'); callWithUser = null; pendingCaller = null; updateUsers(); }
+    function toggleMute() { if(localStream){ isMuted=!isMuted; localStream.getAudioTracks()[0].enabled=!isMuted; document.getElementById('muteBtn').innerHTML=isMuted?'🔊 فتح المايك':'🔇 كتم مايكي'; } }
+    function sendMsg() { let txt=document.getElementById('msgInput').value.trim(); if(!txt) return; channel.publish('msg',{sender:currentUser,text:txt,time:getTime()}); showMsg({sender:currentUser,text:txt,time:getTime()},true); document.getElementById('msgInput').value=''; }
+    function showMsg(msg,isMe=false){ let c=document.getElementById('messages'); let d=document.createElement('div'); if(msg.sender==='system'){ d.className='msg system-msg'; d.innerHTML=msg.text; }else{ d.className=`msg ${msg.sender===currentUser?'my-msg':'other-msg'}`; d.innerHTML=`${msg.sender!==currentUser?`<strong>${msg.sender}</strong><br>`:''}${msg.text}<div style="font-size:9px;">${msg.time}</div>`; } c.appendChild(d); d.scrollIntoView(); }
     
-    function toggleMute() {
-        if (localStream) {
-            isMuted = !isMuted;
-            localStream.getAudioTracks()[0].enabled = !isMuted;
-            document.getElementById('muteBtn').innerHTML = isMuted ? '🔊 فتح المايك' : '🔇 كتم مايكي';
-        }
-    }
+    function initLudoBoard() { let board=document.getElementById('ludoBoard'); board.innerHTML=''; for(let i=0;i<52;i++){ let cell=document.createElement('div'); cell.className='cell'; if(gameState.positions.player1===i) cell.classList.add('player1'); if(gameState.positions.player2===i) cell.classList.add('player2'); cell.innerHTML=i===0?'🏁':''; board.appendChild(cell); } }
     
-    function sendMsg() {
-        let txt = document.getElementById('msgInput').value.trim();
-        if (!txt) return;
-        channel.publish('msg', { sender: currentUser, text: txt, time: getTime() });
-        showMsg({ sender: currentUser, text: txt, time: getTime() }, true);
-        document.getElementById('msgInput').value = '';
-    }
+    function rollDice() { if(gameState.turn!==currentUser) { document.getElementById('gameStatus').innerHTML='⏳ ليس دورك!'; return; } let dice=Math.floor(Math.random()*6)+1; document.getElementById('diceValue').innerHTML=dice; gameState.dice=dice; let newPos=gameState.positions[currentUser]+dice; if(newPos>=52) newPos=52; gameState.positions[currentUser]=newPos; if(newPos===52){ document.getElementById('gameStatus').innerHTML=`🎉 ${currentUser} فاز!`; gameState.turn=null; }else{ gameState.turn=gameState.turn==='player1'?'player2':'player1'; document.getElementById('gameStatus').innerHTML=`🎲 رميت ${dice} - دور ${gameState.turn}`; } channel.publish('game',{positions:gameState.positions,turn:gameState.turn}); initLudoBoard(); }
     
-    function showMsg(msg, isMe = false) {
-        let container = document.getElementById('messages');
-        let div = document.createElement('div');
-        if (msg.sender === 'system') {
-            div.className = 'msg system-msg';
-            div.innerHTML = msg.text;
-        } else {
-            div.className = `msg ${msg.sender === currentUser ? 'my-msg' : 'other-msg'}`;
-            div.innerHTML = `${msg.sender !== currentUser ? `<strong>${msg.sender}</strong><br>` : ''}${msg.text}<div style="font-size:9px;">${msg.time}</div>`;
-        }
-        container.appendChild(div);
-        div.scrollIntoView();
-    }
+    function handleGame(data){ gameState.positions=data.positions; gameState.turn=data.turn; initLudoBoard(); document.getElementById('gameStatus').innerHTML=`🎲 دور: ${gameState.turn}`; }
     
-    function logout() {
-        if (currentCall) endCall();
-        if (localStream) localStream.getTracks().forEach(t => t.stop());
-        if (channel) { channel.presence.leave(); ably.close(); }
-        location.reload();
-    }
+    function showTab(tab) { document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); if(tab==='chat'){ document.querySelector('.tab:first-child').classList.add('active'); document.getElementById('chatTab').classList.add('active'); }else if(tab==='friends'){ document.querySelector('.tab:nth-child(2)').classList.add('active'); document.getElementById('friendsTab').classList.add('active'); updateUsers(); }else{ document.querySelector('.tab:nth-child(3)').classList.add('active'); document.getElementById('ludoTab').classList.add('active'); } }
     
-    function getTime() { return new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }); }
+    function logout() { if(currentCall) endCall(); if(localStream) localStream.getTracks().forEach(t=>t.stop()); if(channel){ channel.presence.leave(); ably.close(); } location.reload(); }
+    function getTime(){ return new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}); }
 </script>
 
 </body>
