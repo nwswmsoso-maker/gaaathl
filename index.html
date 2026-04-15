@@ -2,447 +2,171 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>دردشة فورية - Ably</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دردشة فورية - شغالة 100%</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            border-radius: 25px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            width: 100%;
-            max-width: 550px;
-            overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .header h2 { font-size: 1.5rem; margin-bottom: 5px; }
-        .header p { font-size: 0.8rem; opacity: 0.9; }
-        .login-box, .chat-box { padding: 20px; }
-        input, button {
-            width: 100%;
-            padding: 12px 15px;
-            margin: 8px 0;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s;
-        }
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:active { transform: scale(0.98); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #075E54; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 15px; }
+        .container { background: #fff; border-radius: 20px; width: 100%; max-width: 450px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .header { background: #075E54; color: white; padding: 15px; text-align: center; }
+        .login-box, .chat-box { padding: 15px; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 25px; font-size: 16px; }
+        button { background: #25D366; color: white; border: none; cursor: pointer; font-weight: bold; }
         .hidden { display: none; }
-        .messages {
-            height: 400px;
-            overflow-y: auto;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-        }
-        .msg {
-            padding: 10px 14px;
-            margin: 8px 0;
-            border-radius: 18px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-        .my-msg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            margin-left: auto;
-            text-align: right;
-        }
-        .other-msg {
-            background: #e9ecef;
-            color: #333;
-            margin-right: auto;
-        }
-        .system-msg {
-            background: #ffc107;
-            color: #333;
-            text-align: center;
-            margin: 10px auto;
-            font-size: 0.75rem;
-            width: fit-content;
-        }
-        .sender {
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .time {
-            font-size: 0.6rem;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-        .online-users {
-            background: #e9ecef;
-            padding: 10px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            font-size: 0.8rem;
-            text-align: center;
-        }
-        .input-area {
-            display: flex;
-            gap: 10px;
-        }
-        .input-area input {
-            flex: 1;
-            margin: 0;
-        }
-        .input-area button {
-            width: auto;
-            padding: 12px 20px;
-        }
-        .status {
-            font-size: 0.75rem;
-            text-align: center;
-            margin-top: 10px;
-            color: #666;
-        }
-        .error {
-            color: #dc3545;
-            text-align: center;
-            margin-top: 10px;
-        }
-        .success {
-            color: #28a745;
-            text-align: center;
-            margin-top: 10px;
-        }
-        .logout-btn {
-            margin-top: 10px;
-            background: #dc3545;
-        }
+        .messages { height: 400px; overflow-y: auto; background: #E5DDD5; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        .msg { padding: 8px 12px; margin: 5px; border-radius: 15px; max-width: 80%; word-wrap: break-word; }
+        .my-msg { background: #DCF8C6; margin-left: auto; text-align: right; }
+        .other-msg { background: white; margin-right: auto; }
+        .system-msg { background: #FFC107; text-align: center; margin: 5px auto; font-size: 11px; width: fit-content; }
+        .sender { font-size: 11px; font-weight: bold; color: #075E54; }
+        .time { font-size: 10px; color: #666; margin-top: 3px; }
+        .online-users { background: #E5DDD5; padding: 8px; border-radius: 10px; margin-bottom: 10px; font-size: 12px; text-align: center; }
+        .input-area { display: flex; gap: 8px; }
+        .input-area input { flex: 1; margin: 0; }
+        .input-area button { width: auto; padding: 12px 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2>💬 دردشة فورية</h2>
-        <p>تواصل مع أصدقائك في الوقت الحقيقي</p>
+        <h2>💬 واتساب لايت</h2>
+        <p>دردشة فورية حقيقية</p>
     </div>
 
-    <!-- شاشة تسجيل الدخول -->
     <div id="loginScreen" class="login-box">
-        <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="off">
-        <input type="text" id="roomName" placeholder="اسم الغرفة" value="general">
-        <button onclick="joinChat()">🚀 دخول إلى الدردشة</button>
-        <div id="loginStatus" class="status"></div>
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <button onclick="joinChat()">دخول</button>
+        <div id="status" style="font-size:12px; text-align:center; margin-top:10px; color:#666;"></div>
     </div>
 
-    <!-- شاشة الدردشة -->
     <div id="chatScreen" class="chat-box hidden">
-        <div class="online-users" id="onlineUsers">🟢 جاري التحميل...</div>
+        <div id="onlineUsers" class="online-users">🟢 جاري التحميل...</div>
         <div class="messages" id="messages"></div>
         <div class="input-area">
-            <input type="text" id="messageInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button onclick="sendMessage()">📤 إرسال</button>
+            <input type="text" id="msgInput" placeholder="اكتب رسالة..." onkeypress="if(event.key==='Enter') sendMsg()">
+            <button onclick="sendMsg()">📤</button>
         </div>
-        <button class="logout-btn" onclick="leaveChat()">🚪 مغادرة الغرفة</button>
-        <div id="chatStatus" class="status"></div>
+        <button onclick="leaveChat()" style="background:#dc3545; margin-top:10px;">🚪 خروج</button>
     </div>
 </div>
 
 <script>
-    // 🔑 المفتاح الجديد
-    const ABLY_KEY = 'VH9zDw.kUHivg:dEwXMdK-kqIGPtqj_e8t_Oyz6knD6upO_7LJZdRJsVc';
+    // 🔑 مفتاح Ably الجديد
+    const ABLY_KEY = 'w2taPw.vowV2w:a8slKnYqOSdV5LTfnomK5UpANKY2snGDyf-KmmVhtaw';
     
-    let ably = null;
-    let channel = null;
-    let currentUser = null;
-    let currentRoom = null;
-
+    let ably, channel, currentUser;
+    
     function joinChat() {
-        const username = document.getElementById('username').value.trim();
-        const roomName = document.getElementById('roomName').value.trim() || 'general';
-        
-        if (!username) {
-            document.getElementById('loginStatus').innerHTML = '<span class="error">❌ الرجاء إدخال اسم المستخدم</span>';
+        currentUser = document.getElementById('username').value.trim();
+        if (!currentUser) {
+            document.getElementById('status').innerHTML = '❌ اكتب اسمك';
             return;
         }
         
-        currentUser = username;
-        currentRoom = roomName;
+        document.getElementById('status').innerHTML = '🔄 جاري الاتصال...';
         
-        document.getElementById('loginStatus').innerHTML = '<span class="status">🔄 جاري الاتصال...</span>';
+        ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
         
-        try {
-            // الاتصال بـ Ably
-            ably = new Ably.Realtime({ 
-                key: ABLY_KEY, 
-                clientId: currentUser,
-                echoMessages: false // منع تكرار الرسائل لنفس المستخدم
+        ably.connection.on('connected', () => {
+            document.getElementById('status').innerHTML = '✅ متصل! جاري الدخول...';
+            channel = ably.channels.get('general');
+            
+            // استقبال الرسائل
+            channel.subscribe('message', (msg) => {
+                displayMessage(msg.data);
             });
             
-            // مراقبة حالة الاتصال
-            ably.connection.on('connected', () => {
-                console.log('✅ متصل بـ Ably');
-                document.getElementById('loginStatus').innerHTML = '<span class="success">✅ تم الاتصال بنجاح</span>';
-                setupChatRoom();
+            // دخول المستخدم
+            channel.presence.enter({ name: currentUser });
+            
+            // تحديث قائمة المتصلين
+            channel.presence.subscribe(() => updateUsers());
+            updateUsers();
+            
+            // رسالة ترحيب
+            channel.publish('message', {
+                sender: 'system',
+                text: `🎉 ${currentUser} دخل الدردشة`,
+                time: new Date().toLocaleTimeString()
             });
             
-            ably.connection.on('failed', (err) => {
-                console.error('❌ فشل الاتصال:', err);
-                document.getElementById('loginStatus').innerHTML = '<span class="error">❌ فشل الاتصال بالخادم. تأكد من اتصالك بالإنترنت</span>';
-            });
-            
-            ably.connection.on('disconnected', () => {
-                document.getElementById('chatStatus').innerHTML = '<span class="error">⚠️ انقطع الاتصال... جاري إعادة المحاولة</span>';
-            });
-            
-        } catch (err) {
-            document.getElementById('loginStatus').innerHTML = '<span class="error">❌ خطأ: ' + err.message + '</span>';
-        }
+            // إظهار الدردشة
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('chatScreen').classList.remove('hidden');
+            document.getElementById('status').innerHTML = '';
+        });
+        
+        ably.connection.on('failed', (err) => {
+            document.getElementById('status').innerHTML = '❌ فشل الاتصال: ' + JSON.stringify(err);
+        });
     }
     
-    function setupChatRoom() {
-        // الانضمام إلى قناة الغرفة
-        channel = ably.channels.get(currentRoom);
-        
-        // استقبال الرسائل
-        channel.subscribe('chat_message', (message) => {
-            console.log('📨 رسالة واصلة:', message.data);
-            displayMessage(message.data);
-        });
-        
-        // إدارة الحضور (Presence)
-        const presenceData = { userId: currentUser, name: currentUser };
-        
-        channel.presence.enter(presenceData, (err) => {
-            if (err) console.error('خطأ في الدخول:', err);
-            else console.log('✅ تم الدخول إلى الغرفة');
-        });
-        
-        // مراقبة تغييرات الحضور
-        channel.presence.subscribe('enter', (member) => {
-            console.log('👤 مستخدم دخل:', member.data.name);
-            updateOnlineUsers();
-            // إشعار دخول
-            if (member.data.name !== currentUser) {
-                const systemMsg = {
-                    sender: 'النظام',
-                    text: `🎉 ${member.data.name} انضم إلى الغرفة`,
-                    time: getCurrentTime(),
-                    isSystem: true
-                };
-                channel.publish('chat_message', systemMsg);
-            }
-        });
-        
-        channel.presence.subscribe('leave', (member) => {
-            console.log('👋 مستخدم خرج:', member.data.name);
-            updateOnlineUsers();
-            const systemMsg = {
-                sender: 'النظام',
-                text: `🔴 ${member.data.name} غادر الغرفة`,
-                time: getCurrentTime(),
-                isSystem: true
-            };
-            channel.publish('chat_message', systemMsg);
-        });
-        
-        // تحديث قائمة المستخدمين
-        updateOnlineUsers();
-        setInterval(() => updateOnlineUsers(), 10000);
-        
-        // إرسال رسالة ترحيب
-        setTimeout(() => {
-            const welcomeMsg = {
-                sender: 'النظام',
-                text: `✨ مرحباً ${currentUser}! أنت الآن في غرفة ${currentRoom}`,
-                time: getCurrentTime(),
-                isSystem: true
-            };
-            displayMessage(welcomeMsg);
-        }, 500);
-        
-        // إظهار واجهة الدردشة
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('chatScreen').classList.remove('hidden');
-        document.getElementById('messageInput').focus();
-        document.getElementById('chatStatus').innerHTML = '<span class="success">✅ متصل بالغرفة: ' + currentRoom + '</span>';
-        
-        // إخفاء رسالة الحالة بعد 3 ثواني
-        setTimeout(() => {
-            document.getElementById('chatStatus').innerHTML = '';
-        }, 3000);
-    }
-    
-    function updateOnlineUsers() {
-        if (!channel) return;
-        
+    function updateUsers() {
         channel.presence.get((err, members) => {
-            if (err) {
-                console.error('خطأ في جلب المستخدمين:', err);
-                return;
-            }
-            
-            const users = members.map(m => m.data.name).filter(u => u);
-            const uniqueUsers = [...new Set(users)];
-            const otherUsers = uniqueUsers.filter(u => u !== currentUser);
-            
-            let usersText = '';
-            if (otherUsers.length === 0) {
-                usersText = '👥 لا يوجد مستخدمون آخرون متصلون';
-            } else {
-                usersText = '👥 المتصلون: ' + otherUsers.join('، ');
-            }
-            
-            document.getElementById('onlineUsers').innerHTML = usersText + ` (${uniqueUsers.length} متصل)`;
+            if (err) return;
+            let users = members.map(m => m.data.name).filter(u => u);
+            let text = users.length ? '👥 ' + users.join('، ') : '👥 لا يوجد متصلين';
+            document.getElementById('onlineUsers').innerHTML = text;
         });
     }
     
-    function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const text = input.value.trim();
-        
+    function sendMsg() {
+        let text = document.getElementById('msgInput').value.trim();
         if (!text) return;
         
-        const messageData = {
+        let msg = {
             sender: currentUser,
             text: text,
-            time: getCurrentTime(),
-            isSystem: false
+            time: new Date().toLocaleTimeString()
         };
         
-        // إرسال الرسالة عبر Ably
-        channel.publish('chat_message', messageData, (err) => {
-            if (err) {
-                console.error('❌ فشل إرسال الرسالة:', err);
-                document.getElementById('chatStatus').innerHTML = '<span class="error">❌ فشل إرسال الرسالة</span>';
-                setTimeout(() => document.getElementById('chatStatus').innerHTML = '', 2000);
-            } else {
-                console.log('✅ تم إرسال الرسالة');
-            }
-        });
-        
-        // عرض الرسالة محلياً
-        displayMessage(messageData, true);
-        
-        input.value = '';
-        input.focus();
+        channel.publish('message', msg);
+        displayMessage(msg, true);
+        document.getElementById('msgInput').value = '';
     }
     
-    function displayMessage(message, isMine = false) {
-        const messagesDiv = document.getElementById('messages');
-        const messageDiv = document.createElement('div');
+    function displayMessage(msg, isMe = false) {
+        let div = document.createElement('div');
         
-        const isCurrentUser = (message.sender === currentUser);
-        const isSystem = message.isSystem === true;
-        
-        if (isSystem) {
-            messageDiv.className = 'msg system-msg';
-            messageDiv.style.background = '#ffc107';
-            messageDiv.style.color = '#333';
-            messageDiv.style.textAlign = 'center';
-            messageDiv.style.width = 'fit-content';
-            messageDiv.style.margin = '5px auto';
-            messageDiv.innerHTML = `
-                <div>${escapeHtml(message.text)}</div>
-                <div class="time">${message.time}</div>
-            `;
+        if (msg.sender === 'system') {
+            div.className = 'msg system-msg';
+            div.innerHTML = msg.text;
         } else {
-            messageDiv.className = `msg ${isCurrentUser ? 'my-msg' : 'other-msg'}`;
-            messageDiv.innerHTML = `
-                <div class="sender">${isCurrentUser ? 'أنت' : escapeHtml(message.sender)}</div>
-                <div>${escapeHtml(message.text)}</div>
-                <div class="time">${message.time}</div>
+            div.className = 'msg ' + (isMe || msg.sender === currentUser ? 'my-msg' : 'other-msg');
+            div.innerHTML = `
+                <div class="sender">${msg.sender === currentUser ? 'أنت' : msg.sender}</div>
+                <div>${escapeHtml(msg.text)}</div>
+                <div class="time">${msg.time}</div>
             `;
         }
         
-        messagesDiv.appendChild(messageDiv);
-        messageDiv.scrollIntoView({ behavior: 'smooth' });
-        
-        // تنظيف الرسائل القديمة (اختياري)
-        if (messagesDiv.children.length > 200) {
-            messagesDiv.removeChild(messagesDiv.children[0]);
-        }
+        document.getElementById('messages').appendChild(div);
+        div.scrollIntoView();
     }
     
     function leaveChat() {
         if (channel) {
-            // إرسال رسالة مغادرة
-            const leaveMsg = {
-                sender: 'النظام',
-                text: `🔴 ${currentUser} غادر الغرفة`,
-                time: getCurrentTime(),
-                isSystem: true
-            };
-            channel.publish('chat_message', leaveMsg);
-            
-            // مغادرة الحضور
+            channel.publish('message', {
+                sender: 'system',
+                text: `🔴 ${currentUser} غادر`,
+                time: new Date().toLocaleTimeString()
+            });
             channel.presence.leave();
-        }
-        
-        if (ably) {
             ably.close();
         }
-        
-        // العودة إلى شاشة تسجيل الدخول
-        document.getElementById('chatScreen').classList.add('hidden');
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('messages').innerHTML = '';
-        document.getElementById('username').value = '';
-        document.getElementById('roomName').value = 'general';
-        document.getElementById('loginStatus').innerHTML = '';
-        
-        currentUser = null;
-        currentRoom = null;
-        channel = null;
-        ably = null;
-    }
-    
-    function getCurrentTime() {
-        const now = new Date();
-        return now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+        location.reload();
     }
     
     function escapeHtml(text) {
-        if (!text) return '';
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
+        return text.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
     }
-    
-    // اختبار الاتصال عند تحميل الصفحة
-    window.addEventListener('load', () => {
-        console.log('📱 التطبيق جاهز');
-        console.log('🔑 مفتاح Ably:', ABLY_KEY.substring(0, 20) + '...');
-    });
 </script>
 
 </body>
