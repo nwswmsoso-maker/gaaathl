@@ -959,6 +959,9 @@
 </div>
 
 <script>
+    // 🔑 مفتاح Ably - تم إضافة المفتاح الجديد هنا
+    const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
+    
     // ==================== قاعدة البيانات المحلية ====================
     let users = JSON.parse(localStorage.getItem('ludo_users')) || {};
     let friends = JSON.parse(localStorage.getItem('ludo_friends')) || {};
@@ -966,7 +969,6 @@
     let currentUser = null;
     
     // ==================== Ably Setup ====================
-    const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
     let ably, channel;
     let localStream = null;
     let currentCall = null;
@@ -1834,4 +1836,4 @@
 </script>
 
 </body>
-</html>
+    </html>
