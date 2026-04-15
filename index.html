@@ -3,36 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار الصوت - غرفة واحدة</title>
+    <title>مكالمة صوتية - اتصال ثنائي</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { background: #0a3d2f; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .container { max-width: 400px; width: 100%; background: #f5e6ca; border-radius: 30px; overflow: hidden; border: 5px solid #ffd700; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0a3d2f; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .container { max-width: 450px; width: 100%; background: #f5e6ca; border-radius: 30px; overflow: hidden; border: 5px solid #ffd700; }
         .header { background: #ffd700; padding: 15px; text-align: center; color: #8B0000; }
         .login-box, .chat-box { padding: 20px; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 25px; font-size: 16px; }
         button { background: #8B0000; color: white; cursor: pointer; }
         .hidden { display: none; }
-        .messages { height: 300px; overflow-y: auto; background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
-        .msg { padding: 8px 12px; margin: 5px; border-radius: 15px; max-width: 80%; }
+        .messages { height: 250px; overflow-y: auto; background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
+        .msg { padding: 8px 12px; margin: 5px; border-radius: 15px; max-width: 80%; word-wrap: break-word; font-size: 13px; }
         .my-msg { background: #8B0000; color: white; margin-left: auto; text-align: right; }
         .other-msg { background: white; margin-right: auto; }
-        .system-msg { background: #ffd700; text-align: center; margin: 5px auto; font-size: 12px; width: fit-content; }
+        .system-msg { background: #ffd700; text-align: center; margin: 5px auto; font-size: 11px; width: fit-content; }
         .input-area { display: flex; gap: 8px; }
         .input-area input { flex: 1; margin: 0; }
         .input-area button { width: auto; padding: 12px 20px; }
-        .mic-status { background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; text-align: center; }
-        .mic-on { color: green; }
-        .mic-off { color: red; }
+        .online-users { background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; text-align: center; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; margin: 5px 0; border-radius: 20px; }
+        .call-btn { background: #4CAF50; padding: 5px 15px; border-radius: 20px; font-size: 12px; width: auto; margin: 0; }
+        .call-btn.in-call { background: #f44336; }
+        .call-status { background: #ff9800; padding: 8px; border-radius: 15px; text-align: center; margin-bottom: 10px; font-size: 12px; }
+        .mic-control { display: flex; gap: 10px; margin-top: 10px; }
+        .mic-control button { flex: 1; background: #666; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2>🎙️ غرفة الصوت</h2>
-        <p>تحدث مع الجميع</p>
+        <h2>🎙️ مكالمات صوتية</h2>
+        <p>اتصل مع الأصدقاء</p>
     </div>
 
     <div id="loginScreen" class="login-box">
@@ -42,15 +47,17 @@
     </div>
 
     <div id="chatScreen" class="chat-box hidden">
-        <div class="mic-status" id="micStatus">
-            🔴 الميكروفون: غير متاح
-        </div>
+        <div class="online-users" id="onlineUsers">🟢 جاري التحميل...</div>
+        <div class="call-status" id="callStatus"></div>
         <div class="messages" id="messages"></div>
         <div class="input-area">
             <input type="text" id="msgInput" placeholder="رسالة..." onkeypress="if(event.key==='Enter') sendMsg()">
             <button onclick="sendMsg()">إرسال</button>
         </div>
-        <button onclick="logout()" style="background:#666; margin-top:10px;">🚪 خروج</button>
+        <div class="mic-control">
+            <button id="muteBtn" onclick="toggleMute()">🔇 كتم مايكي</button>
+            <button onclick="logout()" style="background:#666;">🚪 خروج</button>
+        </div>
     </div>
 </div>
 
@@ -59,7 +66,10 @@
     
     let ably, channel, currentUser;
     let localStream = null;
-    let isMicWorking = false;
+    let currentCall = null;
+    let callWithUser = null;
+    let isMuted = false;
+    let processedMessages = new Set();
 
     async function login() {
         currentUser = document.getElementById('username').value.trim();
@@ -70,38 +80,34 @@
         
         document.getElementById('loginStatus').innerHTML = '🎤 جاري طلب الميكروفون...';
         
-        // طلب الميكروفون
         try {
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            isMicWorking = true;
-            document.getElementById('loginStatus').innerHTML = '✅ ميكروفون شغال! جاري الاتصال...';
-            document.getElementById('micStatus').innerHTML = '🟢 الميكروفون: شغال ✅';
-            document.getElementById('micStatus').style.color = 'green';
+            document.getElementById('loginStatus').innerHTML = '✅ ميكروفون جاهز، جاري الاتصال...';
         } catch(err) {
-            isMicWorking = false;
-            document.getElementById('loginStatus').innerHTML = '⚠️ الميكروفون غير متاح - دردشة نصية فقط';
-            document.getElementById('micStatus').innerHTML = '🔴 الميكروفون: غير متاح ⚠️';
+            document.getElementById('loginStatus').innerHTML = '⚠️ ميكروفون غير متاح - دردشة فقط';
         }
         
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
         
         ably.connection.on('connected', () => {
-            channel = ably.channels.get('voice_chat');
+            channel = ably.channels.get('call_room');
             
-            // استقبال الرسائل
             channel.subscribe('message', (msg) => {
-                displayMsg(msg.data);
+                const msgId = `${msg.data.sender}_${msg.data.text}_${msg.data.time}`;
+                if (!processedMessages.has(msgId)) {
+                    processedMessages.add(msgId);
+                    showMessage(msg.data);
+                }
             });
             
-            // استقبال الصوت
-            if (isMicWorking) {
-                setupVoice();
-            }
+            channel.subscribe('signal', (signal) => {
+                handleSignal(signal.data);
+            });
             
-            // الحضور
             channel.presence.enter({ name: currentUser });
+            channel.presence.subscribe(() => updateUsers());
+            updateUsers();
             
-            // رسالة ترحيب
             channel.publish('message', {
                 sender: 'system',
                 text: `🎉 ${currentUser} دخل الغرفة`,
@@ -113,47 +119,159 @@
         });
     }
     
-    function setupVoice() {
-        // قناة الصوت المنفصلة
-        const voiceChannel = ably.channels.get('voice_stream');
-        
-        // إرسال الصوت
-        const sendInterval = setInterval(() => {
-            if (localStream && isMicWorking) {
-                // نرسل إشارة أن المستخدم يتكلم
-                voiceChannel.publish('voice_active', {
-                    user: currentUser,
-                    active: true
-                });
+    function updateUsers() {
+        channel.presence.get((err, members) => {
+            if (err) return;
+            let users = [...new Set(members.map(m => m.data.name))];
+            let others = users.filter(u => u !== currentUser);
+            
+            let container = document.getElementById('onlineUsers');
+            if (others.length === 0) {
+                container.innerHTML = '👥 لا يوجد مستخدمون آخرون';
+                return;
             }
-        }, 100);
-        
-        // استقبال الصوت - تشغيل صوت المستخدمين الآخرين
-        voiceChannel.subscribe('voice_active', (data) => {
-            if (data.data.user !== currentUser) {
-                // تشغيل صوت تنبيه أن المستخدم يتكلم
-                playBeep();
-            }
+            
+            container.innerHTML = '<div style="margin-bottom:8px;">👥 المتصلون:</div>';
+            others.forEach(user => {
+                let isCalling = (callWithUser === user);
+                let div = document.createElement('div');
+                div.className = 'user-item';
+                div.innerHTML = `
+                    <span>${user}</span>
+                    <button class="call-btn ${isCalling ? 'in-call' : ''}" onclick="startCall('${user}')">
+                        ${isCalling ? '🔴 إنهاء' : '🎤 اتصل'}
+                    </button>
+                `;
+                container.appendChild(div);
+            });
         });
     }
     
-    function playBeep() {
-        try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            oscillator.frequency.value = 800;
-            gainNode.gain.value = 0.3;
-            oscillator.start();
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-        } catch(e) { console.log('Beep error:', e); }
+    async function startCall(targetUser) {
+        if (!localStream) {
+            document.getElementById('callStatus').innerHTML = '❌ الميكروفون غير متاح';
+            return;
+        }
+        
+        if (currentCall) {
+            endCall();
+        }
+        
+        callWithUser = targetUser;
+        document.getElementById('callStatus').innerHTML = `📞 جاري الاتصال بـ ${targetUser}...`;
+        
+        const peer = new SimplePeer({
+            initiator: true,
+            stream: localStream,
+            trickle: false,
+            config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+        });
+        
+        peer.on('signal', signalData => {
+            channel.publish('signal', {
+                to: targetUser,
+                from: currentUser,
+                signal: signalData
+            });
+        });
+        
+        peer.on('stream', stream => {
+            const audio = new Audio();
+            audio.srcObject = stream;
+            audio.autoplay = true;
+            document.getElementById('callStatus').innerHTML = `🎙️ تتحدث مع ${targetUser} - اضغط "اتصل" لإنهاء`;
+            updateUsers();
+        });
+        
+        peer.on('error', () => endCall());
+        peer.on('close', () => endCall());
+        
+        currentCall = peer;
+    }
+    
+    function handleSignal(data) {
+        if (data.to !== currentUser) return;
+        
+        if (data.signal && !currentCall && data.from !== currentUser) {
+            if (confirm(`${data.from} يتصل بك. هل تريد الرد؟`)) {
+                answerCall(data.from, data.signal);
+            } else {
+                channel.publish('signal', {
+                    to: data.from,
+                    from: currentUser,
+                    type: 'reject'
+                });
+            }
+        } else if (currentCall && data.signal) {
+            currentCall.signal(data.signal);
+        } else if (data.type === 'reject') {
+            document.getElementById('callStatus').innerHTML = `❌ ${data.from} رفض المكالمة`;
+            setTimeout(() => endCall(), 2000);
+        }
+    }
+    
+    async function answerCall(caller, signalData) {
+        if (!localStream) {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch(err) {
+                document.getElementById('callStatus').innerHTML = '❌ لا يمكن الرد';
+                return;
+            }
+        }
+        
+        callWithUser = caller;
+        
+        const peer = new SimplePeer({
+            initiator: false,
+            stream: localStream,
+            trickle: false,
+            config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+        });
+        
+        peer.on('signal', signal => {
+            channel.publish('signal', {
+                to: caller,
+                from: currentUser,
+                signal: signal
+            });
+        });
+        
+        peer.on('stream', stream => {
+            const audio = new Audio();
+            audio.srcObject = stream;
+            audio.autoplay = true;
+            document.getElementById('callStatus').innerHTML = `🎙️ تتحدث مع ${caller}`;
+            updateUsers();
+        });
+        
+        peer.on('error', () => endCall());
+        peer.on('close', () => endCall());
+        
+        peer.signal(signalData);
+        currentCall = peer;
+    }
+    
+    function endCall() {
+        if (currentCall) {
+            currentCall.destroy();
+            currentCall = null;
+        }
+        callWithUser = null;
+        document.getElementById('callStatus').innerHTML = '';
+        updateUsers();
+    }
+    
+    function toggleMute() {
+        if (localStream) {
+            isMuted = !isMuted;
+            localStream.getAudioTracks()[0].enabled = !isMuted;
+            document.getElementById('muteBtn').innerHTML = isMuted ? '🔊 فتح المايك' : '🔇 كتم مايكي';
+        }
     }
     
     function sendMsg() {
-        const input = document.getElementById('msgInput');
-        const text = input.value.trim();
+        let text = document.getElementById('msgInput').value.trim();
         if (!text) return;
         
         channel.publish('message', {
@@ -162,24 +280,20 @@
             time: getTime()
         });
         
-        displayMsg({ sender: currentUser, text: text, time: getTime() }, true);
-        input.value = '';
+        showMessage({ sender: currentUser, text: text, time: getTime() }, true);
+        document.getElementById('msgInput').value = '';
     }
     
-    function displayMsg(msg, isMe = false) {
-        const container = document.getElementById('messages');
-        const div = document.createElement('div');
+    function showMessage(msg, isMe = false) {
+        let container = document.getElementById('messages');
+        let div = document.createElement('div');
         
         if (msg.sender === 'system') {
             div.className = 'msg system-msg';
             div.innerHTML = msg.text;
         } else {
             div.className = `msg ${msg.sender === currentUser ? 'my-msg' : 'other-msg'}`;
-            div.innerHTML = `
-                ${msg.sender !== currentUser ? `<strong>${msg.sender}</strong><br>` : ''}
-                ${msg.text}
-                <div style="font-size:9px; margin-top:3px;">${msg.time}</div>
-            `;
+            div.innerHTML = `${msg.sender !== currentUser ? `<strong>${msg.sender}</strong><br>` : ''}${msg.text}<div style="font-size:9px;">${msg.time}</div>`;
         }
         
         container.appendChild(div);
@@ -187,8 +301,13 @@
     }
     
     function logout() {
+        if (currentCall) endCall();
         if (localStream) localStream.getTracks().forEach(t => t.stop());
-        if (ably) ably.close();
+        if (channel) {
+            channel.publish('message', { sender: 'system', text: `🔴 ${currentUser} غادر`, time: getTime() });
+            channel.presence.leave();
+            ably.close();
+        }
         location.reload();
     }
     
