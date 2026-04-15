@@ -2,371 +2,192 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>غرفة لودو - مكالمات صوتية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الصوت - غرفة واحدة</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background: #0a3d2f; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        
-        .game-room { max-width: 500px; width: 100%; background: #f5e6ca; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 5px solid #ffd700; }
-        .room-header { background: #ffd700; padding: 15px; text-align: center; border-bottom: 3px solid #daa520; }
-        .room-header h2 { color: #8B0000; }
-        
-        /* شبكة المايكات */
-        .mics-container { background: #e8d5a8; margin: 10px; border-radius: 20px; padding: 15px; }
-        .mics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-        .mic-btn { background: white; border-radius: 15px; padding: 10px; text-align: center; cursor: pointer; border: 2px solid #ffd700; transition: 0.2s; }
-        .mic-btn.selected { border-color: #8B0000; background: #ffd700; }
-        .mic-btn.speaking { border-color: #4CAF50; box-shadow: 0 0 10px #4CAF50; }
-        .mic-num { font-size: 20px; font-weight: bold; color: #8B0000; }
-        .mic-user { font-size: 10px; color: #666; margin-top: 5px; white-space: nowrap; overflow: hidden; }
-        .mic-icon { font-size: 24px; }
-        
-        /* قائمة المستخدمين */
-        .users-list { background: #e8d5a8; margin: 10px; border-radius: 20px; padding: 10px; max-height: 150px; overflow-y: auto; }
-        .user-item { background: white; padding: 8px 12px; margin: 5px 0; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .user-name { font-weight: bold; }
-        .call-status { font-size: 10px; color: #4CAF50; }
-        
-        /* الدردشة */
-        .chat-area { background: #e8d5a8; margin: 10px; border-radius: 20px; overflow: hidden; }
-        .chat-messages { height: 150px; overflow-y: auto; padding: 10px; background: #f5e6ca; }
-        .message { margin: 5px; padding: 6px 10px; border-radius: 15px; max-width: 80%; font-size: 12px; }
-        .message-mine { background: #8B0000; color: white; margin-left: auto; text-align: right; }
-        .message-other { background: white; margin-right: auto; border: 1px solid #ffd700; }
-        .message-system { background: #ffd700; text-align: center; margin: 5px auto; font-size: 10px; width: fit-content; }
-        .chat-input { display: flex; padding: 10px; gap: 8px; background: #e8d5a8; }
-        .chat-input input { flex: 1; padding: 10px; border: none; border-radius: 25px; }
-        .chat-input button { padding: 10px 20px; background: #8B0000; color: white; border: none; border-radius: 25px; cursor: pointer; }
-        
-        .control-buttons { display: flex; gap: 10px; margin: 10px; }
-        .control-buttons button { flex: 1; padding: 12px; background: #8B0000; color: white; border: none; border-radius: 25px; cursor: pointer; }
-        .exit-btn { background: #666 !important; }
-        
-        .login-box { padding: 30px; text-align: center; }
-        .login-box input { width: 100%; padding: 15px; margin: 10px 0; border: none; border-radius: 50px; text-align: center; border: 2px solid #ffd700; }
-        .login-box button { width: 100%; padding: 15px; background: #8B0000; color: white; border: none; border-radius: 50px; cursor: pointer; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #0a3d2f; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { max-width: 400px; width: 100%; background: #f5e6ca; border-radius: 30px; overflow: hidden; border: 5px solid #ffd700; }
+        .header { background: #ffd700; padding: 15px; text-align: center; color: #8B0000; }
+        .login-box, .chat-box { padding: 20px; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 25px; font-size: 16px; }
+        button { background: #8B0000; color: white; cursor: pointer; }
         .hidden { display: none; }
-        .status { text-align: center; font-size: 12px; color: #8B0000; margin-top: 10px; }
+        .messages { height: 300px; overflow-y: auto; background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
+        .msg { padding: 8px 12px; margin: 5px; border-radius: 15px; max-width: 80%; }
+        .my-msg { background: #8B0000; color: white; margin-left: auto; text-align: right; }
+        .other-msg { background: white; margin-right: auto; }
+        .system-msg { background: #ffd700; text-align: center; margin: 5px auto; font-size: 12px; width: fit-content; }
+        .input-area { display: flex; gap: 8px; }
+        .input-area input { flex: 1; margin: 0; }
+        .input-area button { width: auto; padding: 12px 20px; }
+        .mic-status { background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; text-align: center; }
+        .mic-on { color: green; }
+        .mic-off { color: red; }
     </style>
 </head>
 <body>
 
-<div class="game-room">
-    <div class="room-header">
-        <h2>🎙️ غرفة لودو - صوت ومايكات</h2>
-        <p>اختر مايكك وتكلم مع الجميع</p>
+<div class="container">
+    <div class="header">
+        <h2>🎙️ غرفة الصوت</h2>
+        <p>تحدث مع الجميع</p>
     </div>
 
-    <!-- تسجيل الدخول -->
-    <div id="loginScreen">
-        <div class="login-box">
-            <input type="text" id="username" placeholder="اسم المستخدم">
-            <div class="mics-grid" id="micSelector" style="margin-top: 15px;"></div>
-            <button onclick="login()">دخول إلى الغرفة</button>
-            <div id="loginStatus" class="status"></div>
-        </div>
+    <div id="loginScreen" class="login-box">
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <button onclick="login()">دخول</button>
+        <div id="loginStatus" style="font-size:12px; text-align:center; margin-top:10px;"></div>
     </div>
 
-    <!-- الغرفة -->
-    <div id="roomScreen" class="hidden">
-        <!-- شبكة المايكات -->
-        <div class="mics-container">
-            <div class="mics-grid" id="micsGrid"></div>
+    <div id="chatScreen" class="chat-box hidden">
+        <div class="mic-status" id="micStatus">
+            🔴 الميكروفون: غير متاح
         </div>
-
-        <!-- المستخدمين المتصلين -->
-        <div class="users-list" id="usersList"></div>
-
-        <!-- الدردشة -->
-        <div class="chat-area">
-            <div class="chat-messages" id="chatMessages"></div>
-            <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="رسالة..." onkeypress="if(event.key==='Enter') sendChat()">
-                <button onclick="sendChat()">إرسال</button>
-            </div>
+        <div class="messages" id="messages"></div>
+        <div class="input-area">
+            <input type="text" id="msgInput" placeholder="رسالة..." onkeypress="if(event.key==='Enter') sendMsg()">
+            <button onclick="sendMsg()">إرسال</button>
         </div>
-
-        <!-- أزرار التحكم -->
-        <div class="control-buttons">
-            <button id="muteControlBtn" onclick="toggleMyMic()">🔇 كتم مايكي</button>
-            <button class="exit-btn" onclick="logout()">🚪 مغادرة</button>
-        </div>
-        <div id="roomStatus" class="status"></div>
+        <button onclick="logout()" style="background:#666; margin-top:10px;">🚪 خروج</button>
     </div>
 </div>
 
 <script>
     const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
     
-    let ably, channel;
-    let currentUser = null;
-    let myMic = null;
+    let ably, channel, currentUser;
     let localStream = null;
-    let peers = new Map();
-    let micsData = {};
-    let isMuted = false;
-    let processedMessages = new Set();
-    let iceServers = [{ urls: ['stun:stun.l.google.com:19302'] }];
-
-    // إنشاء أزرار اختيار المايك
-    function createMicSelector() {
-        const container = document.getElementById('micSelector');
-        container.innerHTML = '';
-        for (let i = 1; i <= 10; i++) {
-            const btn = document.createElement('div');
-            btn.className = 'mic-btn';
-            btn.onclick = () => selectMic(i);
-            btn.innerHTML = `<div class="mic-num">🎤 ${i}</div><div class="mic-icon">🎙️</div>`;
-            container.appendChild(btn);
-        }
-    }
-
-    function selectMic(num) {
-        myMic = num;
-        document.querySelectorAll('#micSelector .mic-btn').forEach((btn, idx) => {
-            if (idx + 1 === num) btn.classList.add('selected');
-            else btn.classList.remove('selected');
-        });
-        document.getElementById('loginStatus').innerHTML = `✅ تم اختيار مايك رقم ${num}`;
-    }
+    let isMicWorking = false;
 
     async function login() {
-        const username = document.getElementById('username').value.trim();
-        if (!username) { alert('اكتب اسمك'); return; }
-        if (!myMic) { alert('اختر مايك'); return; }
+        currentUser = document.getElementById('username').value.trim();
+        if (!currentUser) {
+            document.getElementById('loginStatus').innerHTML = '❌ اكتب اسمك';
+            return;
+        }
         
-        currentUser = username;
         document.getElementById('loginStatus').innerHTML = '🎤 جاري طلب الميكروفون...';
         
+        // طلب الميكروفون
         try {
             localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            document.getElementById('loginStatus').innerHTML = '✅ ميكروفون جاهز، جاري الاتصال...';
+            isMicWorking = true;
+            document.getElementById('loginStatus').innerHTML = '✅ ميكروفون شغال! جاري الاتصال...';
+            document.getElementById('micStatus').innerHTML = '🟢 الميكروفون: شغال ✅';
+            document.getElementById('micStatus').style.color = 'green';
         } catch(err) {
-            document.getElementById('loginStatus').innerHTML = '❌ لا يمكن الوصول للميكروفون';
-            return;
+            isMicWorking = false;
+            document.getElementById('loginStatus').innerHTML = '⚠️ الميكروفون غير متاح - دردشة نصية فقط';
+            document.getElementById('micStatus').innerHTML = '🔴 الميكروفون: غير متاح ⚠️';
         }
         
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
         
         ably.connection.on('connected', () => {
-            channel = ably.channels.get('lodo_voice');
+            channel = ably.channels.get('voice_chat');
             
-            channel.subscribe('signal', (s) => handleSignal(s.data));
-            channel.subscribe('chat', (m) => {
-                const id = `${m.data.sender}_${m.data.text}_${m.data.time}`;
-                if (!processedMessages.has(id)) {
-                    processedMessages.add(id);
-                    showChatMessage(m.data);
-                }
+            // استقبال الرسائل
+            channel.subscribe('message', (msg) => {
+                displayMsg(msg.data);
             });
-            channel.subscribe('mic_update', (u) => handleMicUpdate(u.data));
             
-            // إعلان المايك
-            channel.publish('mic_update', { mic: myMic, user: currentUser, action: 'join' });
-            channel.publish('chat', { sender: 'system', text: `🎉 ${currentUser} دخل مايك ${myMic}`, time: getTime() });
+            // استقبال الصوت
+            if (isMicWorking) {
+                setupVoice();
+            }
             
             // الحضور
-            channel.presence.enter({ user: currentUser, mic: myMic });
-            channel.presence.subscribe(() => updateFromPresence());
-            updateFromPresence();
+            channel.presence.enter({ name: currentUser });
             
-            createMicsUI();
+            // رسالة ترحيب
+            channel.publish('message', {
+                sender: 'system',
+                text: `🎉 ${currentUser} دخل الغرفة`,
+                time: getTime()
+            });
             
             document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('roomScreen').classList.remove('hidden');
-            document.getElementById('roomStatus').innerHTML = `🎤 أنت في مايك ${myMic} - ${currentUser}`;
+            document.getElementById('chatScreen').classList.remove('hidden');
         });
+    }
+    
+    function setupVoice() {
+        // قناة الصوت المنفصلة
+        const voiceChannel = ably.channels.get('voice_stream');
         
-        ably.connection.on('failed', () => {
-            document.getElementById('loginStatus').innerHTML = '❌ فشل الاتصال';
-        });
-    }
-    
-    function createMicsUI() {
-        const grid = document.getElementById('micsGrid');
-        grid.innerHTML = '';
-        for (let i = 1; i <= 10; i++) {
-            const mic = document.createElement('div');
-            mic.className = 'mic-btn';
-            mic.id = `mic_${i}`;
-            mic.innerHTML = `<div class="mic-num">🎤 ${i}</div><div class="mic-icon">🎙️</div><div class="mic-user" id="micUser_${i}">فارغ</div>`;
-            grid.appendChild(mic);
-            micsData[i] = { user: null, speaking: false };
-        }
-    }
-    
-    function handleMicUpdate(data) {
-        if (data.action === 'join') {
-            micsData[data.mic] = { user: data.user, speaking: false };
-            document.getElementById(`micUser_${data.mic}`).innerHTML = data.user;
-            document.getElementById(`mic_${data.mic}`).classList.add('selected');
-            
-            if (data.user !== currentUser && !peers.has(data.user)) {
-                createPeer(data.user, true);
+        // إرسال الصوت
+        const sendInterval = setInterval(() => {
+            if (localStream && isMicWorking) {
+                // نرسل إشارة أن المستخدم يتكلم
+                voiceChannel.publish('voice_active', {
+                    user: currentUser,
+                    active: true
+                });
             }
-        } else if (data.action === 'leave') {
-            micsData[data.mic] = { user: null, speaking: false };
-            document.getElementById(`micUser_${data.mic}`).innerHTML = 'فارغ';
-            document.getElementById(`mic_${data.mic}`).classList.remove('selected');
-            
-            if (peers.has(data.user)) {
-                peers.get(data.user).destroy();
-                peers.delete(data.user);
+        }, 100);
+        
+        // استقبال الصوت - تشغيل صوت المستخدمين الآخرين
+        voiceChannel.subscribe('voice_active', (data) => {
+            if (data.data.user !== currentUser) {
+                // تشغيل صوت تنبيه أن المستخدم يتكلم
+                playBeep();
             }
-        }
-    }
-    
-    function updateFromPresence() {
-        channel.presence.get((err, members) => {
-            if (err) return;
-            for (let i = 1; i <= 10; i++) {
-                micsData[i] = { user: null, speaking: false };
-                if (document.getElementById(`micUser_${i}`)) {
-                    document.getElementById(`micUser_${i}`).innerHTML = 'فارغ';
-                    document.getElementById(`mic_${i}`).classList.remove('selected');
-                }
-            }
-            members.forEach(m => {
-                if (m.data && m.data.mic) {
-                    micsData[m.data.mic] = { user: m.data.user, speaking: false };
-                    if (document.getElementById(`micUser_${m.data.mic}`)) {
-                        document.getElementById(`micUser_${m.data.mic}`).innerHTML = m.data.user;
-                        document.getElementById(`mic_${m.data.mic}`).classList.add('selected');
-                    }
-                    if (m.data.user !== currentUser && !peers.has(m.data.user)) {
-                        createPeer(m.data.user, true);
-                    }
-                }
-            });
-            updateUsersList(members);
         });
     }
     
-    function updateUsersList(members) {
-        const users = [...new Set(members.map(m => m.data?.user).filter(u => u))];
-        const container = document.getElementById('usersList');
-        if (users.length === 0) {
-            container.innerHTML = '<div style="text-align:center; color:#666;">لا يوجد متصلين</div>';
-            return;
-        }
-        container.innerHTML = '';
-        users.forEach(user => {
-            const isMe = (user === currentUser);
-            const div = document.createElement('div');
-            div.className = 'user-item';
-            div.innerHTML = `<span class="user-name">${isMe ? '👤 ' : '👥 '}${user}</span>
-                            <span class="call-status">${isMe ? '🎤 مايك ' + myMic : '🟢 متصل'}</span>`;
-            container.appendChild(div);
-        });
+    function playBeep() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 800;
+            gainNode.gain.value = 0.3;
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+        } catch(e) { console.log('Beep error:', e); }
     }
     
-    function createPeer(remoteUser, initiator = true) {
-        if (!localStream) return null;
-        
-        const peer = new SimplePeer({
-            initiator: initiator,
-            stream: localStream,
-            trickle: false,
-            config: { iceServers: iceServers }
-        });
-        
-        peer.on('signal', signal => {
-            channel.publish('signal', { to: remoteUser, from: currentUser, signal: signal });
-        });
-        
-        peer.on('stream', stream => {
-            const audio = new Audio();
-            audio.srcObject = stream;
-            audio.autoplay = true;
-            
-            // مؤشر الصوت
-            let targetMic = null;
-            for (let i = 1; i <= 10; i++) {
-                if (micsData[i]?.user === remoteUser) targetMic = i;
-            }
-            
-            const audioContext = new AudioContext();
-            const source = audioContext.createMediaStreamSource(stream);
-            const analyser = audioContext.createAnalyser();
-            source.connect(analyser);
-            analyser.fftSize = 256;
-            const dataArray = new Uint8Array(analyser.frequencyBinCount);
-            
-            const interval = setInterval(() => {
-                analyser.getByteTimeDomainData(dataArray);
-                let max = 0;
-                for (let i = 0; i < dataArray.length; i++) {
-                    const v = Math.abs(dataArray[i] - 128) / 128;
-                    if (v > max) max = v;
-                }
-                if (targetMic && document.getElementById(`mic_${targetMic}`)) {
-                    if (max > 0.05) {
-                        document.getElementById(`mic_${targetMic}`).classList.add('speaking');
-                    } else {
-                        document.getElementById(`mic_${targetMic}`).classList.remove('speaking');
-                    }
-                }
-            }, 100);
-            
-            peer.on('close', () => clearInterval(interval));
-        });
-        
-        peer.on('error', err => console.log(err));
-        peers.set(remoteUser, peer);
-        return peer;
-    }
-    
-    function handleSignal(data) {
-        if (data.to !== currentUser) return;
-        if (peers.has(data.from)) {
-            peers.get(data.from).signal(data.signal);
-        } else {
-            const peer = createPeer(data.from, false);
-            if (peer) peer.signal(data.signal);
-        }
-    }
-    
-    function toggleMyMic() {
-        isMuted = !isMuted;
-        if (localStream) localStream.getAudioTracks()[0].enabled = !isMuted;
-        const btn = document.getElementById('muteControlBtn');
-        btn.innerHTML = isMuted ? '🔊 فتح المايك' : '🔇 كتم مايكي';
-        btn.style.background = isMuted ? '#4CAF50' : '#8B0000';
-    }
-    
-    function sendChat() {
-        const input = document.getElementById('chatInput');
+    function sendMsg() {
+        const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if (!text) return;
-        channel.publish('chat', { sender: currentUser, text: text, time: getTime(), mic: myMic });
-        showChatMessage({ sender: currentUser, text: text, time: getTime(), mic: myMic }, true);
+        
+        channel.publish('message', {
+            sender: currentUser,
+            text: text,
+            time: getTime()
+        });
+        
+        displayMsg({ sender: currentUser, text: text, time: getTime() }, true);
         input.value = '';
     }
     
-    function showChatMessage(msg, isMe = false) {
-        const container = document.getElementById('chatMessages');
+    function displayMsg(msg, isMe = false) {
+        const container = document.getElementById('messages');
         const div = document.createElement('div');
+        
         if (msg.sender === 'system') {
-            div.className = 'message message-system';
+            div.className = 'msg system-msg';
             div.innerHTML = msg.text;
         } else {
-            div.className = `message ${isMe ? 'message-mine' : 'message-other'}`;
-            div.innerHTML = `${!isMe ? `<strong>${msg.sender}</strong> ` : ''}${msg.text}<span style="font-size:9px; margin-left:5px;">${msg.time}</span>`;
+            div.className = `msg ${msg.sender === currentUser ? 'my-msg' : 'other-msg'}`;
+            div.innerHTML = `
+                ${msg.sender !== currentUser ? `<strong>${msg.sender}</strong><br>` : ''}
+                ${msg.text}
+                <div style="font-size:9px; margin-top:3px;">${msg.time}</div>
+            `;
         }
+        
         container.appendChild(div);
         div.scrollIntoView();
-        while (container.children.length > 50) container.removeChild(container.children[0]);
     }
     
     function logout() {
-        channel.publish('mic_update', { mic: myMic, user: currentUser, action: 'leave' });
-        channel.publish('chat', { sender: 'system', text: `🔴 ${currentUser} غادر`, time: getTime() });
-        peers.forEach(p => p.destroy());
         if (localStream) localStream.getTracks().forEach(t => t.stop());
-        if (channel) channel.presence.leave();
         if (ably) ably.close();
         location.reload();
     }
@@ -374,8 +195,6 @@
     function getTime() {
         return new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
     }
-    
-    createMicSelector();
 </script>
 
 </body>
