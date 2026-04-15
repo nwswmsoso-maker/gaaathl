@@ -2,42 +2,62 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مكالمة صوتية - اتصال ثنائي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>اتصال صوتي - احترافي</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #0a3d2f; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .container { max-width: 450px; width: 100%; background: #f5e6ca; border-radius: 30px; overflow: hidden; border: 5px solid #ffd700; }
+        
+        .container { max-width: 450px; width: 100%; background: #f5e6ca; border-radius: 30px; overflow: hidden; border: 5px solid #ffd700; position: relative; }
         .header { background: #ffd700; padding: 15px; text-align: center; color: #8B0000; }
         .login-box, .chat-box { padding: 20px; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 25px; font-size: 16px; }
-        button { background: #8B0000; color: white; cursor: pointer; }
+        button { background: #8B0000; color: white; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.97); }
         .hidden { display: none; }
+        
+        /* الدردشة */
         .messages { height: 250px; overflow-y: auto; background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
         .msg { padding: 8px 12px; margin: 5px; border-radius: 15px; max-width: 80%; word-wrap: break-word; font-size: 13px; }
         .my-msg { background: #8B0000; color: white; margin-left: auto; text-align: right; }
         .other-msg { background: white; margin-right: auto; }
         .system-msg { background: #ffd700; text-align: center; margin: 5px auto; font-size: 11px; width: fit-content; }
         .input-area { display: flex; gap: 8px; }
-        .input-area input { flex: 1; margin: 0; }
+        .input-area input { flex: 1; margin: 0; background: white; }
         .input-area button { width: auto; padding: 12px 20px; }
-        .online-users { background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; text-align: center; }
-        .user-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; margin: 5px 0; border-radius: 20px; }
-        .call-btn { background: #4CAF50; padding: 5px 15px; border-radius: 20px; font-size: 12px; width: auto; margin: 0; }
+        
+        /* المستخدمين */
+        .online-users { background: #e8d5a8; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
+        .user-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px 15px; margin: 5px 0; border-radius: 25px; }
+        .call-btn { background: #4CAF50; padding: 8px 20px; border-radius: 25px; font-size: 13px; width: auto; margin: 0; }
         .call-btn.in-call { background: #f44336; }
-        .call-status { background: #ff9800; padding: 8px; border-radius: 15px; text-align: center; margin-bottom: 10px; font-size: 12px; }
+        
+        /* شاشة المكالمة */
+        .call-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0a3d2f; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .call-card { background: #f5e6ca; border-radius: 50px; padding: 40px; text-align: center; width: 80%; max-width: 300px; border: 5px solid #ffd700; }
+        .call-avatar { font-size: 80px; margin-bottom: 20px; }
+        .call-name { font-size: 24px; font-weight: bold; color: #8B0000; margin-bottom: 10px; }
+        .call-status-text { font-size: 14px; color: #666; margin-bottom: 30px; }
+        .call-buttons { display: flex; gap: 20px; justify-content: center; }
+        .call-buttons button { width: 60px; height: 60px; border-radius: 50%; font-size: 24px; margin: 0; }
+        .accept-btn { background: #4CAF50; }
+        .reject-btn { background: #f44336; }
+        .end-btn { background: #f44336; width: 80px !important; border-radius: 40px !important; }
+        
         .mic-control { display: flex; gap: 10px; margin-top: 10px; }
-        .mic-control button { flex: 1; background: #666; }
+        .mic-control button { background: #666; }
+        .vibrate-icon { animation: shake 0.5s infinite; }
+        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(10deg); } 75% { transform: rotate(-10deg); } 100% { transform: rotate(0deg); } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2>🎙️ مكالمات صوتية</h2>
-        <p>اتصل مع الأصدقاء</p>
+        <h2>🎙️ اتصال صوتي</h2>
+        <p>اتصل مع أصدقائك</p>
     </div>
 
     <div id="loginScreen" class="login-box">
@@ -48,7 +68,6 @@
 
     <div id="chatScreen" class="chat-box hidden">
         <div class="online-users" id="onlineUsers">🟢 جاري التحميل...</div>
-        <div class="call-status" id="callStatus"></div>
         <div class="messages" id="messages"></div>
         <div class="input-area">
             <input type="text" id="msgInput" placeholder="رسالة..." onkeypress="if(event.key==='Enter') sendMsg()">
@@ -57,6 +76,19 @@
         <div class="mic-control">
             <button id="muteBtn" onclick="toggleMute()">🔇 كتم مايكي</button>
             <button onclick="logout()" style="background:#666;">🚪 خروج</button>
+        </div>
+    </div>
+</div>
+
+<!-- شاشة المكالمة -->
+<div id="callScreen" class="call-screen hidden">
+    <div class="call-card">
+        <div class="call-avatar" id="callAvatar">🎤</div>
+        <div class="call-name" id="callName">جاري الاتصال...</div>
+        <div class="call-status-text" id="callStatusText">يرن...</div>
+        <div class="call-buttons" id="callButtons">
+            <button class="accept-btn" onclick="acceptIncomingCall()">✅ قبول</button>
+            <button class="reject-btn" onclick="rejectIncomingCall()">❌ رفض</button>
         </div>
     </div>
 </div>
@@ -70,6 +102,61 @@
     let callWithUser = null;
     let isMuted = false;
     let processedMessages = new Set();
+    let ringtone = null;
+    let pendingCallFrom = null;
+    let isRinging = false;
+
+    // تشغيل نغمة الرنين
+    function playRingtone() {
+        if (ringtone) {
+            ringtone.pause();
+            ringtone = null;
+        }
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            oscillator.frequency.value = 440;
+            gain.gain.value = 0.3;
+            oscillator.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 1.5);
+            setTimeout(() => {
+                if (audioContext.state !== 'closed') {
+                    const osc2 = audioContext.createOscillator();
+                    const gain2 = audioContext.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioContext.destination);
+                    osc2.frequency.value = 880;
+                    gain2.gain.value = 0.3;
+                    osc2.start();
+                    gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 1.5);
+                }
+            }, 1500);
+        } catch(e) { console.log('Ringtone error'); }
+    }
+    
+    function stopRingtone() {
+        if (ringtone) {
+            ringtone.pause();
+            ringtone = null;
+        }
+        isRinging = false;
+    }
+    
+    // اهتزاز الجوال
+    function vibrate() {
+        if (navigator.vibrate) {
+            navigator.vibrate([500, 300, 500]);
+        }
+    }
+    
+    function stopVibrate() {
+        if (navigator.vibrate) {
+            navigator.vibrate(0);
+        }
+    }
 
     async function login() {
         currentUser = document.getElementById('username').value.trim();
@@ -102,6 +189,10 @@
             
             channel.subscribe('signal', (signal) => {
                 handleSignal(signal.data);
+            });
+            
+            channel.subscribe('call_notification', (notif) => {
+                handleCallNotification(notif.data);
             });
             
             channel.presence.enter({ name: currentUser });
@@ -138,7 +229,7 @@
                 div.className = 'user-item';
                 div.innerHTML = `
                     <span>${user}</span>
-                    <button class="call-btn ${isCalling ? 'in-call' : ''}" onclick="startCall('${user}')">
+                    <button class="call-btn ${isCalling ? 'in-call' : ''}" onclick="initiateCall('${user}')">
                         ${isCalling ? '🔴 إنهاء' : '🎤 اتصل'}
                     </button>
                 `;
@@ -147,7 +238,7 @@
         });
     }
     
-    async function startCall(targetUser) {
+    function initiateCall(targetUser) {
         if (!localStream) {
             document.getElementById('callStatus').innerHTML = '❌ الميكروفون غير متاح';
             return;
@@ -158,10 +249,88 @@
         }
         
         callWithUser = targetUser;
-        document.getElementById('callStatus').innerHTML = `📞 جاري الاتصال بـ ${targetUser}...`;
         
+        // إظهار شاشة الاتصال
+        document.getElementById('callScreen').classList.remove('hidden');
+        document.getElementById('callName').innerHTML = targetUser;
+        document.getElementById('callStatusText').innerHTML = 'جاري الاتصال...';
+        document.getElementById('callAvatar').innerHTML = '📞';
+        document.getElementById('callButtons').innerHTML = '<button class="end-btn" onclick="endCall()">🔴 إنهاء</button>';
+        
+        // إرسال إشعار اتصال للشخص الآخر
+        channel.publish('call_notification', {
+            type: 'incoming',
+            from: currentUser,
+            to: targetUser
+        });
+        
+        createPeerConnection(targetUser, true);
+    }
+    
+    function handleCallNotification(data) {
+        if (data.to !== currentUser) return;
+        
+        if (data.type === 'incoming' && !currentCall) {
+            pendingCallFrom = data.from;
+            
+            // إظهار شاشة المكالمة الواردة
+            document.getElementById('callScreen').classList.remove('hidden');
+            document.getElementById('callName').innerHTML = data.from;
+            document.getElementById('callStatusText').innerHTML = 'يتصل بك...';
+            document.getElementById('callAvatar').innerHTML = '🎤';
+            document.getElementById('callButtons').innerHTML = `
+                <button class="accept-btn" onclick="acceptIncomingCall()">✅ قبول</button>
+                <button class="reject-btn" onclick="rejectIncomingCall()">❌ رفض</button>
+            `;
+            
+            // تشغيل النغمة والاهتزاز
+            playRingtone();
+            vibrate();
+            isRinging = true;
+            
+            // إعادة النغمة كل 3 ثواني
+            let ringInterval = setInterval(() => {
+                if (isRinging) {
+                    playRingtone();
+                    vibrate();
+                } else {
+                    clearInterval(ringInterval);
+                }
+            }, 3000);
+        }
+    }
+    
+    function acceptIncomingCall() {
+        stopRingtone();
+        stopVibrate();
+        isRinging = false;
+        
+        callWithUser = pendingCallFrom;
+        document.getElementById('callStatusText').innerHTML = 'جاري الرد...';
+        document.getElementById('callButtons').innerHTML = '<button class="end-btn" onclick="endCall()">🔴 إنهاء</button>';
+        
+        createPeerConnection(pendingCallFrom, false);
+        pendingCallFrom = null;
+    }
+    
+    function rejectIncomingCall() {
+        stopRingtone();
+        stopVibrate();
+        isRinging = false;
+        
+        channel.publish('signal', {
+            to: pendingCallFrom,
+            from: currentUser,
+            type: 'reject'
+        });
+        
+        document.getElementById('callScreen').classList.add('hidden');
+        pendingCallFrom = null;
+    }
+    
+    function createPeerConnection(remoteUser, initiator) {
         const peer = new SimplePeer({
-            initiator: true,
+            initiator: initiator,
             stream: localStream,
             trickle: false,
             config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
@@ -169,7 +338,7 @@
         
         peer.on('signal', signalData => {
             channel.publish('signal', {
-                to: targetUser,
+                to: remoteUser,
                 from: currentUser,
                 signal: signalData
             });
@@ -179,86 +348,58 @@
             const audio = new Audio();
             audio.srcObject = stream;
             audio.autoplay = true;
-            document.getElementById('callStatus').innerHTML = `🎙️ تتحدث مع ${targetUser} - اضغط "اتصل" لإنهاء`;
-            updateUsers();
+            document.getElementById('callStatusText').innerHTML = 'جاري المكالمة...';
+            document.getElementById('callAvatar').innerHTML = '🎙️';
+        });
+        
+        peer.on('connect', () => {
+            document.getElementById('callStatusText').innerHTML = 'متصل...';
         });
         
         peer.on('error', () => endCall());
         peer.on('close', () => endCall());
         
         currentCall = peer;
+        return peer;
     }
     
     function handleSignal(data) {
         if (data.to !== currentUser) return;
         
-        if (data.signal && !currentCall && data.from !== currentUser) {
-            if (confirm(`${data.from} يتصل بك. هل تريد الرد؟`)) {
-                answerCall(data.from, data.signal);
-            } else {
-                channel.publish('signal', {
-                    to: data.from,
-                    from: currentUser,
-                    type: 'reject'
-                });
-            }
-        } else if (currentCall && data.signal) {
+        if (data.type === 'reject') {
+            endCall();
+            showMessage({ sender: 'system', text: `📞 ${data.from} رفض المكالمة`, time: getTime() });
+            return;
+        }
+        
+        if (data.signal && currentCall) {
             currentCall.signal(data.signal);
-        } else if (data.type === 'reject') {
-            document.getElementById('callStatus').innerHTML = `❌ ${data.from} رفض المكالمة`;
-            setTimeout(() => endCall(), 2000);
-        }
-    }
-    
-    async function answerCall(caller, signalData) {
-        if (!localStream) {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            } catch(err) {
-                document.getElementById('callStatus').innerHTML = '❌ لا يمكن الرد';
-                return;
+        } else if (data.signal && !currentCall) {
+            // هذا يحدث عندما يرد الطرف الآخر
+            if (callWithUser === data.from) {
+                currentCall.signal(data.signal);
             }
         }
-        
-        callWithUser = caller;
-        
-        const peer = new SimplePeer({
-            initiator: false,
-            stream: localStream,
-            trickle: false,
-            config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
-        });
-        
-        peer.on('signal', signal => {
-            channel.publish('signal', {
-                to: caller,
-                from: currentUser,
-                signal: signal
-            });
-        });
-        
-        peer.on('stream', stream => {
-            const audio = new Audio();
-            audio.srcObject = stream;
-            audio.autoplay = true;
-            document.getElementById('callStatus').innerHTML = `🎙️ تتحدث مع ${caller}`;
-            updateUsers();
-        });
-        
-        peer.on('error', () => endCall());
-        peer.on('close', () => endCall());
-        
-        peer.signal(signalData);
-        currentCall = peer;
     }
     
     function endCall() {
+        stopRingtone();
+        stopVibrate();
+        isRinging = false;
+        
         if (currentCall) {
             currentCall.destroy();
             currentCall = null;
         }
+        
+        document.getElementById('callScreen').classList.add('hidden');
+        
+        if (callWithUser) {
+            showMessage({ sender: 'system', text: `📞 انتهت المكالمة مع ${callWithUser}`, time: getTime() });
+        }
+        
         callWithUser = null;
-        document.getElementById('callStatus').innerHTML = '';
+        pendingCallFrom = null;
         updateUsers();
     }
     
