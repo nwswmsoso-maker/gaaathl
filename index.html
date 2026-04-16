@@ -842,16 +842,80 @@ let localStream = null;
 let micEnabled = true;
 let currentPeer = null;
 
+// تعريف المسار الكامل (52 خانة) لكل لون
+const PATH_COORDINATES = {
+    // المسار المشترك للجميع - 52 خانة
+    common: [
+        // الصفوف والأعمدة للمسار الكامل
+        {row: 6, col: 1}, // 0 - بداية الأخضر
+        {row: 6, col: 2}, {row: 6, col: 3}, {row: 6, col: 4}, {row: 6, col: 5},
+        {row: 5, col: 6}, {row: 4, col: 6}, {row: 3, col: 6}, {row: 2, col: 6}, {row: 1, col: 6}, {row: 0, col: 6},
+        {row: 0, col: 7}, {row: 0, col: 8}, // 11-12 - بداية الأصفر عند 12
+        {row: 1, col: 8}, {row: 2, col: 8}, {row: 3, col: 8}, {row: 4, col: 8}, {row: 5, col: 8},
+        {row: 6, col: 9}, {row: 6, col: 10}, {row: 6, col: 11}, {row: 6, col: 12}, {row: 6, col: 13}, {row: 6, col: 14},
+        {row: 7, col: 14}, {row: 8, col: 14}, // 24-25 - بداية الأحمر عند 25
+        {row: 8, col: 13}, {row: 8, col: 12}, {row: 8, col: 11}, {row: 8, col: 10}, {row: 8, col: 9},
+        {row: 9, col: 8}, {row: 10, col: 8}, {row: 11, col: 8}, {row: 12, col: 8}, {row: 13, col: 8}, {row: 14, col: 8},
+        {row: 14, col: 7}, {row: 14, col: 6}, // 37-38 - بداية الأزرق عند 38
+        {row: 13, col: 6}, {row: 12, col: 6}, {row: 11, col: 6}, {row: 10, col: 6}, {row: 9, col: 6},
+        {row: 8, col: 5}, {row: 8, col: 4}, {row: 8, col: 3}, {row: 8, col: 2}, {row: 8, col: 1}, {row: 8, col: 0},
+        {row: 7, col: 0}, {row: 6, col: 0} // 50-51 - العودة لبداية الأخضر
+    ],
+    // نقاط البداية لكل لون في المسار المشترك
+    startPos: {
+        green: 0,
+        yellow: 12,
+        red: 25,
+        blue: 38
+    },
+    // مسار النهاية (Home) لكل لون - 5 خانات
+    home: {
+        green: [
+            {row: 7, col: 1}, {row: 7, col: 2}, {row: 7, col: 3}, {row: 7, col: 4}, {row: 7, col: 5}
+        ],
+        yellow: [
+            {row: 1, col: 7}, {row: 2, col: 7}, {row: 3, col: 7}, {row: 4, col: 7}, {row: 5, col: 7}
+        ],
+        red: [
+            {row: 7, col: 13}, {row: 7, col: 12}, {row: 7, col: 11}, {row: 7, col: 10}, {row: 7, col: 9}
+        ],
+        blue: [
+            {row: 13, col: 7}, {row: 12, col: 7}, {row: 11, col: 7}, {row: 10, col: 7}, {row: 9, col: 7}
+        ]
+    }
+};
+
 let gameState = {
     myColor: null,
     opponentColor: null,
     currentTurn: null,
     lastDice: 0,
+    canRollAgain: false,
     pieces: {
-        green: [{pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}],
-        yellow: [{pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}],
-        blue: [{pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}],
-        red: [{pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}]
+        green: [
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}
+        ],
+        yellow: [
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}
+        ],
+        blue: [
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}
+        ],
+        red: [
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}, 
+            {pos: -1, homeSteps: 0, finished: false}
+        ]
     },
     matchId: null,
     opponent: null
@@ -892,7 +956,6 @@ function register() {
         return;
     }
     
-    // إعادة تحميل البيانات
     users = JSON.parse(localStorage.getItem('ludo_users')) || {};
     userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
     
@@ -922,7 +985,6 @@ async function login() {
     
     console.log("🔑 محاولة تسجيل الدخول:", username);
     
-    // إعادة تحميل البيانات من localStorage
     users = JSON.parse(localStorage.getItem('ludo_users')) || {};
     userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
     
@@ -947,7 +1009,6 @@ async function login() {
     
     showMessage('loginMessage', '✅ جاري الاتصال...', 'success');
     
-    // طلب المايك
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         console.log('✅ تم الحصول على المايك');
@@ -955,7 +1016,6 @@ async function login() {
         console.log('⚠️ لا يمكن الوصول للمايك:', e);
     }
     
-    // الاتصال بـ Ably
     try {
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
         
@@ -963,11 +1023,7 @@ async function login() {
             console.log('✅ متصل بـ Ably بنجاح');
             channel = ably.channels.get('ludo-main');
             
-            // الاشتراك في الأحداث
             channel.subscribe('match-found', handleMatchFound);
-            channel.subscribe('game-start', handleGameStart);
-            channel.subscribe('game-move', handleGameMove);
-            channel.subscribe('game-end', handleGameEnd);
             channel.subscribe('call-signal', handleCallSignal);
             
             channel.presence.enter({ username: currentUser, coins: userCoins });
@@ -1024,18 +1080,6 @@ function handleMatchFound(message) {
     
     document.getElementById('searchingScreen').classList.add('hidden');
     startGame();
-}
-
-function handleGameStart(message) {
-    console.log("Game start:", message.data);
-}
-
-function handleGameMove(message) {
-    console.log("Game move:", message.data);
-}
-
-function handleGameEnd(message) {
-    console.log("Game end:", message.data);
 }
 
 function handleSearchMatch(message) {
@@ -1126,6 +1170,7 @@ function initBoard() {
 }
 
 function styleBoardCell(cell, row, col) {
+    // القواعد الأربعة
     if (row >= 0 && row < 6 && col >= 0 && col < 6) {
         cell.classList.add('base-green');
         if ((row === 1 && col === 1) || (row === 1 && col === 4) ||
@@ -1158,16 +1203,40 @@ function styleBoardCell(cell, row, col) {
         }
     }
     
-    if ((col === 6 || col === 8) && row < 6) cell.classList.add('path-cell');
-    if ((col === 6 || col === 8) && row >= 9) cell.classList.add('path-cell');
-    if ((row === 6 || row === 8) && col < 6) cell.classList.add('path-cell');
-    if ((row === 6 || row === 8) && col >= 9) cell.classList.add('path-cell');
+    // المسار المشترك
+    const isPath = PATH_COORDINATES.common.some(coord => coord.row === row && coord.col === col);
+    if (isPath) {
+        cell.classList.add('path-cell');
+        cell.dataset.pathIndex = PATH_COORDINATES.common.findIndex(coord => coord.row === row && coord.col === col);
+    }
     
+    // مسار النهاية
+    Object.keys(PATH_COORDINATES.home).forEach(color => {
+        PATH_COORDINATES.home[color].forEach((coord, idx) => {
+            if (coord.row === row && coord.col === col) {
+                cell.classList.add(`home-${color}`);
+                cell.dataset.homeColor = color;
+                cell.dataset.homeIndex = idx;
+            }
+        });
+    });
+    
+    // نقاط البداية
     if (row === 6 && col === 1) cell.classList.add('start-green');
     if (row === 1 && col === 8) cell.classList.add('start-yellow');
     if (row === 8 && col === 13) cell.classList.add('start-red');
     if (row === 13 && col === 6) cell.classList.add('start-blue');
     
+    // المناطق الآمنة (النجوم)
+    const safeSpots = [
+        {row: 6, col: 1}, {row: 1, col: 8}, {row: 8, col: 13}, {row: 13, col: 6},
+        {row: 2, col: 2}, {row: 2, col: 12}, {row: 12, col: 12}, {row: 12, col: 2}
+    ];
+    if (safeSpots.some(s => s.row === row && s.col === col)) {
+        cell.classList.add('safe-cell');
+    }
+    
+    // المركز
     if (row === 7 && col === 7) {
         cell.classList.add('center-cell');
         cell.innerHTML = '🏆';
@@ -1179,12 +1248,31 @@ function renderPieces() {
     
     Object.keys(gameState.pieces).forEach(color => {
         gameState.pieces[color].forEach((piece, index) => {
+            if (piece.finished) return; // قطعة وصلت للنهاية
+            
+            let targetCell = null;
+            
             if (piece.pos === -1) {
+                // في القاعدة
                 const bases = document.querySelectorAll(`[data-base="${color}"]`);
                 if (bases[index]) {
-                    const pieceEl = createPieceElement(color, index);
-                    bases[index].appendChild(pieceEl);
+                    targetCell = bases[index];
                 }
+            } else if (piece.homeSteps > 0) {
+                // في مسار النهاية
+                const homeCells = document.querySelectorAll(`[data-home-color="${color}"]`);
+                if (homeCells[piece.homeSteps - 1]) {
+                    targetCell = homeCells[piece.homeSteps - 1];
+                }
+            } else if (piece.pos >= 0 && piece.pos < 52) {
+                // على المسار المشترك
+                const coord = PATH_COORDINATES.common[piece.pos];
+                targetCell = document.querySelector(`.cell[data-row="${coord.row}"][data-col="${coord.col}"]`);
+            }
+            
+            if (targetCell) {
+                const pieceEl = createPieceElement(color, index);
+                targetCell.appendChild(pieceEl);
             }
         });
     });
@@ -1198,6 +1286,34 @@ function createPieceElement(color, index) {
     piece.textContent = index + 1;
     piece.onclick = () => selectPiece(color, index);
     return piece;
+}
+
+// دالة فحص الأكل (Capture)
+function checkCapture(color, pos) {
+    if (pos < 0 || pos >= 52) return;
+    
+    // فحص إذا كانت النقطة آمنة
+    const coord = PATH_COORDINATES.common[pos];
+    const safeSpots = [
+        {row: 6, col: 1}, {row: 1, col: 8}, {row: 8, col: 13}, {row: 13, col: 6},
+        {row: 2, col: 2}, {row: 2, col: 12}, {row: 12, col: 12}, {row: 12, col: 2}
+    ];
+    if (safeSpots.some(s => s.row === coord.row && s.col === coord.col)) {
+        return; // نقطة آمنة - ما يصير أكل
+    }
+    
+    // فحص قطع الخصم في نفس الموقع
+    const opponentColor = color === 'green' ? 'yellow' : (color === 'yellow' ? 'green' : (color === 'blue' ? 'red' : 'blue'));
+    
+    gameState.pieces[opponentColor].forEach((piece, idx) => {
+        if (piece.pos === pos && piece.homeSteps === 0 && !piece.finished) {
+            // أكل القطعة - ترجع للقاعدة
+            piece.pos = -1;
+            piece.homeSteps = 0;
+            console.log(`🍴 أكلت قطعة ${opponentColor} رقم ${idx + 1}!`);
+            updateGameStatus(`🍴 أكلت قطعة الخصم!`);
+        }
+    });
 }
 
 function rollDice() {
@@ -1226,7 +1342,7 @@ function rollDice() {
             dice.textContent = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][finalDice - 1];
             dice.classList.remove('rolling');
             
-            updateGameStatus(`🎲 رميت ${finalDice}! اختر قطعة`);
+            updateGameStatus(`🎲 رميت ${finalDice}!`);
             
             if (gameChannel) {
                 gameChannel.publish('dice-roll', {
@@ -1235,13 +1351,65 @@ function rollDice() {
                 });
             }
             
+            // فحص إذا يوجد حركات ممكنة
+            const hasMove = checkHasValidMove();
+            
+            if (!hasMove) {
+                updateGameStatus(`😕 لا توجد حركة ممكنة! انتقل الدور للخصم`);
+                gameState.currentTurn = gameState.opponentColor;
+                gameState.lastDice = 0;
+                setTimeout(() => {
+                    btn.disabled = false;
+                    updateGameStatus();
+                }, 1500);
+                return;
+            }
+            
             highlightMovablePieces();
             
+            // إذا ماكو قطع تقدر تتحرك والرمية مو 6، ينتقل الدور
             setTimeout(() => {
+                if (finalDice !== 6 && gameState.currentTurn === gameState.myColor) {
+                    const movable = document.querySelectorAll('.piece.can-move');
+                    if (movable.length === 0) {
+                        gameState.currentTurn = gameState.opponentColor;
+                        gameState.lastDice = 0;
+                        updateGameStatus();
+                    }
+                }
                 btn.disabled = false;
-            }, 1000);
+            }, 500);
         }
     }, 100);
+}
+
+function checkHasValidMove() {
+    const color = gameState.myColor;
+    const dice = gameState.lastDice;
+    
+    // فحص إذا فيه قطعة تطلع من القاعدة
+    if (dice === 6) {
+        const piecesInBase = gameState.pieces[color].filter(p => p.pos === -1 && !p.finished);
+        if (piecesInBase.length > 0) return true;
+    }
+    
+    // فحص القطع على المسار
+    return gameState.pieces[color].some(p => {
+        if (p.pos >= 0 && p.pos < 52 && p.homeSteps === 0 && !p.finished) {
+            const newPos = p.pos + dice;
+            if (newPos < 52) return true;
+            // فحص الدخول للنهاية
+            if (newPos === 52 + PATH_COORDINATES.startPos[color]) {
+                return true;
+            }
+        }
+        // فحص القطع في مسار النهاية
+        if (p.homeSteps > 0 && !p.finished) {
+            const newHomeStep = p.homeSteps + dice;
+            return newHomeStep <= 5;
+        }
+        return false;
+    });
 }
 
 function highlightMovablePieces() {
@@ -1254,11 +1422,28 @@ function highlightMovablePieces() {
         if (color === gameState.myColor) {
             const piece = gameState.pieces[color][index];
             
+            if (piece.finished) return;
+            
+            // قطعة في القاعدة - تحتاج 6 لتخرج
             if (piece.pos === -1 && gameState.lastDice === 6) {
                 p.classList.add('can-move');
             }
-            else if (piece.pos >= 0 && piece.pos < 52) {
-                p.classList.add('can-move');
+            // قطعة على المسار
+            else if (piece.pos >= 0 && piece.pos < 52 && piece.homeSteps === 0) {
+                const newPos = piece.pos + gameState.lastDice;
+                if (newPos < 52) {
+                    p.classList.add('can-move');
+                } else if (newPos === 52 + PATH_COORDINATES.startPos[color]) {
+                    // دخول النهاية
+                    p.classList.add('can-move');
+                }
+            }
+            // قطعة في مسار النهاية
+            else if (piece.homeSteps > 0) {
+                const newHomeStep = piece.homeSteps + gameState.lastDice;
+                if (newHomeStep <= 5) {
+                    p.classList.add('can-move');
+                }
             }
         }
     });
@@ -1269,57 +1454,86 @@ function selectPiece(color, index) {
     if (gameState.lastDice === 0) return;
     
     const piece = gameState.pieces[color][index];
+    if (piece.finished) return;
     
+    let moveMade = false;
+    let moveData = null;
+    
+    // قطعة في القاعدة
     if (piece.pos === -1) {
         if (gameState.lastDice === 6) {
-            piece.pos = 0;
-            
-            if (gameChannel) {
-                gameChannel.publish('move', {
-                    player: currentUser,
-                    color: color,
-                    index: index,
-                    newPos: 0
-                });
-            }
-            
-            renderPieces();
+            piece.pos = PATH_COORDINATES.startPos[color];
+            moveMade = true;
+            moveData = { type: 'exit', color, index, newPos: piece.pos };
             updateGameStatus('✅ أخرجت القطعة!');
-            
-            gameState.lastDice = 0;
-            document.querySelectorAll('.can-move').forEach(p => p.classList.remove('can-move'));
         }
     }
-    else if (piece.pos >= 0 && piece.pos < 52) {
+    // قطعة على المسار المشترك
+    else if (piece.pos >= 0 && piece.pos < 52 && piece.homeSteps === 0) {
         const newPos = piece.pos + gameState.lastDice;
         
-        if (newPos <= 57) {
+        if (newPos < 52) {
+            // حركة عادية
             piece.pos = newPos;
+            moveMade = true;
+            moveData = { type: 'move', color, index, newPos };
             
-            if (gameChannel) {
-                gameChannel.publish('move', {
-                    player: currentUser,
-                    color: color,
-                    index: index,
-                    newPos: newPos
-                });
-            }
-            
-            renderPieces();
-            
-            if (checkWin()) {
-                endGame(true);
-                return;
-            }
-            
-            if (gameState.lastDice !== 6) {
-                gameState.currentTurn = gameState.opponentColor;
-            }
-            
-            gameState.lastDice = 0;
-            document.querySelectorAll('.can-move').forEach(p => p.classList.remove('can-move'));
-            updateGameStatus();
+            // فحص الأكل
+            checkCapture(color, newPos);
+        } else if (newPos === 52 + PATH_COORDINATES.startPos[color]) {
+            // دخول مسار النهاية
+            piece.pos = -2; // علامة أنه في مسار النهاية
+            piece.homeSteps = 1;
+            moveMade = true;
+            moveData = { type: 'enterHome', color, index };
+            updateGameStatus('🏠 دخلت مسار النهاية!');
         }
+    }
+    // قطعة في مسار النهاية
+    else if (piece.homeSteps > 0) {
+        const newHomeStep = piece.homeSteps + gameState.lastDice;
+        
+        if (newHomeStep <= 5) {
+            piece.homeSteps = newHomeStep;
+            moveMade = true;
+            moveData = { type: 'homeMove', color, index, homeSteps: newHomeStep };
+            
+            if (newHomeStep === 5) {
+                piece.finished = true;
+                updateGameStatus('🎉 قطعة وصلت للنهاية!');
+            }
+        }
+    }
+    
+    if (moveMade) {
+        // إرسال الحركة للخصم
+        if (gameChannel && moveData) {
+            gameChannel.publish('move', {
+                player: currentUser,
+                moveData: moveData
+            });
+        }
+        
+        renderPieces();
+        
+        // فحص الفوز
+        if (checkWin(color)) {
+            endGame(true);
+            return;
+        }
+        
+        // تحديد إذا يحق له دور إضافي
+        if (gameState.lastDice === 6) {
+            gameState.canRollAgain = true;
+            updateGameStatus('🎲 رميت 6! لك دور إضافي');
+        } else {
+            gameState.currentTurn = gameState.opponentColor;
+            gameState.canRollAgain = false;
+        }
+        
+        gameState.lastDice = 0;
+        document.querySelectorAll('.can-move').forEach(p => p.classList.remove('can-move'));
+        updateGameStatus();
     }
 }
 
@@ -1327,10 +1541,33 @@ function handleOpponentMove(message) {
     const data = message.data;
     if (data.player === currentUser) return;
     
-    gameState.pieces[data.color][data.index].pos = data.newPos;
+    const moveData = data.moveData;
+    const piece = gameState.pieces[moveData.color][moveData.index];
+    
+    switch (moveData.type) {
+        case 'exit':
+            piece.pos = moveData.newPos;
+            break;
+        case 'move':
+            piece.pos = moveData.newPos;
+            checkCapture(moveData.color, moveData.newPos);
+            break;
+        case 'enterHome':
+            piece.pos = -2;
+            piece.homeSteps = 1;
+            break;
+        case 'homeMove':
+            piece.homeSteps = moveData.homeSteps;
+            if (moveData.homeSteps === 5) {
+                piece.finished = true;
+            }
+            break;
+    }
+    
     renderPieces();
     
-    if (checkWin(data.color)) {
+    // فحص فوز الخصم
+    if (checkWin(moveData.color)) {
         endGame(false);
         return;
     }
@@ -1346,9 +1583,8 @@ function handleOpponentDiceRoll(message) {
     updateGameStatus(`🎲 الخصم رمى ${data.dice}`);
 }
 
-function checkWin(color = gameState.myColor) {
-    const pieces = gameState.pieces[color];
-    return pieces.every(p => p.pos >= 57);
+function checkWin(color) {
+    return gameState.pieces[color].every(p => p.finished);
 }
 
 function updateGameStatus(customMsg) {
@@ -1377,7 +1613,7 @@ function endGame(won) {
         
         userCoins += selectedBet;
         userStats[currentUser].coins = userCoins;
-        userStats[currentUser].wins++;
+        userStats[currentUser].wins = (userStats[currentUser].wins || 0) + 1;
     } else {
         document.getElementById('resultIcon').textContent = '😢';
         document.getElementById('resultTitle').textContent = 'خسرت';
@@ -1385,7 +1621,7 @@ function endGame(won) {
         
         userCoins -= selectedBet;
         userStats[currentUser].coins = userCoins;
-        userStats[currentUser].losses++;
+        userStats[currentUser].losses = (userStats[currentUser].losses || 0) + 1;
     }
     
     localStorage.setItem('ludo_stats', JSON.stringify(userStats));
@@ -1394,6 +1630,10 @@ function endGame(won) {
         currentPeer.destroy();
         currentPeer = null;
     }
+    
+    if (gameChannel) {
+        gameChannel.unsubscribe();
+    }
 }
 
 function backToMenu() {
@@ -1401,20 +1641,43 @@ function backToMenu() {
     document.getElementById('userCoins').textContent = userCoins;
     document.getElementById('mainMenu').classList.remove('hidden');
     
+    // إعادة تعيين اللعبة
     gameState = {
         myColor: null,
         opponentColor: null,
         currentTurn: null,
         lastDice: 0,
+        canRollAgain: false,
         pieces: {
-            green: [{pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}],
-            yellow: [{pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}],
-            blue: [{pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}],
-            red: [{pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}, {pos: -1, inHome: false}]
+            green: [
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}
+            ],
+            yellow: [
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}
+            ],
+            blue: [
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}
+            ],
+            red: [
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}, 
+                {pos: -1, homeSteps: 0, finished: false}
+            ]
         },
         matchId: null,
         opponent: null
     };
+    selectedBet = 0;
 }
 
 // ==================== المكالمة الصوتية ====================
@@ -1498,7 +1761,7 @@ function showChat() {
     alert('قريباً: نظام المحادثات! 💬');
 }
 
-// ==================== تهيئة الأحداث عند تحميل الصفحة ====================
+// ==================== تهيئة الأحداث ====================
 document.addEventListener('DOMContentLoaded', function() {
     // أزرار تسجيل الدخول
     document.getElementById('loginBtn').addEventListener('click', login);
@@ -1506,18 +1769,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('registerBtn').addEventListener('click', register);
     document.getElementById('showLoginBtn').addEventListener('click', showLoginForm);
     
-    // أزرار القائمة الرئيسية
+    // أزرار القائمة
     document.getElementById('playBtn').addEventListener('click', showBetSelection);
     document.getElementById('friendsBtn').addEventListener('click', showFriends);
     document.getElementById('chatBtn').addEventListener('click', showChat);
     
-    // أزرار اختيار المبلغ
+    // اختيار المبلغ
     document.querySelectorAll('.bet-option').forEach(opt => {
         opt.addEventListener('click', function() {
             const bet = parseInt(this.dataset.bet);
             selectBet(bet);
-            
-            // بدء البحث مباشرة بعد الاختيار
             setTimeout(() => {
                 if (selectedBet > 0) {
                     startSearching();
@@ -1527,17 +1788,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('cancelBetBtn').addEventListener('click', cancelBetSelection);
     
-    // أزرار البحث
+    // البحث
     document.getElementById('cancelSearchBtn').addEventListener('click', cancelSearch);
     
-    // أزرار اللعبة
+    // اللعبة
     document.getElementById('rollDiceBtn').addEventListener('click', rollDice);
     document.getElementById('micBtn').addEventListener('click', toggleMic);
-    
-    // زر العودة للقائمة
     document.getElementById('backToMenuBtn').addEventListener('click', backToMenu);
     
-    console.log('✅ تم تحميل الصفحة وتهيئة جميع الأحداث');
+    console.log('✅ تم تحميل اللعبة بنجاح!');
 });
 </script>
 
