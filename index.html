@@ -33,7 +33,6 @@
         /* ============ التطبيق الرئيسي ============ */
         .app { position:fixed; top:0; left:0; width:100%; height:100%; background:#f5f7fa; display:flex; flex-direction:column; }
         
-        /* هيدر */
         .app-header { background:linear-gradient(135deg,#1a3a1a,#0d2610); padding:18px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 4px 15px rgba(0,0,0,0.1); }
         .user-section { display:flex; align-items:center; gap:12px; }
         .avatar { width:45px; height:45px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:1.2rem; border:2px solid #FFD700; }
@@ -42,14 +41,12 @@
         .header-actions i { color:white; font-size:1.3rem; cursor:pointer; opacity:0.9; transition:0.2s; }
         .header-actions i:active { opacity:0.6; }
         
-        /* التبويبات */
         .tabs-container { background:#1a3a1a; padding:0 15px; display:flex; }
         .tab-item { flex:1; padding:15px 5px; text-align:center; color:rgba(255,255,255,0.7); cursor:pointer; font-weight:600; border-bottom:3px solid transparent; position:relative; transition:0.2s; }
         .tab-item i { margin-left:5px; }
         .tab-item.active { color:white; border-bottom-color:#FFD700; }
         .tab-badge { background:#e74c3c; color:white; border-radius:15px; padding:2px 8px; font-size:0.7rem; position:absolute; top:8px; right:15px; min-width:20px; }
         
-        /* المحتوى */
         .content-area { flex:1; overflow-y:auto; background:#f0f4f0; }
         
         /* ============ الدردشة ============ */
@@ -122,7 +119,7 @@
         .private-bottom input { flex:1; padding:14px; border:2px solid #e0e0e0; border-radius:30px; font-family:'Cairo',sans-serif; }
         .private-bottom button { width:55px; height:55px; background:#2ecc71; border:none; border-radius:50%; color:white; font-size:1.3rem; cursor:pointer; }
         
-        /* ============ مكالمة واردة (بدون confirm) ============ */
+        /* ============ مكالمة واردة ============ */
         .incoming-call-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(15px); }
         .incoming-card { background:white; border-radius:40px; padding:45px 35px; text-align:center; max-width:350px; width:90%; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
         .incoming-avatar { width:120px; height:120px; border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:3.5rem; color:white; border:4px solid #FFD700; }
@@ -133,7 +130,7 @@
         .incoming-reject { width:75px; height:75px; background:#e74c3c; border:none; border-radius:50%; color:white; font-size:2rem; cursor:pointer; box-shadow:0 6px 0 #b71c1c; }
         .incoming-actions button:active { transform:translateY(3px); box-shadow:0 3px 0 #1a7a3a; }
         
-        /* ============ إشعار رسالة جديد (بدون alert) ============ */
+        /* ============ إشعار Toast ============ */
         .toast-notification { position:fixed; top:20px; left:20px; right:20px; background:#1a3a1a; color:white; padding:18px 22px; border-radius:20px; display:flex; align-items:center; gap:15px; z-index:5000; box-shadow:0 15px 40px rgba(0,0,0,0.3); transform:translateY(-120%); transition:0.3s; max-width:400px; margin:0 auto; }
         .toast-notification.show { transform:translateY(0); }
         .toast-icon { width:45px; height:45px; background:#2ecc71; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
@@ -142,7 +139,7 @@
         .toast-text { opacity:0.9; font-size:0.9rem; }
         .toast-close { cursor:pointer; opacity:0.7; font-size:1.2rem; }
         
-        /* ============ شاشة المكالمة الجارية ============ */
+        /* ============ شاشة المكالمة ============ */
         .call-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(145deg,#1a3a1a,#0a1a0f); z-index:3000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
         .call-avatar-large { width:160px; height:160px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:4.5rem; color:white; border:5px solid #FFD700; margin-bottom:25px; }
         .call-name-large { font-size:2.2rem; color:white; font-weight:700; margin-bottom:10px; }
@@ -155,7 +152,6 @@
         
         .hidden { display:none !important; }
         
-        /* ألوان */
         .bg1 { background:#e74c3c; } .bg2 { background:#3498db; } .bg3 { background:#2ecc71; }
         .bg4 { background:#f39c12; } .bg5 { background:#9b59b6; } .bg6 { background:#1abc9c; }
     </style>
@@ -166,37 +162,19 @@
 <div id="loginScreen" class="login-screen">
     <div class="login-container">
         <div class="login-card">
-            <div class="login-icon">
-                <i class="fas fa-comment-dots"></i>
-            </div>
+            <div class="login-icon"><i class="fas fa-comment-dots"></i></div>
             <div class="login-title">مرحباً بك</div>
             <div id="loginForm">
-                <div class="input-wrapper">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="loginUsername" placeholder="اسم المستخدم">
-                </div>
-                <div class="input-wrapper">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="loginPassword" placeholder="كلمة المرور">
-                </div>
+                <div class="input-wrapper"><i class="fas fa-user"></i><input type="text" id="loginUsername" placeholder="اسم المستخدم"></div>
+                <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="loginPassword" placeholder="كلمة المرور"></div>
                 <button class="login-btn" onclick="login()">تسجيل الدخول</button>
-                <div class="login-switch">
-                    <a onclick="showRegister()">إنشاء حساب جديد</a>
-                </div>
+                <div class="login-switch"><a onclick="showRegister()">إنشاء حساب جديد</a></div>
             </div>
             <div id="registerForm" class="hidden">
-                <div class="input-wrapper">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="regUsername" placeholder="اسم المستخدم">
-                </div>
-                <div class="input-wrapper">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="regPassword" placeholder="كلمة المرور">
-                </div>
+                <div class="input-wrapper"><i class="fas fa-user"></i><input type="text" id="regUsername" placeholder="اسم المستخدم"></div>
+                <div class="input-wrapper"><i class="fas fa-lock"></i><input type="password" id="regPassword" placeholder="كلمة المرور"></div>
                 <button class="login-btn" onclick="register()">إنشاء حساب</button>
-                <div class="login-switch">
-                    <a onclick="showLogin()">لدي حساب بالفعل</a>
-                </div>
+                <div class="login-switch"><a onclick="showLogin()">لدي حساب بالفعل</a></div>
             </div>
         </div>
     </div>
@@ -209,64 +187,29 @@
             <div class="avatar" id="myAvatar"></div>
             <span class="user-name" id="myName"></span>
         </div>
-        <div class="header-actions">
-            <i class="fas fa-sign-out-alt" onclick="logout()"></i>
-        </div>
+        <div class="header-actions"><i class="fas fa-sign-out-alt" onclick="logout()"></i></div>
     </div>
     
     <div class="tabs-container">
-        <div class="tab-item active" onclick="switchTab('chat')" id="chatTabBtn">
-            <i class="fas fa-comments"></i> الدردشة
-            <span class="tab-badge hidden" id="chatBadge">0</span>
-        </div>
-        <div class="tab-item" onclick="switchTab('posts')">
-            <i class="fas fa-newspaper"></i> المنشورات
-        </div>
-        <div class="tab-item" onclick="switchTab('friends')" id="friendsTabBtn">
-            <i class="fas fa-users"></i> الأصدقاء
-            <span class="tab-badge hidden" id="requestsBadge">0</span>
-        </div>
-        <div class="tab-item" onclick="switchTab('active')">
-            <i class="fas fa-circle"></i> نشط
-        </div>
+        <div class="tab-item active" onclick="switchTab('chat')"><i class="fas fa-comments"></i> الدردشة<span class="tab-badge hidden" id="chatBadge">0</span></div>
+        <div class="tab-item" onclick="switchTab('posts')"><i class="fas fa-newspaper"></i> المنشورات</div>
+        <div class="tab-item" onclick="switchTab('friends')"><i class="fas fa-users"></i> الأصدقاء<span class="tab-badge hidden" id="requestsBadge">0</span></div>
+        <div class="tab-item" onclick="switchTab('active')"><i class="fas fa-circle"></i> نشط</div>
     </div>
     
     <div class="content-area">
-        <!-- الدردشة -->
         <div id="chatTab" class="chat-view">
             <div class="messages-list" id="messages"></div>
-            <div class="chat-footer">
-                <input type="text" id="chatInput" placeholder="اكتب رسالتك...">
-                <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-            </div>
+            <div class="chat-footer"><input type="text" id="chatInput" placeholder="اكتب رسالتك..."><button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button></div>
         </div>
-        
-        <!-- المنشورات -->
-        <div id="postsTab" class="posts-view hidden">
-            <div class="new-post-btn" onclick="createPost()">
-                <i class="fas fa-plus-circle"></i> إنشاء منشور جديد
-            </div>
-            <div id="postsList"></div>
-        </div>
-        
-        <!-- الأصدقاء -->
+        <div id="postsTab" class="posts-view hidden"><div class="new-post-btn" onclick="createPost()"><i class="fas fa-plus-circle"></i> إنشاء منشور جديد</div><div id="postsList"></div></div>
         <div id="friendsTab" class="friends-view hidden">
-            <div class="add-friend-box">
-                <input type="text" id="friendNameInput" placeholder="اسم الصديق">
-                <button onclick="addFriend()"><i class="fas fa-user-plus"></i> إضافة</button>
-            </div>
-            <div class="section-header"><i class="fas fa-user-friends"></i> أصدقائي</div>
-            <div id="friendsList"></div>
-            <div class="section-header"><i class="fas fa-bell"></i> طلبات الصداقة <span id="requestsCount"></span></div>
-            <div id="requestsList"></div>
+            <div class="add-friend-box"><input type="text" id="friendNameInput" placeholder="اسم الصديق"><button onclick="addFriend()"><i class="fas fa-user-plus"></i> إضافة</button></div>
+            <div class="section-header"><i class="fas fa-user-friends"></i> أصدقائي</div><div id="friendsList"></div>
+            <div class="section-header"><i class="fas fa-bell"></i> طلبات الصداقة <span id="requestsCount"></span></div><div id="requestsList"></div>
         </div>
-        
-        <!-- نشط الآن -->
         <div id="activeTab" class="active-view hidden">
-            <div class="active-top">
-                <h3><i class="fas fa-circle" style="color:#2ecc71;"></i> متصلون الآن</h3>
-                <button class="refresh-active" onclick="refreshActive()"><i class="fas fa-sync-alt"></i> تحديث</button>
-            </div>
+            <div class="active-top"><h3><i class="fas fa-circle" style="color:#2ecc71;"></i> متصلون الآن</h3><button class="refresh-active" onclick="refreshActive()"><i class="fas fa-sync-alt"></i> تحديث</button></div>
             <div id="activeList"></div>
         </div>
     </div>
@@ -274,16 +217,9 @@
 
 <!-- محادثة خاصة -->
 <div id="privateChat" class="private-overlay hidden">
-    <div class="private-top">
-        <i class="fas fa-arrow-right" onclick="closePrivateChat()"></i>
-        <span id="privateChatName"></span>
-        <i class="fas fa-phone" onclick="startCallFromChat()"></i>
-    </div>
+    <div class="private-top"><i class="fas fa-arrow-right" onclick="closePrivateChat()"></i><span id="privateChatName"></span><i class="fas fa-phone" onclick="startCallFromChat()"></i></div>
     <div class="private-messages" id="privateMessages"></div>
-    <div class="private-bottom">
-        <input type="text" id="privateInput" placeholder="اكتب رسالة...">
-        <button onclick="sendPrivateMessage()"><i class="fas fa-paper-plane"></i></button>
-    </div>
+    <div class="private-bottom"><input type="text" id="privateInput" placeholder="اكتب رسالة..."><button onclick="sendPrivateMessage()"><i class="fas fa-paper-plane"></i></button></div>
 </div>
 
 <!-- مكالمة واردة -->
@@ -302,10 +238,7 @@
 <!-- إشعار Toast -->
 <div id="toast" class="toast-notification">
     <div class="toast-icon"><i class="fas fa-comment"></i></div>
-    <div class="toast-content">
-        <div class="toast-title" id="toastTitle">رسالة جديدة</div>
-        <div class="toast-text" id="toastText"></div>
-    </div>
+    <div class="toast-content"><div class="toast-title" id="toastTitle">رسالة جديدة</div><div class="toast-text" id="toastText"></div></div>
     <div class="toast-close" onclick="hideToast()"><i class="fas fa-times"></i></div>
 </div>
 
@@ -328,7 +261,7 @@ const ADMIN_PASS = '11';
 
 let currentUser = null, isAdmin = false, ably = null, pubChannel = null, privChannel = null;
 let currentChat = null, localStream = null, currentPeer = null, muted = false;
-let incomingCallFrom = null, incomingPeer = null;
+let incomingCallFrom = null, incomingCallSignal = null;
 
 let users = JSON.parse(localStorage.getItem('chat_users')) || {};
 let posts = JSON.parse(localStorage.getItem('chat_posts')) || [];
@@ -340,12 +273,7 @@ const lastUser = localStorage.getItem('chat_lastUser');
 if(lastUser) document.getElementById('loginUsername').value = lastUser;
 
 // ================ Toast ================
-function showToast(title, text) {
-    document.getElementById('toastTitle').textContent = title;
-    document.getElementById('toastText').textContent = text;
-    document.getElementById('toast').classList.add('show');
-    setTimeout(hideToast, 4000);
-}
+function showToast(title, text) { document.getElementById('toastTitle').textContent=title; document.getElementById('toastText').textContent=text; document.getElementById('toast').classList.add('show'); setTimeout(hideToast,4000); }
 function hideToast() { document.getElementById('toast').classList.remove('show'); }
 
 // ================ ألوان ================
@@ -367,7 +295,7 @@ async function login() {
     else if(!users[u]||users[u]!==p) { showToast('خطأ','بيانات الدخول غير صحيحة'); return; }
     else isAdmin=false;
     currentUser=u; localStorage.setItem('chat_lastUser',u);
-    try { localStream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e) {}
+    try { localStream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e) { showToast('تنبيه','لم يتم الوصول للميكروفون'); }
     ably = new Ably.Realtime({key:ABLY_KEY, clientId:u});
     ably.connection.on('connected',()=>{
         pubChannel=ably.channels.get('public');
@@ -379,7 +307,9 @@ async function login() {
         privChannel=ably.channels.get(`priv-${u}`);
         privChannel.subscribe('msg',m=>handlePrivateMessage(m.data));
         privChannel.subscribe('call',handleCall);
-        privChannel.subscribe('signal',handleSignal);
+        privChannel.subscribe('call-signal',handleCallSignal);
+        privChannel.subscribe('call-accept',handleCallAccept);
+        privChannel.subscribe('call-reject',handleCallReject);
         privChannel.subscribe('friend-req',handleFriendReq);
         privChannel.subscribe('friend-acc',handleFriendAcc);
     });
@@ -405,25 +335,9 @@ function switchTab(t) {
 }
 
 // ================ الدردشة ================
-function sendMessage() {
-    const inp=document.getElementById('chatInput'), text=inp.value.trim();
-    if(!text) return;
-    const msg={sender:currentUser,text,admin:isAdmin,time:new Date().toLocaleTimeString()};
-    pubChannel.publish('msg',msg); addMessage(msg,true); inp.value='';
-}
-function handlePublicMessage(m) {
-    if(m.sender!==currentUser) { addMessage(m,false); showToast('رسالة جديدة',`${m.sender}: ${m.text.substring(0,30)}...`); }
-}
-function addMessage(m,own) {
-    const div=document.getElementById('messages'), isMe=own||m.sender===currentUser;
-    const isFriend=(friends[currentUser]||[]).includes(m.sender);
-    div.innerHTML+=`<div class="msg-row ${isMe?'own':''}">
-        <div class="msg-avatar ${getColor(m.sender)}">${m.sender[0]}</div><div class="msg-body">
-            <div class="msg-top"><span class="msg-sender">${m.sender}</span>${m.admin?'<span class="admin-tag">👑 مشرف</span>':''}${!isMe&&!isFriend?`<button class="add-friend-tag" onclick="sendFriendRequestTo('${m.sender}')"><i class="fas fa-user-plus"></i> إضافة</button>`:''}</div>
-            <div class="msg-bubble">${m.text}</div><div class="msg-time">${m.time}</div>
-        </div>
-    </div>`; div.scrollTop=div.scrollHeight;
-}
+function sendMessage() { const inp=document.getElementById('chatInput'), text=inp.value.trim(); if(!text) return; const msg={sender:currentUser,text,admin:isAdmin,time:new Date().toLocaleTimeString()}; pubChannel.publish('msg',msg); addMessage(msg,true); inp.value=''; }
+function handlePublicMessage(m) { if(m.sender!==currentUser) { addMessage(m,false); showToast('رسالة جديدة',`${m.sender}: ${m.text.substring(0,30)}...`); } }
+function addMessage(m,own) { const div=document.getElementById('messages'), isMe=own||m.sender===currentUser; const isFriend=(friends[currentUser]||[]).includes(m.sender); div.innerHTML+=`<div class="msg-row ${isMe?'own':''}"><div class="msg-avatar ${getColor(m.sender)}">${m.sender[0]}</div><div class="msg-body"><div class="msg-top"><span class="msg-sender">${m.sender}</span>${m.admin?'<span class="admin-tag">👑 مشرف</span>':''}${!isMe&&!isFriend?`<button class="add-friend-tag" onclick="sendFriendRequestTo('${m.sender}')"><i class="fas fa-user-plus"></i> إضافة</button>`:''}</div><div class="msg-bubble">${m.text}</div><div class="msg-time">${m.time}</div></div></div>`; div.scrollTop=div.scrollHeight; }
 function sendFriendRequestTo(u) { if(u===currentUser) return; ably.channels.get(`priv-${u}`).publish('friend-req',{from:currentUser}); showToast('تم','تم إرسال طلب الصداقة'); }
 
 // ================ منشورات ================
@@ -436,88 +350,190 @@ function loadPosts() { renderPosts(); }
 // ================ أصدقاء ================
 function addFriend() { const n=document.getElementById('friendNameInput').value.trim(); if(n&&n!==currentUser) { sendFriendRequestTo(n); document.getElementById('friendNameInput').value=''; } }
 function handleFriendReq(m) { if(!requests[currentUser]) requests[currentUser]=[]; if(!requests[currentUser].find(r=>r.from===m.data.from)) { requests[currentUser].push({from:m.data.from}); localStorage.setItem('chat_requests',JSON.stringify(requests)); updateRequestsCount(); renderFriends(); showToast('طلب صداقة',`${m.data.from} يريد إضافتك`); } }
-function acceptFriend(f) {
-    if(!friends[currentUser]) friends[currentUser]=[]; if(!friends[f]) friends[f]=[];
-    friends[currentUser].push(f); friends[f].push(currentUser);
-    requests[currentUser]=(requests[currentUser]||[]).filter(r=>r.from!==f);
-    localStorage.setItem('chat_friends',JSON.stringify(friends)); localStorage.setItem('chat_requests',JSON.stringify(requests));
-    ably.channels.get(`priv-${f}`).publish('friend-acc',{from:currentUser});
-    updateRequestsCount(); renderFriends(); showToast('تم','تم قبول الصداقة');
-}
+function acceptFriend(f) { if(!friends[currentUser]) friends[currentUser]=[]; if(!friends[f]) friends[f]=[]; friends[currentUser].push(f); friends[f].push(currentUser); requests[currentUser]=(requests[currentUser]||[]).filter(r=>r.from!==f); localStorage.setItem('chat_friends',JSON.stringify(friends)); localStorage.setItem('chat_requests',JSON.stringify(requests)); ably.channels.get(`priv-${f}`).publish('friend-acc',{from:currentUser}); updateRequestsCount(); renderFriends(); showToast('تم','تم قبول الصداقة'); }
 function rejectFriend(f) { requests[currentUser]=(requests[currentUser]||[]).filter(r=>r.from!==f); localStorage.setItem('chat_requests',JSON.stringify(requests)); updateRequestsCount(); renderFriends(); }
 function handleFriendAcc(m) { if(!friends[currentUser]) friends[currentUser]=[]; friends[currentUser].push(m.data.from); localStorage.setItem('chat_friends',JSON.stringify(friends)); renderFriends(); showToast('تم',`${m.data.from} قبل طلب الصداقة`); }
 function updateRequestsCount() { const c=(requests[currentUser]||[]).length; document.getElementById('requestsBadge').classList.toggle('hidden',c===0); document.getElementById('requestsBadge').textContent=c>9?'9+':c; document.getElementById('requestsCount').textContent=c?`(${c})`:''; }
-function renderFriends() {
-    const mf=friends[currentUser]||[], mr=requests[currentUser]||[];
-    document.getElementById('friendsList').innerHTML=mf.map(f=>`<div class="friend-card"><div class="friend-left"><div class="friend-avatar ${getColor(f)}">${f[0]}</div><div><div class="friend-name">${f}</div><div class="friend-online"><i class="fas fa-circle"></i> متصل</div></div></div><div class="friend-actions"><button class="icon-btn call-icon" onclick="startCall('${f}')"><i class="fas fa-phone"></i></button><button class="icon-btn chat-icon" onclick="openPrivateChat('${f}')"><i class="fas fa-comment"></i></button></div></div>`).join('')||'<p style="text-align:center;">لا يوجد أصدقاء</p>';
-    document.getElementById('requestsList').innerHTML=mr.map(r=>`<div class="friend-card"><div class="friend-left"><div class="friend-avatar ${getColor(r.from)}">${r.from[0]}</div><div class="friend-name">${r.from}</div></div><div style="display:flex;gap:5px;"><button class="accept-icon" onclick="acceptFriend('${r.from}')">قبول</button><button class="reject-icon" onclick="rejectFriend('${r.from}')">رفض</button></div></div>`).join('')||'<p style="text-align:center;">لا توجد طلبات</p>';
-}
+function renderFriends() { const mf=friends[currentUser]||[], mr=requests[currentUser]||[]; document.getElementById('friendsList').innerHTML=mf.map(f=>`<div class="friend-card"><div class="friend-left"><div class="friend-avatar ${getColor(f)}">${f[0]}</div><div><div class="friend-name">${f}</div><div class="friend-online"><i class="fas fa-circle"></i> متصل</div></div></div><div class="friend-actions"><button class="icon-btn call-icon" onclick="startCall('${f}')"><i class="fas fa-phone"></i></button><button class="icon-btn chat-icon" onclick="openPrivateChat('${f}')"><i class="fas fa-comment"></i></button></div></div>`).join('')||'<p style="text-align:center;">لا يوجد أصدقاء</p>'; document.getElementById('requestsList').innerHTML=mr.map(r=>`<div class="friend-card"><div class="friend-left"><div class="friend-avatar ${getColor(r.from)}">${r.from[0]}</div><div class="friend-name">${r.from}</div></div><div style="display:flex;gap:5px;"><button class="accept-icon" onclick="acceptFriend('${r.from}')">قبول</button><button class="reject-icon" onclick="rejectFriend('${r.from}')">رفض</button></div></div>`).join('')||'<p style="text-align:center;">لا توجد طلبات</p>'; }
 function loadFriends() { renderFriends(); updateRequestsCount(); }
 
 // ================ نشط ================
 function refreshActive() { updateActive(); }
 function updateActive() { pubChannel.presence.get((e,m)=>{ window.activeMembers=m||[]; renderActive(); }); }
-function renderActive() {
-    const m=window.activeMembers||[], mf=friends[currentUser]||[];
-    document.getElementById('activeList').innerHTML=m.filter(x=>x.clientId!==currentUser).map(x=>`<div class="active-member"><div class="active-avatar ${getColor(x.clientId)}">${x.clientId[0]}</div><div class="active-info"><div class="active-name">${x.clientId} ${x.data?.admin?'👑':''}</div></div>${!mf.includes(x.clientId)?`<button class="add-active" onclick="sendFriendRequestTo('${x.clientId}')"><i class="fas fa-user-plus"></i> إضافة</button>`:''}<div class="dot-online"></div></div>`).join('')||'<p>لا يوجد نشط</p>';
-}
+function renderActive() { const m=window.activeMembers||[], mf=friends[currentUser]||[]; document.getElementById('activeList').innerHTML=m.filter(x=>x.clientId!==currentUser).map(x=>`<div class="active-member"><div class="active-avatar ${getColor(x.clientId)}">${x.clientId[0]}</div><div class="active-info"><div class="active-name">${x.clientId} ${x.data?.admin?'👑':''}</div></div>${!mf.includes(x.clientId)?`<button class="add-active" onclick="sendFriendRequestTo('${x.clientId}')"><i class="fas fa-user-plus"></i> إضافة</button>`:''}<div class="dot-online"></div></div>`).join('')||'<p>لا يوجد نشط</p>'; }
 
 // ================ خاص ================
 function openPrivateChat(u) { currentChat=u; document.getElementById('privateChatName').textContent=u; document.getElementById('privateChat').classList.remove('hidden'); loadPrivateMessages(u); }
 function closePrivateChat() { document.getElementById('privateChat').classList.add('hidden'); currentChat=null; }
-function sendPrivateMessage() {
-    const inp=document.getElementById('privateInput'), text=inp.value.trim();
-    if(!text||!currentChat) return;
-    const msg={from:currentUser,to:currentChat,text,time:new Date().toLocaleTimeString()};
-    const k=[currentUser,currentChat].sort().join('-'); if(!privateMessages[k]) privateMessages[k]=[]; privateMessages[k].push(msg); localStorage.setItem('private_msgs',JSON.stringify(privateMessages));
-    ably.channels.get(`priv-${currentChat}`).publish('msg',msg); addPrivateMsg(msg,true); inp.value='';
-}
-function handlePrivateMessage(m) {
-    if(m.from!==currentUser) {
-        const k=[currentUser,m.from].sort().join('-'); if(!privateMessages[k]) privateMessages[k]=[]; privateMessages[k].push(m); localStorage.setItem('private_msgs',JSON.stringify(privateMessages));
-        if(currentChat===m.from) addPrivateMsg(m,false);
-        else showToast('رسالة خاصة',`${m.from}: ${m.text.substring(0,30)}...`);
-    }
-}
+function sendPrivateMessage() { const inp=document.getElementById('privateInput'), text=inp.value.trim(); if(!text||!currentChat) return; const msg={from:currentUser,to:currentChat,text,time:new Date().toLocaleTimeString()}; const k=[currentUser,currentChat].sort().join('-'); if(!privateMessages[k]) privateMessages[k]=[]; privateMessages[k].push(msg); localStorage.setItem('private_msgs',JSON.stringify(privateMessages)); ably.channels.get(`priv-${currentChat}`).publish('msg',msg); addPrivateMsg(msg,true); inp.value=''; }
+function handlePrivateMessage(m) { if(m.from!==currentUser) { const k=[currentUser,m.from].sort().join('-'); if(!privateMessages[k]) privateMessages[k]=[]; privateMessages[k].push(m); localStorage.setItem('private_msgs',JSON.stringify(privateMessages)); if(currentChat===m.from) addPrivateMsg(m,false); else showToast('رسالة خاصة',`${m.from}: ${m.text.substring(0,30)}...`); } }
 function addPrivateMsg(m,own) { const div=document.getElementById('privateMessages'), isMe=own||m.from===currentUser; div.innerHTML+=`<div class="msg-row ${isMe?'own':''}"><div class="msg-avatar ${getColor(m.from)}">${m.from[0]}</div><div class="msg-body"><div class="msg-bubble">${m.text}</div><div class="msg-time">${m.time}</div></div></div>`; div.scrollTop=div.scrollHeight; }
 function loadPrivateMessages(u) { const k=[currentUser,u].sort().join('-'), ms=privateMessages[k]||[]; document.getElementById('privateMessages').innerHTML=ms.map(m=>`<div class="msg-row ${m.from===currentUser?'own':''}"><div class="msg-avatar ${getColor(m.from)}">${m.from[0]}</div><div class="msg-body"><div class="msg-bubble">${m.text}</div></div></div>`).join(''); }
 
-// ================ مكالمات ================
-function startCall(u) {
-    currentChat=u; incomingCallFrom=null;
+// ================ مكالمات (تم الإصلاح) ================
+async function startCall(u) {
+    currentChat = u;
     document.getElementById('callScreen').classList.remove('hidden');
-    document.getElementById('callName').textContent=u; document.getElementById('callAvatar').textContent=u[0]; document.getElementById('callAvatar').className=`call-avatar-large ${getColor(u)}`;
-    document.getElementById('callStatus').textContent='📞 جاري الاتصال...';
-    const peer=new SimplePeer({initiator:true,stream:localStream,trickle:false}); setupPeer(peer,u);
-    ably.channels.get(`priv-${u}`).publish('call',{from:currentUser});
+    document.getElementById('callName').textContent = u;
+    document.getElementById('callAvatar').textContent = u[0];
+    document.getElementById('callAvatar').className = `call-avatar-large ${getColor(u)}`;
+    document.getElementById('callStatus').textContent = '📞 جاري الاتصال...';
+    
+    // إنشاء Peer
+    const peer = new SimplePeer({ initiator: true, stream: localStream, trickle: true });
+    
+    peer.on('signal', signal => {
+        // إرسال الإشارة للطرف الآخر
+        ably.channels.get(`priv-${u}`).publish('call-signal', { signal: signal, from: currentUser });
+    });
+    
+    peer.on('stream', remoteStream => {
+        const audio = new Audio();
+        audio.srcObject = remoteStream;
+        audio.autoplay = true;
+        audio.play().catch(e => console.log('تشغيل الصوت:', e));
+        document.getElementById('callStatus').textContent = '📞 متصل';
+    });
+    
+    peer.on('connect', () => {
+        document.getElementById('callStatus').textContent = '📞 متصل';
+    });
+    
+    peer.on('close', () => {
+        document.getElementById('callScreen').classList.add('hidden');
+    });
+    
+    peer.on('error', err => {
+        console.error('خطأ في الاتصال:', err);
+        showToast('خطأ', 'فشل الاتصال');
+        document.getElementById('callScreen').classList.add('hidden');
+    });
+    
+    currentPeer = peer;
+    
+    // إرسال إشعار المكالمة
+    ably.channels.get(`priv-${u}`).publish('call', { from: currentUser });
 }
-function startCallFromChat() { if(currentChat) startCall(currentChat); }
+
+function startCallFromChat() {
+    if(currentChat) startCall(currentChat);
+}
+
 function handleCall(m) {
-    incomingCallFrom=m.data.from;
+    incomingCallFrom = m.data.from;
     document.getElementById('incomingCall').classList.remove('hidden');
-    document.getElementById('incomingName').textContent=incomingCallFrom;
-    document.getElementById('incomingAvatar').textContent=incomingCallFrom[0];
-    document.getElementById('incomingAvatar').className=`incoming-avatar ${getColor(incomingCallFrom)}`;
+    document.getElementById('incomingName').textContent = incomingCallFrom;
+    document.getElementById('incomingAvatar').textContent = incomingCallFrom[0];
+    document.getElementById('incomingAvatar').className = `incoming-avatar ${getColor(incomingCallFrom)}`;
+    
+    // تشغيل صوت الرنين
+    try {
+        const audio = new Audio('data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoAAACAgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/f39/f38=');
+        audio.loop = true;
+        audio.play().catch(e=>{});
+        window.ringtone = audio;
+    } catch(e) {}
 }
+
 function acceptIncomingCall() {
+    if(window.ringtone) { window.ringtone.pause(); window.ringtone = null; }
+    
     document.getElementById('incomingCall').classList.add('hidden');
-    currentChat=incomingCallFrom;
+    currentChat = incomingCallFrom;
+    
     document.getElementById('callScreen').classList.remove('hidden');
-    document.getElementById('callName').textContent=incomingCallFrom; document.getElementById('callAvatar').textContent=incomingCallFrom[0]; document.getElementById('callAvatar').className=`call-avatar-large ${getColor(incomingCallFrom)}`;
-    document.getElementById('callStatus').textContent='📞 متصل';
-    const peer=new SimplePeer({initiator:false,stream:localStream,trickle:false}); setupPeer(peer,incomingCallFrom);
+    document.getElementById('callName').textContent = incomingCallFrom;
+    document.getElementById('callAvatar').textContent = incomingCallFrom[0];
+    document.getElementById('callAvatar').className = `call-avatar-large ${getColor(incomingCallFrom)}`;
+    document.getElementById('callStatus').textContent = '📞 متصل';
+    
+    // إنشاء Peer كمستقبل
+    const peer = new SimplePeer({ initiator: false, stream: localStream, trickle: true });
+    
+    peer.on('signal', signal => {
+        ably.channels.get(`priv-${incomingCallFrom}`).publish('call-signal', { signal: signal, from: currentUser });
+    });
+    
+    peer.on('stream', remoteStream => {
+        const audio = new Audio();
+        audio.srcObject = remoteStream;
+        audio.autoplay = true;
+        audio.play().catch(e => console.log('تشغيل الصوت:', e));
+        document.getElementById('callStatus').textContent = '📞 متصل';
+    });
+    
+    peer.on('connect', () => {
+        document.getElementById('callStatus').textContent = '📞 متصل';
+    });
+    
+    peer.on('close', () => {
+        document.getElementById('callScreen').classList.add('hidden');
+    });
+    
+    peer.on('error', err => {
+        console.error('خطأ في الاتصال:', err);
+        document.getElementById('callScreen').classList.add('hidden');
+    });
+    
+    currentPeer = peer;
+    
+    // إرسال قبول المكالمة
+    ably.channels.get(`priv-${incomingCallFrom}`).publish('call-accept', { from: currentUser });
 }
-function rejectIncomingCall() { document.getElementById('incomingCall').classList.add('hidden'); incomingCallFrom=null; }
-function setupPeer(peer,u) {
-    peer.on('signal',s=>{ ably.channels.get(`priv-${u}`).publish('signal',{signal:s,from:currentUser}); });
-    peer.on('stream',s=>{ new Audio().srcObject=s; s.play(); document.getElementById('callStatus').textContent='📞 متصل'; });
-    peer.on('connect',()=>document.getElementById('callStatus').textContent='📞 متصل');
-    peer.on('close',()=>document.getElementById('callScreen').classList.add('hidden'));
-    currentPeer=peer;
+
+function rejectIncomingCall() {
+    if(window.ringtone) { window.ringtone.pause(); window.ringtone = null; }
+    document.getElementById('incomingCall').classList.add('hidden');
+    if(incomingCallFrom) {
+        ably.channels.get(`priv-${incomingCallFrom}`).publish('call-reject', { from: currentUser });
+    }
+    incomingCallFrom = null;
 }
-function handleSignal(m) { if(currentPeer&&m.data.from!==currentUser) currentPeer.signal(m.data.signal); }
-function toggleMute() { if(localStream) { muted=!muted; localStream.getAudioTracks()[0].enabled=!muted; document.getElementById('muteBtn').classList.toggle('active',muted); } }
-function endCall() { document.getElementById('callScreen').classList.add('hidden'); if(currentPeer) { currentPeer.destroy(); currentPeer=null; } }
+
+function handleCallSignal(m) {
+    if(m.data.from === currentUser) return;
+    if(currentPeer) {
+        currentPeer.signal(m.data.signal);
+    }
+}
+
+function handleCallAccept(m) {
+    // تم قبول المكالمة
+    document.getElementById('callStatus').textContent = '📞 متصل';
+}
+
+function handleCallReject(m) {
+    // تم رفض المكالمة
+    showToast('تنبيه', `${m.data.from} رفض المكالمة`);
+    document.getElementById('callScreen').classList.add('hidden');
+    if(currentPeer) {
+        currentPeer.destroy();
+        currentPeer = null;
+    }
+}
+
+function toggleMute() {
+    if(localStream) {
+        muted = !muted;
+        localStream.getAudioTracks()[0].enabled = !muted;
+        document.getElementById('muteBtn').classList.toggle('active', muted);
+    }
+}
+
+function endCall() {
+    if(window.ringtone) { window.ringtone.pause(); window.ringtone = null; }
+    document.getElementById('callScreen').classList.add('hidden');
+    document.getElementById('incomingCall').classList.add('hidden');
+    
+    if(currentPeer) {
+        currentPeer.destroy();
+        currentPeer = null;
+    }
+    
+    if(currentChat) {
+        ably.channels.get(`priv-${currentChat}`).publish('call-reject', { from: currentUser });
+    }
+}
 
 window.showRegister=showRegister; window.showLogin=showLogin; window.register=register; window.login=login; window.logout=logout;
 window.switchTab=switchTab; window.sendMessage=sendMessage; window.sendFriendRequestTo=sendFriendRequestTo;
