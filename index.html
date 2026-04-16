@@ -122,9 +122,10 @@
         .private-bottom input { flex:1; padding:14px; border:2px solid #e0e0e0; border-radius:30px; font-family:'Cairo',sans-serif; }
         .private-bottom button { width:55px; height:55px; background:#2ecc71; border:none; border-radius:50%; color:white; font-size:1.3rem; cursor:pointer; }
         
-        /* ============ مكالمة واردة (بدون confirm) ============ */
+        /* ============ مكالمة واردة ============ */
         .incoming-call-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(15px); }
-        .incoming-card { background:white; border-radius:40px; padding:45px 35px; text-align:center; max-width:350px; width:90%; box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+        .incoming-card { background:white; border-radius:40px; padding:45px 35px; text-align:center; max-width:350px; width:90%; box-shadow:0 30px 60px rgba(0,0,0,0.5); animation:pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { transform:scale(1); } 50% { transform:scale(1.02); } }
         .incoming-avatar { width:120px; height:120px; border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:3.5rem; color:white; border:4px solid #FFD700; }
         .incoming-name { font-size:1.8rem; font-weight:800; color:#1a3a1a; margin-bottom:8px; }
         .incoming-status { color:#2ecc71; font-weight:600; margin-bottom:35px; font-size:1.1rem; }
@@ -133,7 +134,7 @@
         .incoming-reject { width:75px; height:75px; background:#e74c3c; border:none; border-radius:50%; color:white; font-size:2rem; cursor:pointer; box-shadow:0 6px 0 #b71c1c; }
         .incoming-actions button:active { transform:translateY(3px); box-shadow:0 3px 0 #1a7a3a; }
         
-        /* ============ إشعار رسالة جديد (بدون alert) ============ */
+        /* ============ إشعار رسالة جديد ============ */
         .toast-notification { position:fixed; top:20px; left:20px; right:20px; background:#1a3a1a; color:white; padding:18px 22px; border-radius:20px; display:flex; align-items:center; gap:15px; z-index:5000; box-shadow:0 15px 40px rgba(0,0,0,0.3); transform:translateY(-120%); transition:0.3s; max-width:400px; margin:0 auto; }
         .toast-notification.show { transform:translateY(0); }
         .toast-icon { width:45px; height:45px; background:#2ecc71; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; }
@@ -328,7 +329,7 @@ const ADMIN_PASS = '11';
 
 let currentUser = null, isAdmin = false, ably = null, pubChannel = null, privChannel = null;
 let currentChat = null, localStream = null, currentPeer = null, muted = false;
-let incomingCallFrom = null, incomingPeer = null;
+let incomingCallFrom = null, incomingPeer = null, ringtone = null, remoteAudio = null;
 
 let users = JSON.parse(localStorage.getItem('chat_users')) || {};
 let posts = JSON.parse(localStorage.getItem('chat_posts')) || [];
@@ -338,6 +339,29 @@ let privateMessages = JSON.parse(localStorage.getItem('private_msgs')) || {};
 
 const lastUser = localStorage.getItem('chat_lastUser');
 if(lastUser) document.getElementById('loginUsername').value = lastUser;
+
+// ================ صوت الرنين ================
+function createRingtone() {
+    if (!ringtone) {
+        ringtone = new Audio();
+        ringtone.loop = true;
+        // رابط صوت رنين من freesound
+        ringtone.src = 'https://cdn.freesound.org/previews/320/320655_5260872-lq.mp3';
+        ringtone.volume = 0.5;
+    }
+}
+
+function playRingtone() {
+    createRingtone();
+    ringtone.play().catch(e => console.log('Ringtone play error:', e));
+}
+
+function stopRingtone() {
+    if (ringtone) {
+        ringtone.pause();
+        ringtone.currentTime = 0;
+    }
+}
 
 // ================ Toast ================
 function showToast(title, text) {
@@ -367,7 +391,16 @@ async function login() {
     else if(!users[u]||users[u]!==p) { showToast('خطأ','بيانات الدخول غير صحيحة'); return; }
     else isAdmin=false;
     currentUser=u; localStorage.setItem('chat_lastUser',u);
-    try { localStream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e) {}
+    
+    // طلب الميكروفون
+    try { 
+        localStream = await navigator.mediaDevices.getUserMedia({audio: true}); 
+        console.log('Microphone access granted');
+    } catch(e) { 
+        console.error('Microphone error:', e);
+        showToast('تنبيه', 'لم يتم السماح بالوصول للميكروفون');
+    }
+    
     ably = new Ably.Realtime({key:ABLY_KEY, clientId:u});
     ably.connection.on('connected',()=>{
         pubChannel=ably.channels.get('public');
@@ -390,7 +423,14 @@ async function login() {
     document.getElementById('myAvatar').className=`avatar ${getColor(u)}`;
     loadFriends(); loadPosts(); updateActive(); updateRequestsCount();
 }
-function logout() { if(ably) ably.close(); localStorage.removeItem('chat_lastUser'); location.reload(); }
+function logout() { 
+    stopRingtone();
+    if(currentPeer) currentPeer.destroy();
+    if(localStream) localStream.getTracks().forEach(t => t.stop());
+    if(ably) ably.close(); 
+    localStorage.removeItem('chat_lastUser'); 
+    location.reload(); 
+}
 
 // ================ تبويبات ================
 function switchTab(t) {
@@ -486,38 +526,165 @@ function loadPrivateMessages(u) { const k=[currentUser,u].sort().join('-'), ms=p
 function startCall(u) {
     currentChat=u; incomingCallFrom=null;
     document.getElementById('callScreen').classList.remove('hidden');
-    document.getElementById('callName').textContent=u; document.getElementById('callAvatar').textContent=u[0]; document.getElementById('callAvatar').className=`call-avatar-large ${getColor(u)}`;
+    document.getElementById('callName').textContent=u; 
+    document.getElementById('callAvatar').textContent=u[0]; 
+    document.getElementById('callAvatar').className=`call-avatar-large ${getColor(u)}`;
     document.getElementById('callStatus').textContent='📞 جاري الاتصال...';
-    const peer=new SimplePeer({initiator:true,stream:localStream,trickle:false}); setupPeer(peer,u);
-    ably.channels.get(`priv-${u}`).publish('call',{from:currentUser});
+    
+    if (!localStream) {
+        showToast('خطأ', 'الميكروفون غير متاح');
+        return;
+    }
+    
+    const peer = new SimplePeer({
+        initiator: true,
+        stream: localStream,
+        trickle: false,
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        }
+    });
+    
+    setupPeer(peer, u);
+    ably.channels.get(`priv-${u}`).publish('call', {from: currentUser});
 }
+
 function startCallFromChat() { if(currentChat) startCall(currentChat); }
+
 function handleCall(m) {
-    incomingCallFrom=m.data.from;
+    incomingCallFrom = m.data.from;
     document.getElementById('incomingCall').classList.remove('hidden');
-    document.getElementById('incomingName').textContent=incomingCallFrom;
-    document.getElementById('incomingAvatar').textContent=incomingCallFrom[0];
-    document.getElementById('incomingAvatar').className=`incoming-avatar ${getColor(incomingCallFrom)}`;
+    document.getElementById('incomingName').textContent = incomingCallFrom;
+    document.getElementById('incomingAvatar').textContent = incomingCallFrom[0];
+    document.getElementById('incomingAvatar').className = `incoming-avatar ${getColor(incomingCallFrom)}`;
+    
+    // تشغيل صوت الرنين
+    playRingtone();
 }
+
 function acceptIncomingCall() {
+    // إيقاف صوت الرنين
+    stopRingtone();
+    
     document.getElementById('incomingCall').classList.add('hidden');
-    currentChat=incomingCallFrom;
+    currentChat = incomingCallFrom;
     document.getElementById('callScreen').classList.remove('hidden');
-    document.getElementById('callName').textContent=incomingCallFrom; document.getElementById('callAvatar').textContent=incomingCallFrom[0]; document.getElementById('callAvatar').className=`call-avatar-large ${getColor(incomingCallFrom)}`;
-    document.getElementById('callStatus').textContent='📞 متصل';
-    const peer=new SimplePeer({initiator:false,stream:localStream,trickle:false}); setupPeer(peer,incomingCallFrom);
+    document.getElementById('callName').textContent = incomingCallFrom; 
+    document.getElementById('callAvatar').textContent = incomingCallFrom[0]; 
+    document.getElementById('callAvatar').className = `call-avatar-large ${getColor(incomingCallFrom)}`;
+    document.getElementById('callStatus').textContent = '📞 جاري الاتصال...';
+    
+    if (!localStream) {
+        showToast('خطأ', 'الميكروفون غير متاح');
+        endCall();
+        return;
+    }
+    
+    const peer = new SimplePeer({
+        initiator: false,
+        stream: localStream,
+        trickle: false,
+        config: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        }
+    });
+    
+    setupPeer(peer, incomingCallFrom);
 }
-function rejectIncomingCall() { document.getElementById('incomingCall').classList.add('hidden'); incomingCallFrom=null; }
-function setupPeer(peer,u) {
-    peer.on('signal',s=>{ ably.channels.get(`priv-${u}`).publish('signal',{signal:s,from:currentUser}); });
-    peer.on('stream',s=>{ new Audio().srcObject=s; s.play(); document.getElementById('callStatus').textContent='📞 متصل'; });
-    peer.on('connect',()=>document.getElementById('callStatus').textContent='📞 متصل');
-    peer.on('close',()=>document.getElementById('callScreen').classList.add('hidden'));
-    currentPeer=peer;
+
+function rejectIncomingCall() { 
+    stopRingtone();
+    document.getElementById('incomingCall').classList.add('hidden'); 
+    incomingCallFrom = null; 
 }
-function handleSignal(m) { if(currentPeer&&m.data.from!==currentUser) currentPeer.signal(m.data.signal); }
-function toggleMute() { if(localStream) { muted=!muted; localStream.getAudioTracks()[0].enabled=!muted; document.getElementById('muteBtn').classList.toggle('active',muted); } }
-function endCall() { document.getElementById('callScreen').classList.add('hidden'); if(currentPeer) { currentPeer.destroy(); currentPeer=null; } }
+
+function setupPeer(peer, u) {
+    peer.on('signal', s => { 
+        ably.channels.get(`priv-${u}`).publish('signal', {signal: s, from: currentUser}); 
+    });
+    
+    peer.on('stream', remoteStream => {
+        console.log('Received remote stream');
+        
+        // إنشاء عنصر audio لتشغيل الصوت البعيد
+        if (!remoteAudio) {
+            remoteAudio = new Audio();
+            remoteAudio.autoplay = true;
+            remoteAudio.volume = 1.0;
+        }
+        
+        remoteAudio.srcObject = remoteStream;
+        remoteAudio.play()
+            .then(() => {
+                console.log('Remote audio playing');
+                document.getElementById('callStatus').textContent = '📞 متصل';
+            })
+            .catch(e => {
+                console.error('Audio play error:', e);
+                showToast('خطأ', 'فشل تشغيل الصوت');
+            });
+    });
+    
+    peer.on('connect', () => {
+        console.log('Peer connected');
+        document.getElementById('callStatus').textContent = '📞 متصل';
+    });
+    
+    peer.on('close', () => {
+        console.log('Peer closed');
+        endCall();
+    });
+    
+    peer.on('error', err => {
+        console.error('Peer error:', err);
+        showToast('خطأ', 'خطأ في الاتصال');
+        endCall();
+    });
+    
+    currentPeer = peer;
+}
+
+function handleSignal(m) { 
+    if (currentPeer && m.data.from !== currentUser) {
+        try {
+            currentPeer.signal(m.data.signal);
+        } catch (e) {
+            console.error('Signal error:', e);
+        }
+    }
+}
+
+function toggleMute() { 
+    if (localStream) { 
+        muted = !muted; 
+        localStream.getAudioTracks()[0].enabled = !muted; 
+        document.getElementById('muteBtn').classList.toggle('active', muted); 
+    } 
+}
+
+function endCall() { 
+    stopRingtone();
+    document.getElementById('callScreen').classList.add('hidden'); 
+    
+    if (currentPeer) { 
+        currentPeer.destroy(); 
+        currentPeer = null; 
+    }
+    
+    if (remoteAudio) {
+        remoteAudio.pause();
+        remoteAudio.srcObject = null;
+        remoteAudio = null;
+    }
+    
+    currentChat = null;
+}
 
 window.showRegister=showRegister; window.showLogin=showLogin; window.register=register; window.login=login; window.logout=logout;
 window.switchTab=switchTab; window.sendMessage=sendMessage; window.sendFriendRequestTo=sendFriendRequestTo;
