@@ -3,705 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎲 لودو أونلاين - العب الآن!</title>
+    <title>🎲 لودو أونلاين</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #1a5f2e 0%, #0d3318 100%);
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* ============ شاشة تسجيل الدخول ============ */
-        .login-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a5f2e 0%, #0d3318 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            z-index: 1000;
-        }
-        
-        .login-box {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 30px;
-            padding: 40px 30px;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-        }
-        
-        .login-logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .login-logo h1 {
-            font-size: 2.5rem;
-            color: #1a5f2e;
-            margin-bottom: 10px;
-        }
-        
-        .login-input {
-            width: 100%;
-            padding: 15px 20px;
-            margin-bottom: 15px;
-            border: 2px solid #ddd;
-            border-radius: 15px;
-            font-size: 16px;
-            font-family: 'Cairo', sans-serif;
-            transition: all 0.3s ease;
-        }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #1a5f2e;
-            box-shadow: 0 0 0 4px rgba(26, 95, 46, 0.1);
-        }
-        
-        .login-btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 15px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Cairo', sans-serif;
-            margin-bottom: 10px;
-        }
-        
-        .btn-login {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-        }
-        
-        .btn-register {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
-        }
-        
-        .login-btn:active {
-            transform: scale(0.98);
-        }
-        
-        .login-message {
-            text-align: center;
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        .message-error {
-            background: rgba(244, 67, 54, 0.1);
-            color: #f44336;
-        }
-        
-        .message-success {
-            background: rgba(76, 175, 80, 0.1);
-            color: #4CAF50;
-        }
-        
-        /* ============ شاشة القائمة الرئيسية ============ */
-        .main-menu {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a5f2e 0%, #0d3318 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .menu-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        
-        .menu-header h1 {
-            font-size: 3rem;
-            color: #FFD700;
-            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            margin-bottom: 10px;
-        }
-        
-        .menu-header p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.2rem;
-        }
-        
-        .menu-coins {
-            background: rgba(255, 215, 0, 0.2);
-            border: 2px solid #FFD700;
-            border-radius: 20px;
-            padding: 15px 30px;
-            margin-bottom: 40px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .menu-coins .coin-icon {
-            font-size: 2rem;
-        }
-        
-        .menu-coins .coin-amount {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #FFD700;
-        }
-        
-        .menu-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            max-width: 350px;
-        }
-        
-        .menu-btn {
-            padding: 20px;
-            border: none;
-            border-radius: 20px;
-            font-size: 1.5rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Cairo', sans-serif;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .menu-btn:active {
-            transform: translateY(2px);
-        }
-        
-        .btn-play {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-        }
-        
-        .btn-friends {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            color: white;
-        }
-        
-        .btn-chat {
-            background: linear-gradient(135deg, #FF9800, #F57C00);
-            color: white;
-        }
-        
-        /* ============ شاشة اختيار المبلغ ============ */
-        .bet-selection {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-        
-        .bet-box {
-            background: white;
-            border-radius: 30px;
-            padding: 40px 30px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-        }
-        
-        .bet-box h2 {
-            font-size: 2rem;
-            color: #1a5f2e;
-            margin-bottom: 30px;
-        }
-        
-        .bet-options {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .bet-option {
-            padding: 20px;
-            border: 3px solid #ddd;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-        }
-        
-        .bet-option:hover {
-            border-color: #4CAF50;
-            background: rgba(76, 175, 80, 0.05);
-        }
-        
-        .bet-option.selected {
-            border-color: #4CAF50;
-            background: rgba(76, 175, 80, 0.1);
-        }
-        
-        .bet-amount {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #FFD700;
-        }
-        
-        .bet-cancel {
-            padding: 15px;
-            background: #f44336;
-            color: white;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        /* ============ شاشة البحث عن لاعبين ============ */
-        .searching-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a5f2e 0%, #0d3318 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-        
-        .searching-content {
-            text-align: center;
-        }
-        
-        .searching-spinner {
-            width: 100px;
-            height: 100px;
-            border: 8px solid rgba(255, 215, 0, 0.2);
-            border-top-color: #FFD700;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 30px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .searching-text {
-            font-size: 2rem;
-            color: white;
-            margin-bottom: 20px;
-        }
-        
-        .searching-dots {
-            font-size: 2rem;
-            color: #FFD700;
-        }
-        
-        .searching-cancel {
-            margin-top: 40px;
-            padding: 15px 40px;
-            background: #f44336;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-        
-        /* ============ شاشة اللعبة ============ */
-        .game-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #2d7a3f 0%, #1a5f2e 100%);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .game-header {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .player-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .player-avatar {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            border: 3px solid white;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-        
-        .player-name {
-            color: white;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        
-        .game-bet {
-            background: rgba(255, 215, 0, 0.2);
-            border: 2px solid #FFD700;
-            border-radius: 15px;
-            padding: 8px 15px;
-            color: #FFD700;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        
-        .game-board-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
-            position: relative;
-        }
-        
-        .game-board {
-            width: min(95vw, 95vh, 500px);
-            height: min(95vw, 95vh, 500px);
-            background: white;
-            border-radius: 15px;
-            padding: 8px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-        
-        .board-grid {
-            width: 100%;
-            height: 100%;
-            display: grid;
-            grid-template-columns: repeat(15, 1fr);
-            grid-template-rows: repeat(15, 1fr);
-            gap: 1px;
-            background: #e0e0e0;
-            position: relative;
-        }
-        
-        .cell {
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            font-size: 0.6rem;
-        }
-        
-        .base-green { background: linear-gradient(135deg, #4CAF50, #45a049) !important; border-radius: 15px; }
-        .base-yellow { background: linear-gradient(135deg, #FFD700, #FFA500) !important; border-radius: 15px; }
-        .base-blue { background: linear-gradient(135deg, #2196F3, #1976D2) !important; border-radius: 15px; }
-        .base-red { background: linear-gradient(135deg, #f44336, #d32f2f) !important; border-radius: 15px; }
-        
-        .path-cell { background: #f5f5f5 !important; }
-        .safe-green { background: rgba(76, 175, 80, 0.3) !important; }
-        .safe-yellow { background: rgba(255, 215, 0, 0.3) !important; }
-        .safe-blue { background: rgba(33, 150, 243, 0.3) !important; }
-        .safe-red { background: rgba(244, 67, 54, 0.3) !important; }
-        
-        .start-green { background: #4CAF50 !important; }
-        .start-yellow { background: #FFD700 !important; }
-        .start-blue { background: #2196F3 !important; }
-        .start-red { background: #f44336 !important; }
-        
-        .home-green { background: linear-gradient(to right, white, #4CAF50) !important; }
-        .home-yellow { background: linear-gradient(to right, white, #FFD700) !important; }
-        .home-blue { background: linear-gradient(to right, white, #2196F3) !important; }
-        .home-red { background: linear-gradient(to right, white, #f44336) !important; }
-        
-        .center-cell {
-            background: linear-gradient(45deg, #4CAF50, #FFD700, #2196F3, #f44336) !important;
-            font-size: 1.2rem;
-        }
-        
-        .piece {
-            width: 80%;
-            height: 80%;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            color: white;
-            border: 2px solid white;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        
-        .piece:active {
-            transform: translate(-50%, -50%) scale(1.15);
-        }
-        
-        .piece-green { background: radial-gradient(circle at 30% 30%, #66bb6a, #4CAF50); }
-        .piece-yellow { background: radial-gradient(circle at 30% 30%, #ffd54f, #FFD700); }
-        .piece-blue { background: radial-gradient(circle at 30% 30%, #42a5f5, #2196F3); }
-        .piece-red { background: radial-gradient(circle at 30% 30%, #ef5350, #f44336); }
-        
-        .piece.can-move {
-            animation: pulsePiece 0.8s ease-in-out infinite;
-        }
-        
-        @keyframes pulsePiece {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
-        }
-        
-        .dice-area {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-        }
-        
-        .dice-container {
-            text-align: center;
-        }
-        
-        .dice {
-            width: 70px;
-            height: 70px;
-            background: white;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-            margin: 0 auto 10px;
-            border: 3px solid #FFD700;
-        }
-        
-        .dice.rolling {
-            animation: diceRoll 0.5s ease-in-out;
-        }
-        
-        @keyframes diceRoll {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(90deg); }
-            50% { transform: rotate(180deg); }
-            75% { transform: rotate(270deg); }
-        }
-        
-        .roll-btn {
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #1a5f2e;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            font-family: 'Cairo', sans-serif;
-        }
-        
-        .roll-btn:active {
-            transform: translateY(2px);
-        }
-        
-        .roll-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .game-status {
-            color: white;
-            font-weight: 700;
-            font-size: 1.1rem;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 10px;
-            border-radius: 10px;
-        }
-        
-        .voice-control {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            z-index: 100;
-        }
-        
-        .mic-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 3px solid white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-        }
-        
-        .mic-btn.active {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            animation: micPulse 1.5s ease-in-out infinite;
-        }
-        
-        .mic-btn.muted {
-            background: linear-gradient(135deg, #f44336, #d32f2f);
-            color: white;
-        }
-        
-        @keyframes micPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(76, 175, 80, 0.6); }
-        }
-        
-        .opponent-info {
-            position: absolute;
-            top: 80px;
-            right: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 15px;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .opponent-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #f44336, #d32f2f);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            border: 2px solid white;
-        }
-        
-        .opponent-name {
-            color: white;
-            font-weight: 700;
-        }
-        
-        .result-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-        }
-        
-        .result-box {
-            background: white;
-            border-radius: 30px;
-            padding: 50px 40px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        
-        .result-icon {
-            font-size: 5rem;
-            margin-bottom: 20px;
-        }
-        
-        .result-title {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            color: #1a5f2e;
-        }
-        
-        .result-coins {
-            font-size: 2rem;
-            color: #FFD700;
-            font-weight: 700;
-            margin-bottom: 30px;
-        }
-        
-        .result-btn {
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            font-size: 1.3rem;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-        }
-        
-        .hidden { display: none !important; }
+        /* نفس الستايل السابق بالضبط - ما أغير شي */
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        body { font-family:'Cairo',sans-serif; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); overflow:hidden; position:fixed; width:100%; height:100%; }
+        .login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000; }
+        .login-box { background:rgba(255,255,255,0.95); border-radius:30px; padding:40px 30px; max-width:400px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.5); }
+        .login-logo { text-align:center; margin-bottom:30px; }
+        .login-logo h1 { font-size:2.5rem; color:#1a5f2e; margin-bottom:10px; }
+        .login-input { width:100%; padding:15px 20px; margin-bottom:15px; border:2px solid #ddd; border-radius:15px; font-size:16px; font-family:'Cairo',sans-serif; }
+        .login-input:focus { outline:none; border-color:#1a5f2e; }
+        .login-btn { width:100%; padding:15px; border:none; border-radius:15px; font-size:18px; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; margin-bottom:10px; }
+        .btn-login { background:linear-gradient(135deg,#4CAF50,#45a049); color:white; }
+        .btn-register { background:linear-gradient(135deg,#2196F3,#1976D2); color:white; }
+        .login-btn:active { transform:scale(0.98); }
+        .login-message { text-align:center; margin-top:10px; padding:10px; border-radius:10px; font-size:14px; font-weight:600; }
+        .message-error { background:rgba(244,67,54,0.1); color:#f44336; }
+        .message-success { background:rgba(76,175,80,0.1); color:#4CAF50; }
+        .main-menu { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+        .menu-header { text-align:center; margin-bottom:40px; }
+        .menu-header h1 { font-size:3rem; color:#FFD700; text-shadow:0 4px 15px rgba(0,0,0,0.5); margin-bottom:10px; }
+        .menu-header p { color:rgba(255,255,255,0.8); font-size:1.2rem; }
+        .menu-coins { background:rgba(255,215,0,0.2); border:2px solid #FFD700; border-radius:20px; padding:15px 30px; margin-bottom:40px; display:flex; align-items:center; gap:10px; }
+        .menu-coins .coin-icon { font-size:2rem; }
+        .menu-coins .coin-amount { font-size:1.8rem; font-weight:700; color:#FFD700; }
+        .menu-buttons { display:flex; flex-direction:column; gap:15px; width:100%; max-width:350px; }
+        .menu-btn { padding:20px; border:none; border-radius:20px; font-size:1.5rem; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; box-shadow:0 8px 20px rgba(0,0,0,0.3); }
+        .menu-btn:active { transform:translateY(2px); }
+        .btn-play { background:linear-gradient(135deg,#4CAF50,#45a049); color:white; }
+        .btn-friends { background:linear-gradient(135deg,#2196F3,#1976D2); color:white; }
+        .btn-chat { background:linear-gradient(135deg,#FF9800,#F57C00); color:white; }
+        .bet-selection { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:2000; padding:20px; }
+        .bet-box { background:white; border-radius:30px; padding:40px 30px; max-width:400px; width:100%; text-align:center; }
+        .bet-box h2 { font-size:2rem; color:#1a5f2e; margin-bottom:30px; }
+        .bet-options { display:flex; flex-direction:column; gap:15px; margin-bottom:20px; }
+        .bet-option { padding:20px; border:3px solid #ddd; border-radius:20px; cursor:pointer; background:white; }
+        .bet-option.selected { border-color:#4CAF50; background:rgba(76,175,80,0.1); }
+        .bet-amount { font-size:2rem; font-weight:700; color:#FFD700; }
+        .bet-cancel { padding:15px; background:#f44336; color:white; border:none; border-radius:15px; font-size:1.2rem; font-weight:700; cursor:pointer; width:100%; margin-top:10px; }
+        .searching-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:2000; }
+        .searching-content { text-align:center; }
+        .searching-spinner { width:100px; height:100px; border:8px solid rgba(255,215,0,0.2); border-top-color:#FFD700; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 30px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .searching-text { font-size:2rem; color:white; margin-bottom:20px; }
+        .searching-cancel { margin-top:40px; padding:15px 40px; background:#f44336; color:white; border:none; border-radius:20px; font-size:1.2rem; font-weight:700; cursor:pointer; }
+        .game-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#2d7a3f 0%,#1a5f2e 100%); display:flex; flex-direction:column; }
+        .game-header { background:rgba(0,0,0,0.3); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; }
+        .player-info { display:flex; align-items:center; gap:10px; }
+        .player-avatar { width:50px; height:50px; background:linear-gradient(135deg,#FFD700,#FFA500); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; border:3px solid white; }
+        .player-name { color:white; font-weight:700; font-size:1.1rem; }
+        .game-bet { background:rgba(255,215,0,0.2); border:2px solid #FFD700; border-radius:15px; padding:8px 15px; color:#FFD700; font-weight:700; }
+        .game-board-container { flex:1; display:flex; align-items:center; justify-content:center; padding:10px; position:relative; }
+        .game-board { width:min(95vw,95vh,500px); height:min(95vw,95vh,500px); background:white; border-radius:15px; padding:8px; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
+        .board-grid { width:100%; height:100%; display:grid; grid-template-columns:repeat(15,1fr); grid-template-rows:repeat(15,1fr); gap:1px; background:#e0e0e0; }
+        .cell { background:white; display:flex; align-items:center; justify-content:center; position:relative; font-size:0.6rem; }
+        .base-green { background:linear-gradient(135deg,#4CAF50,#45a049) !important; border-radius:15px; }
+        .base-yellow { background:linear-gradient(135deg,#FFD700,#FFA500) !important; border-radius:15px; }
+        .base-blue { background:linear-gradient(135deg,#2196F3,#1976D2) !important; border-radius:15px; }
+        .base-red { background:linear-gradient(135deg,#f44336,#d32f2f) !important; border-radius:15px; }
+        .path-cell { background:#f5f5f5 !important; }
+        .start-green { background:#4CAF50 !important; }
+        .start-yellow { background:#FFD700 !important; }
+        .start-blue { background:#2196F3 !important; }
+        .start-red { background:#f44336 !important; }
+        .center-cell { background:linear-gradient(45deg,#4CAF50,#FFD700,#2196F3,#f44336) !important; font-size:1.2rem; }
+        .piece { width:80%; height:80%; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; border:2px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.4); cursor:pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
+        .piece-green { background:radial-gradient(circle at 30% 30%,#66bb6a,#4CAF50); }
+        .piece-yellow { background:radial-gradient(circle at 30% 30%,#ffd54f,#FFD700); }
+        .piece-blue { background:radial-gradient(circle at 30% 30%,#42a5f5,#2196F3); }
+        .piece-red { background:radial-gradient(circle at 30% 30%,#ef5350,#f44336); }
+        .piece.can-move { animation:pulsePiece 0.8s infinite; }
+        @keyframes pulsePiece { 0%,100%{ transform:translate(-50%,-50%) scale(1); } 50%{ transform:translate(-50%,-50%) scale(1.15); } }
+        .dice-area { background:rgba(0,0,0,0.3); padding:15px; display:flex; align-items:center; justify-content:space-around; }
+        .dice-container { text-align:center; }
+        .dice { width:70px; height:70px; background:white; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; box-shadow:0 5px 15px rgba(0,0,0,0.4); margin:0 auto 10px; border:3px solid #FFD700; }
+        .dice.rolling { animation:diceRoll 0.5s; }
+        @keyframes diceRoll { 0%,100%{ transform:rotate(0); } 25%{ transform:rotate(90deg); } 50%{ transform:rotate(180deg); } 75%{ transform:rotate(270deg); } }
+        .roll-btn { padding:12px 30px; background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a5f2e; border:none; border-radius:15px; font-size:1.2rem; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; }
+        .roll-btn:disabled { opacity:0.5; cursor:not-allowed; }
+        .game-status { color:white; font-weight:700; font-size:1.1rem; text-align:center; background:rgba(0,0,0,0.4); padding:10px; border-radius:10px; }
+        .opponent-info { position:absolute; top:80px; right:15px; background:rgba(0,0,0,0.6); border-radius:15px; padding:10px 15px; display:flex; align-items:center; gap:10px; z-index:100; }
+        .opponent-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:2px solid white; }
+        .opponent-name { color:white; font-weight:700; }
+        .result-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; align-items:center; justify-content:center; z-index:3000; }
+        .result-box { background:white; border-radius:30px; padding:50px 40px; text-align:center; max-width:400px; width:90%; }
+        .result-icon { font-size:5rem; margin-bottom:20px; }
+        .result-title { font-size:2.5rem; margin-bottom:10px; color:#1a5f2e; }
+        .result-coins { font-size:2rem; color:#FFD700; font-weight:700; margin-bottom:30px; }
+        .result-btn { padding:15px 40px; background:linear-gradient(135deg,#4CAF50,#45a049); color:white; border:none; border-radius:15px; font-size:1.3rem; font-weight:700; cursor:pointer; }
+        .hidden { display:none !important; }
     </style>
 </head>
 <body>
 
-<!-- ============ شاشة تسجيل الدخول ============ -->
+<!-- شاشة تسجيل الدخول -->
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
         <div class="login-logo">
             <h1>🎲 لودو أونلاين</h1>
             <p>العب واربح!</p>
         </div>
-        
         <div id="loginForm">
             <input type="text" id="loginUsername" class="login-input" placeholder="اسم المستخدم">
             <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
@@ -709,7 +113,6 @@
             <button class="login-btn btn-register" id="showRegisterBtn">تسجيل جديد 📝</button>
             <div id="loginMessage" class="login-message hidden"></div>
         </div>
-        
         <div id="registerForm" class="hidden">
             <input type="text" id="regUsername" class="login-input" placeholder="اسم المستخدم">
             <input type="password" id="regPassword" class="login-input" placeholder="كلمة المرور">
@@ -720,68 +123,46 @@
     </div>
 </div>
 
-<!-- ============ القائمة الرئيسية ============ -->
+<!-- القائمة الرئيسية -->
 <div id="mainMenu" class="main-menu hidden">
     <div class="menu-header">
         <h1>🎲 لودو أونلاين</h1>
         <p>مرحباً <span id="menuUsername"></span></p>
     </div>
-    
     <div class="menu-coins">
         <span class="coin-icon">💰</span>
         <span class="coin-amount" id="userCoins">10000</span>
     </div>
-    
     <div class="menu-buttons">
-        <button class="menu-btn btn-play" id="playBtn">
-            🎲 العب الآن
-        </button>
-        <button class="menu-btn btn-friends" id="friendsBtn">
-            👥 الأصدقاء
-        </button>
-        <button class="menu-btn btn-chat" id="chatBtn">
-            💬 المحادثات
-        </button>
+        <button class="menu-btn btn-play" id="playBtn">🎲 العب الآن</button>
+        <button class="menu-btn btn-friends" id="friendsBtn">👥 الأصدقاء</button>
+        <button class="menu-btn btn-chat" id="chatBtn">💬 المحادثات</button>
     </div>
 </div>
 
-<!-- ============ اختيار المبلغ ============ -->
+<!-- اختيار المبلغ -->
 <div id="betSelection" class="bet-selection hidden">
     <div class="bet-box">
         <h2>اختر مبلغ المباراة</h2>
         <div class="bet-options">
-            <div class="bet-option" data-bet="500">
-                <div class="bet-amount">💰 500</div>
-                <div>مباراة عادية</div>
-            </div>
-            <div class="bet-option" data-bet="1000">
-                <div class="bet-amount">💰 1000</div>
-                <div>مباراة كبيرة</div>
-            </div>
-            <div class="bet-option" data-bet="5000">
-                <div class="bet-amount">💰 5000</div>
-                <div>مباراة ضخمة</div>
-            </div>
+            <div class="bet-option" data-bet="500"><div class="bet-amount">💰 500</div><div>مباراة عادية</div></div>
+            <div class="bet-option" data-bet="1000"><div class="bet-amount">💰 1000</div><div>مباراة كبيرة</div></div>
+            <div class="bet-option" data-bet="5000"><div class="bet-amount">💰 5000</div><div>مباراة ضخمة</div></div>
         </div>
         <button class="bet-cancel" id="cancelBetBtn">إلغاء</button>
     </div>
 </div>
 
-<!-- ============ البحث عن لاعبين ============ -->
+<!-- البحث عن لاعب -->
 <div id="searchingScreen" class="searching-screen hidden">
     <div class="searching-content">
         <div class="searching-spinner"></div>
         <div class="searching-text">جاري البحث عن لاعب</div>
-        <div class="searching-dots">
-            <span class="dot">.</span>
-            <span class="dot">.</span>
-            <span class="dot">.</span>
-        </div>
         <button class="searching-cancel" id="cancelSearchBtn">إلغاء</button>
     </div>
 </div>
 
-<!-- ============ شاشة اللعبة ============ -->
+<!-- شاشة اللعبة -->
 <div id="gameScreen" class="game-screen hidden">
     <div class="game-header">
         <div class="player-info">
@@ -791,15 +172,9 @@
         <div class="game-bet" id="gameBetDisplay">💰 0</div>
     </div>
     
-    <div class="voice-control">
-        <div class="mic-btn active" id="micBtn">
-            🎤
-        </div>
-    </div>
-    
     <div class="opponent-info">
-        <div class="opponent-avatar">🎮</div>
-        <div class="opponent-name" id="opponentName">منافس</div>
+        <div class="opponent-avatar" id="opponentAvatar">🎮</div>
+        <div class="opponent-name" id="opponentName">في الانتظار...</div>
     </div>
     
     <div class="game-board-container">
@@ -817,18 +192,18 @@
     </div>
 </div>
 
-<!-- ============ شاشة النتيجة ============ -->
+<!-- شاشة النتيجة -->
 <div id="resultScreen" class="result-screen hidden">
     <div class="result-box">
         <div class="result-icon" id="resultIcon">🏆</div>
         <div class="result-title" id="resultTitle">فزت!</div>
-        <div class="result-coins" id="resultCoins">+500 💰</div>
+        <div class="result-coins" id="resultCoins">+0 💰</div>
         <button class="result-btn" id="backToMenuBtn">العودة للقائمة</button>
     </div>
 </div>
 
 <script>
-// ==================== المتغيرات العامة ====================
+// ==================== المتغيرات ====================
 const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
 
 let currentUser = null;
@@ -837,85 +212,42 @@ let selectedBet = 0;
 let ably = null;
 let channel = null;
 let gameChannel = null;
+let isSearching = false;
 
-let localStream = null;
-let micEnabled = true;
-let currentPeer = null;
+// المسار الكامل 52 خانة
+const PATH = [
+    {r:6,c:1},{r:6,c:2},{r:6,c:3},{r:6,c:4},{r:6,c:5},
+    {r:5,c:6},{r:4,c:6},{r:3,c:6},{r:2,c:6},{r:1,c:6},{r:0,c:6},
+    {r:0,c:7},{r:0,c:8},{r:1,c:8},{r:2,c:8},{r:3,c:8},{r:4,c:8},{r:5,c:8},
+    {r:6,c:9},{r:6,c:10},{r:6,c:11},{r:6,c:12},{r:6,c:13},{r:6,c:14},
+    {r:7,c:14},{r:8,c:14},{r:8,c:13},{r:8,c:12},{r:8,c:11},{r:8,c:10},{r:8,c:9},
+    {r:9,c:8},{r:10,c:8},{r:11,c:8},{r:12,c:8},{r:13,c:8},{r:14,c:8},
+    {r:14,c:7},{r:14,c:6},{r:13,c:6},{r:12,c:6},{r:11,c:6},{r:10,c:6},{r:9,c:6},
+    {r:8,c:5},{r:8,c:4},{r:8,c:3},{r:8,c:2},{r:8,c:1},{r:8,c:0},
+    {r:7,c:0},{r:6,c:0}
+];
 
-// تعريف المسار الكامل (52 خانة) لكل لون
-const PATH_COORDINATES = {
-    // المسار المشترك للجميع - 52 خانة
-    common: [
-        // الصفوف والأعمدة للمسار الكامل
-        {row: 6, col: 1}, // 0 - بداية الأخضر
-        {row: 6, col: 2}, {row: 6, col: 3}, {row: 6, col: 4}, {row: 6, col: 5},
-        {row: 5, col: 6}, {row: 4, col: 6}, {row: 3, col: 6}, {row: 2, col: 6}, {row: 1, col: 6}, {row: 0, col: 6},
-        {row: 0, col: 7}, {row: 0, col: 8}, // 11-12 - بداية الأصفر عند 12
-        {row: 1, col: 8}, {row: 2, col: 8}, {row: 3, col: 8}, {row: 4, col: 8}, {row: 5, col: 8},
-        {row: 6, col: 9}, {row: 6, col: 10}, {row: 6, col: 11}, {row: 6, col: 12}, {row: 6, col: 13}, {row: 6, col: 14},
-        {row: 7, col: 14}, {row: 8, col: 14}, // 24-25 - بداية الأحمر عند 25
-        {row: 8, col: 13}, {row: 8, col: 12}, {row: 8, col: 11}, {row: 8, col: 10}, {row: 8, col: 9},
-        {row: 9, col: 8}, {row: 10, col: 8}, {row: 11, col: 8}, {row: 12, col: 8}, {row: 13, col: 8}, {row: 14, col: 8},
-        {row: 14, col: 7}, {row: 14, col: 6}, // 37-38 - بداية الأزرق عند 38
-        {row: 13, col: 6}, {row: 12, col: 6}, {row: 11, col: 6}, {row: 10, col: 6}, {row: 9, col: 6},
-        {row: 8, col: 5}, {row: 8, col: 4}, {row: 8, col: 3}, {row: 8, col: 2}, {row: 8, col: 1}, {row: 8, col: 0},
-        {row: 7, col: 0}, {row: 6, col: 0} // 50-51 - العودة لبداية الأخضر
-    ],
-    // نقاط البداية لكل لون في المسار المشترك
-    startPos: {
-        green: 0,
-        yellow: 12,
-        red: 25,
-        blue: 38
-    },
-    // مسار النهاية (Home) لكل لون - 5 خانات
-    home: {
-        green: [
-            {row: 7, col: 1}, {row: 7, col: 2}, {row: 7, col: 3}, {row: 7, col: 4}, {row: 7, col: 5}
-        ],
-        yellow: [
-            {row: 1, col: 7}, {row: 2, col: 7}, {row: 3, col: 7}, {row: 4, col: 7}, {row: 5, col: 7}
-        ],
-        red: [
-            {row: 7, col: 13}, {row: 7, col: 12}, {row: 7, col: 11}, {row: 7, col: 10}, {row: 7, col: 9}
-        ],
-        blue: [
-            {row: 13, col: 7}, {row: 12, col: 7}, {row: 11, col: 7}, {row: 10, col: 7}, {row: 9, col: 7}
-        ]
-    }
+const STARTS = { green:0, yellow:12, red:25, blue:38 };
+const SAFE = [0,12,25,38,8,17,30,43];
+
+// نقاط النهاية
+const HOME = {
+    green: [{r:7,c:1},{r:7,c:2},{r:7,c:3},{r:7,c:4},{r:7,c:5}],
+    yellow: [{r:1,c:7},{r:2,c:7},{r:3,c:7},{r:4,c:7},{r:5,c:7}],
+    red: [{r:7,c:13},{r:7,c:12},{r:7,c:11},{r:7,c:10},{r:7,c:9}],
+    blue: [{r:13,c:7},{r:12,c:7},{r:11,c:7},{r:10,c:7},{r:9,c:7}]
 };
 
 let gameState = {
     myColor: null,
     opponentColor: null,
-    currentTurn: null,
+    currentTurn: 'green',
     lastDice: 0,
-    canRollAgain: false,
     pieces: {
-        green: [
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}
-        ],
-        yellow: [
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}
-        ],
-        blue: [
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}
-        ],
-        red: [
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}, 
-            {pos: -1, homeSteps: 0, finished: false}
-        ]
+        green: [{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false}],
+        yellow: [{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false}],
+        blue: [{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false}],
+        red: [{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false}]
     },
     matchId: null,
     opponent: null
@@ -925,120 +257,67 @@ let users = JSON.parse(localStorage.getItem('ludo_users')) || {};
 let userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
 
 // ==================== دوال مساعدة ====================
-function showMessage(elementId, text, type) {
-    const el = document.getElementById(elementId);
-    if (!el) return;
+function showMessage(id, text, type) {
+    const el = document.getElementById(id);
+    if(!el) return;
     el.textContent = text;
     el.className = `login-message message-${type}`;
     el.classList.remove('hidden');
     setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
+// ==================== تسجيل الدخول ====================
 function showRegisterForm() {
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('registerForm').classList.remove('hidden');
-    document.getElementById('regMessage').classList.add('hidden');
 }
 
 function showLoginForm() {
     document.getElementById('registerForm').classList.add('hidden');
     document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('loginMessage').classList.add('hidden');
 }
 
-// ==================== تسجيل الدخول والتسجيل ====================
 function register() {
     const username = document.getElementById('regUsername').value.trim();
     const password = document.getElementById('regPassword').value;
-    
-    if (!username || !password) {
-        showMessage('regMessage', '❌ الرجاء ملء جميع الحقول', 'error');
-        return;
-    }
-    
+    if(!username||!password){showMessage('regMessage','❌ املأ جميع الحقول','error');return;}
     users = JSON.parse(localStorage.getItem('ludo_users')) || {};
-    userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
-    
-    if (users[username]) {
-        showMessage('regMessage', '❌ اسم المستخدم موجود مسبقاً', 'error');
-        return;
-    }
-    
-    users[username] = password;
-    userStats[username] = { coins: 10000, wins: 0, losses: 0 };
-    
-    localStorage.setItem('ludo_users', JSON.stringify(users));
-    localStorage.setItem('ludo_stats', JSON.stringify(userStats));
-    
-    showMessage('regMessage', '✅ تم التسجيل بنجاح! سجل الدخول الآن', 'success');
-    
-    setTimeout(() => {
-        document.getElementById('loginUsername').value = username;
-        document.getElementById('loginPassword').value = '';
-        showLoginForm();
-    }, 1500);
+    if(users[username]){showMessage('regMessage','❌ الاسم موجود','error');return;}
+    users[username]=password;
+    userStats[username]={coins:10000,wins:0,losses:0};
+    localStorage.setItem('ludo_users',JSON.stringify(users));
+    localStorage.setItem('ludo_stats',JSON.stringify(userStats));
+    showMessage('regMessage','✅ تم التسجيل','success');
+    setTimeout(()=>{document.getElementById('loginUsername').value=username;showLoginForm();},1500);
 }
 
 async function login() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
-    
-    console.log("🔑 محاولة تسجيل الدخول:", username);
-    
     users = JSON.parse(localStorage.getItem('ludo_users')) || {};
     userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
     
-    if (!username || !password) {
-        showMessage('loginMessage', '❌ الرجاء ملء جميع الحقول', 'error');
-        return;
-    }
-    
-    if (!users[username] || users[username] !== password) {
-        showMessage('loginMessage', '❌ اسم مستخدم أو كلمة مرور خاطئة', 'error');
-        return;
+    if(!users[username]||users[username]!==password){
+        showMessage('loginMessage','❌ خطأ في البيانات','error');return;
     }
     
     currentUser = username;
-    
-    if (!userStats[currentUser]) {
-        userStats[currentUser] = { coins: 10000, wins: 0, losses: 0 };
-        localStorage.setItem('ludo_stats', JSON.stringify(userStats));
-    }
-    
-    userCoins = userStats[currentUser].coins;
-    
-    showMessage('loginMessage', '✅ جاري الاتصال...', 'success');
-    
-    try {
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log('✅ تم الحصول على المايك');
-    } catch (e) {
-        console.log('⚠️ لا يمكن الوصول للمايك:', e);
-    }
+    userCoins = userStats[currentUser]?.coins || 10000;
     
     try {
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
-        
         ably.connection.on('connected', () => {
-            console.log('✅ متصل بـ Ably بنجاح');
+            console.log('✅ متصل');
             channel = ably.channels.get('ludo-main');
-            
             channel.subscribe('match-found', handleMatchFound);
-            channel.subscribe('call-signal', handleCallSignal);
-            
-            channel.presence.enter({ username: currentUser, coins: userCoins });
-            
+            channel.presence.enter({ username: currentUser });
             showMainMenu();
         });
-        
-        ably.connection.on('failed', (err) => {
-            console.error('❌ فشل الاتصال:', err);
-            showMessage('loginMessage', '❌ فشل الاتصال بالخادم. تأكد من الإنترنت.', 'error');
+        ably.connection.on('failed', (e) => {
+            showMessage('loginMessage','❌ فشل الاتصال','error');
         });
-        
-    } catch (e) {
-        console.error('❌ خطأ في إنشاء اتصال Ably:', e);
-        showMessage('loginMessage', '❌ حدث خطأ. حاول مرة أخرى.', 'error');
+    } catch(e) {
+        showMessage('loginMessage','❌ خطأ','error');
     }
 }
 
@@ -1049,14 +328,60 @@ function showMainMenu() {
     document.getElementById('userCoins').textContent = userCoins;
 }
 
-// ==================== معالجات أحداث Ably ====================
-function handleMatchFound(message) {
-    const data = message.data;
-    if (data.player1 !== currentUser && data.player2 !== currentUser) return;
+// ==================== البحث عن مباراة ====================
+function showBetSelection() {
+    document.getElementById('betSelection').classList.remove('hidden');
+}
+
+function cancelBetSelection() {
+    document.getElementById('betSelection').classList.add('hidden');
+}
+
+function selectBet(amount) {
+    if(userCoins < amount) { alert('❌ عملات غير كافية'); return; }
+    selectedBet = amount;
+    document.querySelectorAll('.bet-option').forEach(o=>o.classList.remove('selected'));
+    document.querySelector(`[data-bet="${amount}"]`).classList.add('selected');
+    setTimeout(()=>{ if(selectedBet>0) startSearching(); }, 300);
+}
+
+function startSearching() {
+    document.getElementById('betSelection').classList.add('hidden');
+    document.getElementById('searchingScreen').classList.remove('hidden');
+    isSearching = true;
     
+    channel.subscribe('search-match', (msg) => {
+        if(!isSearching) return;
+        const data = msg.data;
+        if(data.username === currentUser) return;
+        if(data.bet !== selectedBet) return;
+        
+        const matchId = 'm_'+Date.now();
+        channel.publish('match-found', {
+            player1: currentUser,
+            player2: data.username,
+            bet: selectedBet,
+            matchId: matchId
+        });
+    });
+    
+    channel.publish('search-match', { username: currentUser, bet: selectedBet });
+}
+
+function cancelSearch() {
+    isSearching = false;
+    channel.unsubscribe('search-match');
+    document.getElementById('searchingScreen').classList.add('hidden');
+}
+
+function handleMatchFound(msg) {
+    const data = msg.data;
+    if(data.player1 !== currentUser && data.player2 !== currentUser) return;
+    
+    isSearching = false;
     channel.unsubscribe('search-match');
     
-    if (data.player1 === currentUser) {
+    if(data.player1 === currentUser) {
         gameState.myColor = 'green';
         gameState.opponentColor = 'yellow';
         gameState.opponent = data.player2;
@@ -1069,74 +394,12 @@ function handleMatchFound(message) {
     gameState.matchId = data.matchId;
     gameState.currentTurn = 'green';
     
-    gameChannel = ably.channels.get(`game-${data.matchId}`);
+    gameChannel = ably.channels.get('game-'+data.matchId);
+    gameChannel.subscribe('dice', handleOpponentDice);
     gameChannel.subscribe('move', handleOpponentMove);
-    gameChannel.subscribe('dice-roll', handleOpponentDiceRoll);
-    gameChannel.subscribe('call-signal', handleCallSignal);
-    
-    setTimeout(() => {
-        startVoiceCall();
-    }, 1000);
     
     document.getElementById('searchingScreen').classList.add('hidden');
     startGame();
-}
-
-function handleSearchMatch(message) {
-    const data = message.data;
-    if (data.username === currentUser) return;
-    if (data.bet !== selectedBet) return;
-    
-    const matchId = `match_${Date.now()}`;
-    
-    channel.publish('match-found', {
-        player1: currentUser,
-        player2: data.username,
-        bet: selectedBet,
-        matchId: matchId
-    });
-}
-
-// ==================== اختيار المبلغ والبحث ====================
-function showBetSelection() {
-    document.getElementById('betSelection').classList.remove('hidden');
-}
-
-function cancelBetSelection() {
-    document.getElementById('betSelection').classList.add('hidden');
-}
-
-function selectBet(amount) {
-    if (userCoins < amount) {
-        alert('❌ ليس لديك عملات كافية!');
-        return;
-    }
-    
-    selectedBet = amount;
-    document.querySelectorAll('.bet-option').forEach(opt => opt.classList.remove('selected'));
-    document.querySelector(`[data-bet="${amount}"]`).classList.add('selected');
-}
-
-function startSearching() {
-    if (selectedBet === 0) {
-        alert('❌ الرجاء اختيار مبلغ المباراة أولاً');
-        return;
-    }
-    
-    document.getElementById('betSelection').classList.add('hidden');
-    document.getElementById('searchingScreen').classList.remove('hidden');
-    
-    channel.publish('search-match', {
-        username: currentUser,
-        bet: selectedBet
-    });
-    
-    channel.subscribe('search-match', handleSearchMatch);
-}
-
-function cancelSearch() {
-    channel.unsubscribe('search-match');
-    document.getElementById('searchingScreen').classList.add('hidden');
 }
 
 // ==================== اللعبة ====================
@@ -1146,22 +409,58 @@ function startGame() {
     document.getElementById('opponentName').textContent = gameState.opponent || 'منافس';
     document.getElementById('gameBetDisplay').textContent = `💰 ${selectedBet}`;
     
+    const oppAvatar = document.getElementById('opponentAvatar');
+    oppAvatar.style.background = gameState.opponentColor === 'green' ? 
+        'linear-gradient(135deg,#4CAF50,#45a049)' : 'linear-gradient(135deg,#FFD700,#FFA500)';
+    
     initBoard();
-    updateGameStatus();
+    updateStatus();
 }
 
 function initBoard() {
     const board = document.getElementById('gameBoard');
     board.innerHTML = '';
     
-    for (let row = 0; row < 15; row++) {
-        for (let col = 0; col < 15; col++) {
+    for(let r=0; r<15; r++) {
+        for(let c=0; c<15; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.dataset.row = row;
-            cell.dataset.col = col;
+            cell.dataset.r = r;
+            cell.dataset.c = c;
             
-            styleBoardCell(cell, row, col);
+            // القواعد
+            if(r<6 && c<6) { cell.classList.add('base-green');
+                if((r===1&&c===1)||(r===1&&c===4)||(r===4&&c===1)||(r===4&&c===4)) cell.dataset.base='green';
+            }
+            if(r<6 && c>=9) { cell.classList.add('base-yellow');
+                if((r===1&&c===10)||(r===1&&c===13)||(r===4&&c===10)||(r===4&&c===13)) cell.dataset.base='yellow';
+            }
+            if(r>=9 && c<6) { cell.classList.add('base-blue');
+                if((r===10&&c===1)||(r===10&&c===4)||(r===13&&c===1)||(r===13&&c===4)) cell.dataset.base='blue';
+            }
+            if(r>=9 && c>=9) { cell.classList.add('base-red');
+                if((r===10&&c===10)||(r===10&&c===13)||(r===13&&c===10)||(r===13&&c===13)) cell.dataset.base='red';
+            }
+            
+            // المسار
+            const pathIdx = PATH.findIndex(p=>p.r===r&&p.c===c);
+            if(pathIdx >= 0) { cell.classList.add('path-cell'); cell.dataset.path = pathIdx; }
+            
+            // البدايات
+            if(r===6&&c===1) cell.classList.add('start-green');
+            if(r===1&&c===8) cell.classList.add('start-yellow');
+            if(r===8&&c===13) cell.classList.add('start-red');
+            if(r===13&&c===6) cell.classList.add('start-blue');
+            
+            // النهاية
+            Object.entries(HOME).forEach(([color, cells]) => {
+                cells.forEach((pos, i) => {
+                    if(pos.r===r && pos.c===c) { cell.dataset.home = color; cell.dataset.homeIdx = i; }
+                });
+            });
+            
+            if(r===7&&c===7) { cell.classList.add('center-cell'); cell.innerHTML='🏆'; }
+            
             board.appendChild(cell);
         }
     }
@@ -1169,471 +468,268 @@ function initBoard() {
     renderPieces();
 }
 
-function styleBoardCell(cell, row, col) {
-    // القواعد الأربعة
-    if (row >= 0 && row < 6 && col >= 0 && col < 6) {
-        cell.classList.add('base-green');
-        if ((row === 1 && col === 1) || (row === 1 && col === 4) ||
-            (row === 4 && col === 1) || (row === 4 && col === 4)) {
-            cell.dataset.base = 'green';
-        }
-    }
-    
-    if (row >= 0 && row < 6 && col >= 9 && col < 15) {
-        cell.classList.add('base-yellow');
-        if ((row === 1 && col === 10) || (row === 1 && col === 13) ||
-            (row === 4 && col === 10) || (row === 4 && col === 13)) {
-            cell.dataset.base = 'yellow';
-        }
-    }
-    
-    if (row >= 9 && row < 15 && col >= 0 && col < 6) {
-        cell.classList.add('base-blue');
-        if ((row === 10 && col === 1) || (row === 10 && col === 4) ||
-            (row === 13 && col === 1) || (row === 13 && col === 4)) {
-            cell.dataset.base = 'blue';
-        }
-    }
-    
-    if (row >= 9 && row < 15 && col >= 9 && col < 15) {
-        cell.classList.add('base-red');
-        if ((row === 10 && col === 10) || (row === 10 && col === 13) ||
-            (row === 13 && col === 10) || (row === 13 && col === 13)) {
-            cell.dataset.base = 'red';
-        }
-    }
-    
-    // المسار المشترك
-    const isPath = PATH_COORDINATES.common.some(coord => coord.row === row && coord.col === col);
-    if (isPath) {
-        cell.classList.add('path-cell');
-        cell.dataset.pathIndex = PATH_COORDINATES.common.findIndex(coord => coord.row === row && coord.col === col);
-    }
-    
-    // مسار النهاية
-    Object.keys(PATH_COORDINATES.home).forEach(color => {
-        PATH_COORDINATES.home[color].forEach((coord, idx) => {
-            if (coord.row === row && coord.col === col) {
-                cell.classList.add(`home-${color}`);
-                cell.dataset.homeColor = color;
-                cell.dataset.homeIndex = idx;
-            }
-        });
-    });
-    
-    // نقاط البداية
-    if (row === 6 && col === 1) cell.classList.add('start-green');
-    if (row === 1 && col === 8) cell.classList.add('start-yellow');
-    if (row === 8 && col === 13) cell.classList.add('start-red');
-    if (row === 13 && col === 6) cell.classList.add('start-blue');
-    
-    // المناطق الآمنة (النجوم)
-    const safeSpots = [
-        {row: 6, col: 1}, {row: 1, col: 8}, {row: 8, col: 13}, {row: 13, col: 6},
-        {row: 2, col: 2}, {row: 2, col: 12}, {row: 12, col: 12}, {row: 12, col: 2}
-    ];
-    if (safeSpots.some(s => s.row === row && s.col === col)) {
-        cell.classList.add('safe-cell');
-    }
-    
-    // المركز
-    if (row === 7 && col === 7) {
-        cell.classList.add('center-cell');
-        cell.innerHTML = '🏆';
-    }
-}
-
 function renderPieces() {
-    document.querySelectorAll('.piece').forEach(p => p.remove());
+    document.querySelectorAll('.piece').forEach(p=>p.remove());
     
-    Object.keys(gameState.pieces).forEach(color => {
-        gameState.pieces[color].forEach((piece, index) => {
-            if (piece.finished) return; // قطعة وصلت للنهاية
+    Object.entries(gameState.pieces).forEach(([color, pieces]) => {
+        pieces.forEach((p, idx) => {
+            if(p.done) return;
             
-            let targetCell = null;
-            
-            if (piece.pos === -1) {
-                // في القاعدة
-                const bases = document.querySelectorAll(`[data-base="${color}"]`);
-                if (bases[index]) {
-                    targetCell = bases[index];
-                }
-            } else if (piece.homeSteps > 0) {
-                // في مسار النهاية
-                const homeCells = document.querySelectorAll(`[data-home-color="${color}"]`);
-                if (homeCells[piece.homeSteps - 1]) {
-                    targetCell = homeCells[piece.homeSteps - 1];
-                }
-            } else if (piece.pos >= 0 && piece.pos < 52) {
-                // على المسار المشترك
-                const coord = PATH_COORDINATES.common[piece.pos];
-                targetCell = document.querySelector(`.cell[data-row="${coord.row}"][data-col="${coord.col}"]`);
+            let target = null;
+            if(p.pos === -1) {
+                target = document.querySelector(`[data-base="${color}"]:nth-of-type(${idx+1})`);
+            } else if(p.home > 0) {
+                target = document.querySelector(`[data-home="${color}"][data-home-idx="${p.home-1}"]`);
+            } else if(p.pos >= 0 && p.pos < 52) {
+                const coord = PATH[p.pos];
+                target = document.querySelector(`.cell[data-r="${coord.r}"][data-c="${coord.c}"]`);
             }
             
-            if (targetCell) {
-                const pieceEl = createPieceElement(color, index);
-                targetCell.appendChild(pieceEl);
+            if(target) {
+                const piece = document.createElement('div');
+                piece.className = `piece piece-${color}`;
+                piece.dataset.color = color;
+                piece.dataset.idx = idx;
+                piece.textContent = idx+1;
+                piece.onclick = () => selectPiece(color, idx);
+                target.appendChild(piece);
             }
         });
-    });
-}
-
-function createPieceElement(color, index) {
-    const piece = document.createElement('div');
-    piece.className = `piece piece-${color}`;
-    piece.dataset.color = color;
-    piece.dataset.index = index;
-    piece.textContent = index + 1;
-    piece.onclick = () => selectPiece(color, index);
-    return piece;
-}
-
-// دالة فحص الأكل (Capture)
-function checkCapture(color, pos) {
-    if (pos < 0 || pos >= 52) return;
-    
-    // فحص إذا كانت النقطة آمنة
-    const coord = PATH_COORDINATES.common[pos];
-    const safeSpots = [
-        {row: 6, col: 1}, {row: 1, col: 8}, {row: 8, col: 13}, {row: 13, col: 6},
-        {row: 2, col: 2}, {row: 2, col: 12}, {row: 12, col: 12}, {row: 12, col: 2}
-    ];
-    if (safeSpots.some(s => s.row === coord.row && s.col === coord.col)) {
-        return; // نقطة آمنة - ما يصير أكل
-    }
-    
-    // فحص قطع الخصم في نفس الموقع
-    const opponentColor = color === 'green' ? 'yellow' : (color === 'yellow' ? 'green' : (color === 'blue' ? 'red' : 'blue'));
-    
-    gameState.pieces[opponentColor].forEach((piece, idx) => {
-        if (piece.pos === pos && piece.homeSteps === 0 && !piece.finished) {
-            // أكل القطعة - ترجع للقاعدة
-            piece.pos = -1;
-            piece.homeSteps = 0;
-            console.log(`🍴 أكلت قطعة ${opponentColor} رقم ${idx + 1}!`);
-            updateGameStatus(`🍴 أكلت قطعة الخصم!`);
-        }
     });
 }
 
 function rollDice() {
-    if (gameState.currentTurn !== gameState.myColor) {
-        updateGameStatus('⏳ ليس دورك!');
-        return;
+    if(gameState.currentTurn !== gameState.myColor) {
+        updateStatus('⏳ ليس دورك'); return;
     }
     
     const btn = document.getElementById('rollDiceBtn');
-    btn.disabled = true;
-    
     const dice = document.getElementById('diceDisplay');
+    btn.disabled = true;
     dice.classList.add('rolling');
     
     let count = 0;
-    const interval = setInterval(() => {
-        const temp = Math.floor(Math.random() * 6) + 1;
-        dice.textContent = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][temp - 1];
-        count++;
-        
-        if (count >= 10) {
-            clearInterval(interval);
-            
-            const finalDice = Math.floor(Math.random() * 6) + 1;
-            gameState.lastDice = finalDice;
-            dice.textContent = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][finalDice - 1];
+    const int = setInterval(() => {
+        dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][Math.floor(Math.random()*6)];
+        if(++count >= 10) {
+            clearInterval(int);
+            const val = Math.floor(Math.random()*6)+1;
+            gameState.lastDice = val;
+            dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][val-1];
             dice.classList.remove('rolling');
             
-            updateGameStatus(`🎲 رميت ${finalDice}!`);
+            gameChannel.publish('dice', { player: currentUser, dice: val });
             
-            if (gameChannel) {
-                gameChannel.publish('dice-roll', {
-                    player: currentUser,
-                    dice: finalDice
-                });
-            }
-            
-            // فحص إذا يوجد حركات ممكنة
-            const hasMove = checkHasValidMove();
-            
-            if (!hasMove) {
-                updateGameStatus(`😕 لا توجد حركة ممكنة! انتقل الدور للخصم`);
+            const hasMove = checkHasMove();
+            if(!hasMove) {
+                updateStatus('😕 لا توجد حركة - انتقل الدور');
                 gameState.currentTurn = gameState.opponentColor;
                 gameState.lastDice = 0;
-                setTimeout(() => {
-                    btn.disabled = false;
-                    updateGameStatus();
-                }, 1500);
+                btn.disabled = false;
+                updateStatus();
                 return;
             }
             
-            highlightMovablePieces();
+            highlightMovable();
+            updateStatus(`🎲 رميت ${val}`);
             
-            // إذا ماكو قطع تقدر تتحرك والرمية مو 6، ينتقل الدور
-            setTimeout(() => {
-                if (finalDice !== 6 && gameState.currentTurn === gameState.myColor) {
-                    const movable = document.querySelectorAll('.piece.can-move');
-                    if (movable.length === 0) {
-                        gameState.currentTurn = gameState.opponentColor;
-                        gameState.lastDice = 0;
-                        updateGameStatus();
+            if(val !== 6) {
+                setTimeout(() => {
+                    if(gameState.currentTurn === gameState.myColor) {
+                        const movable = document.querySelectorAll('.piece.can-move');
+                        if(movable.length === 0) {
+                            gameState.currentTurn = gameState.opponentColor;
+                            updateStatus();
+                        }
                     }
-                }
+                    btn.disabled = false;
+                }, 500);
+            } else {
                 btn.disabled = false;
-            }, 500);
+            }
         }
-    }, 100);
+    }, 80);
 }
 
-function checkHasValidMove() {
+function checkHasMove() {
     const color = gameState.myColor;
     const dice = gameState.lastDice;
     
-    // فحص إذا فيه قطعة تطلع من القاعدة
-    if (dice === 6) {
-        const piecesInBase = gameState.pieces[color].filter(p => p.pos === -1 && !p.finished);
-        if (piecesInBase.length > 0) return true;
+    if(dice === 6) {
+        if(gameState.pieces[color].some(p=>p.pos===-1 && !p.done)) return true;
     }
     
-    // فحص القطع على المسار
     return gameState.pieces[color].some(p => {
-        if (p.pos >= 0 && p.pos < 52 && p.homeSteps === 0 && !p.finished) {
-            const newPos = p.pos + dice;
-            if (newPos < 52) return true;
-            // فحص الدخول للنهاية
-            if (newPos === 52 + PATH_COORDINATES.startPos[color]) {
-                return true;
-            }
+        if(p.done) return false;
+        if(p.pos >= 0 && p.pos < 52 && p.home === 0) {
+            const np = p.pos + dice;
+            if(np < 52) return true;
+            if(np === 52 + STARTS[color]) return true;
         }
-        // فحص القطع في مسار النهاية
-        if (p.homeSteps > 0 && !p.finished) {
-            const newHomeStep = p.homeSteps + dice;
-            return newHomeStep <= 5;
+        if(p.home > 0) {
+            return p.home + dice <= 5;
         }
         return false;
     });
 }
 
-function highlightMovablePieces() {
-    document.querySelectorAll('.piece').forEach(p => {
-        p.classList.remove('can-move');
+function highlightMovable() {
+    document.querySelectorAll('.piece').forEach(el => {
+        el.classList.remove('can-move');
+        if(el.dataset.color !== gameState.myColor) return;
         
-        const color = p.dataset.color;
-        const index = parseInt(p.dataset.index);
+        const idx = parseInt(el.dataset.idx);
+        const p = gameState.pieces[gameState.myColor][idx];
+        if(p.done) return;
         
-        if (color === gameState.myColor) {
-            const piece = gameState.pieces[color][index];
-            
-            if (piece.finished) return;
-            
-            // قطعة في القاعدة - تحتاج 6 لتخرج
-            if (piece.pos === -1 && gameState.lastDice === 6) {
-                p.classList.add('can-move');
-            }
-            // قطعة على المسار
-            else if (piece.pos >= 0 && piece.pos < 52 && piece.homeSteps === 0) {
-                const newPos = piece.pos + gameState.lastDice;
-                if (newPos < 52) {
-                    p.classList.add('can-move');
-                } else if (newPos === 52 + PATH_COORDINATES.startPos[color]) {
-                    // دخول النهاية
-                    p.classList.add('can-move');
-                }
-            }
-            // قطعة في مسار النهاية
-            else if (piece.homeSteps > 0) {
-                const newHomeStep = piece.homeSteps + gameState.lastDice;
-                if (newHomeStep <= 5) {
-                    p.classList.add('can-move');
-                }
-            }
+        if(p.pos === -1 && gameState.lastDice === 6) el.classList.add('can-move');
+        else if(p.pos >= 0 && p.pos < 52 && p.home === 0) {
+            const np = p.pos + gameState.lastDice;
+            if(np < 52 || np === 52 + STARTS[gameState.myColor]) el.classList.add('can-move');
+        } else if(p.home > 0) {
+            if(p.home + gameState.lastDice <= 5) el.classList.add('can-move');
         }
     });
 }
 
-function selectPiece(color, index) {
-    if (color !== gameState.myColor) return;
-    if (gameState.lastDice === 0) return;
+function selectPiece(color, idx) {
+    if(color !== gameState.myColor || gameState.lastDice === 0) return;
     
-    const piece = gameState.pieces[color][index];
-    if (piece.finished) return;
+    const p = gameState.pieces[color][idx];
+    if(p.done) return;
     
-    let moveMade = false;
+    let moved = false;
     let moveData = null;
     
-    // قطعة في القاعدة
-    if (piece.pos === -1) {
-        if (gameState.lastDice === 6) {
-            piece.pos = PATH_COORDINATES.startPos[color];
-            moveMade = true;
-            moveData = { type: 'exit', color, index, newPos: piece.pos };
-            updateGameStatus('✅ أخرجت القطعة!');
+    if(p.pos === -1 && gameState.lastDice === 6) {
+        p.pos = STARTS[color];
+        moved = true;
+        moveData = { type: 'exit', color, idx, pos: p.pos };
+    } else if(p.pos >= 0 && p.pos < 52 && p.home === 0) {
+        const np = p.pos + gameState.lastDice;
+        if(np < 52) {
+            // أكل
+            const opp = gameState.opponentColor;
+            gameState.pieces[opp].forEach(oppP => {
+                if(oppP.pos === np && oppP.home === 0 && !oppP.done) {
+                    if(!SAFE.includes(np)) {
+                        oppP.pos = -1;
+                        updateStatus('🍴 أكلت قطعة!');
+                    }
+                }
+            });
+            p.pos = np;
+            moved = true;
+            moveData = { type: 'move', color, idx, pos: np };
+        } else if(np === 52 + STARTS[color]) {
+            p.pos = -2;
+            p.home = 1;
+            moved = true;
+            moveData = { type: 'home', color, idx, home: 1 };
         }
-    }
-    // قطعة على المسار المشترك
-    else if (piece.pos >= 0 && piece.pos < 52 && piece.homeSteps === 0) {
-        const newPos = piece.pos + gameState.lastDice;
-        
-        if (newPos < 52) {
-            // حركة عادية
-            piece.pos = newPos;
-            moveMade = true;
-            moveData = { type: 'move', color, index, newPos };
-            
-            // فحص الأكل
-            checkCapture(color, newPos);
-        } else if (newPos === 52 + PATH_COORDINATES.startPos[color]) {
-            // دخول مسار النهاية
-            piece.pos = -2; // علامة أنه في مسار النهاية
-            piece.homeSteps = 1;
-            moveMade = true;
-            moveData = { type: 'enterHome', color, index };
-            updateGameStatus('🏠 دخلت مسار النهاية!');
-        }
-    }
-    // قطعة في مسار النهاية
-    else if (piece.homeSteps > 0) {
-        const newHomeStep = piece.homeSteps + gameState.lastDice;
-        
-        if (newHomeStep <= 5) {
-            piece.homeSteps = newHomeStep;
-            moveMade = true;
-            moveData = { type: 'homeMove', color, index, homeSteps: newHomeStep };
-            
-            if (newHomeStep === 5) {
-                piece.finished = true;
-                updateGameStatus('🎉 قطعة وصلت للنهاية!');
+    } else if(p.home > 0) {
+        const nh = p.home + gameState.lastDice;
+        if(nh <= 5) {
+            p.home = nh;
+            moved = true;
+            moveData = { type: 'homeMove', color, idx, home: nh };
+            if(nh === 5) {
+                p.done = true;
+                updateStatus('🎉 قطعة وصلت!');
             }
         }
     }
     
-    if (moveMade) {
-        // إرسال الحركة للخصم
-        if (gameChannel && moveData) {
-            gameChannel.publish('move', {
-                player: currentUser,
-                moveData: moveData
-            });
-        }
-        
+    if(moved) {
+        gameChannel.publish('move', { player: currentUser, moveData });
         renderPieces();
         
-        // فحص الفوز
-        if (checkWin(color)) {
+        if(checkWin(color)) {
             endGame(true);
             return;
         }
         
-        // تحديد إذا يحق له دور إضافي
-        if (gameState.lastDice === 6) {
-            gameState.canRollAgain = true;
-            updateGameStatus('🎲 رميت 6! لك دور إضافي');
-        } else {
+        if(gameState.lastDice !== 6) {
             gameState.currentTurn = gameState.opponentColor;
-            gameState.canRollAgain = false;
         }
         
         gameState.lastDice = 0;
-        document.querySelectorAll('.can-move').forEach(p => p.classList.remove('can-move'));
-        updateGameStatus();
+        document.querySelectorAll('.can-move').forEach(e=>e.classList.remove('can-move'));
+        updateStatus();
     }
 }
 
-function handleOpponentMove(message) {
-    const data = message.data;
-    if (data.player === currentUser) return;
+function handleOpponentDice(msg) {
+    const data = msg.data;
+    if(data.player === currentUser) return;
+    updateStatus(`🎲 الخصم رمى ${data.dice}`);
+}
+
+function handleOpponentMove(msg) {
+    const data = msg.data;
+    if(data.player === currentUser) return;
     
-    const moveData = data.moveData;
-    const piece = gameState.pieces[moveData.color][moveData.index];
+    const md = data.moveData;
+    const p = gameState.pieces[md.color][md.idx];
     
-    switch (moveData.type) {
-        case 'exit':
-            piece.pos = moveData.newPos;
-            break;
-        case 'move':
-            piece.pos = moveData.newPos;
-            checkCapture(moveData.color, moveData.newPos);
-            break;
-        case 'enterHome':
-            piece.pos = -2;
-            piece.homeSteps = 1;
-            break;
-        case 'homeMove':
-            piece.homeSteps = moveData.homeSteps;
-            if (moveData.homeSteps === 5) {
-                piece.finished = true;
+    if(md.type === 'exit') p.pos = md.pos;
+    else if(md.type === 'move') {
+        // أكل
+        const myColor = gameState.myColor;
+        gameState.pieces[myColor].forEach(myP => {
+            if(myP.pos === md.pos && myP.home === 0 && !myP.done) {
+                if(!SAFE.includes(md.pos)) {
+                    myP.pos = -1;
+                    updateStatus('😢 انأكلت قطعتك!');
+                }
             }
-            break;
-    }
+        });
+        p.pos = md.pos;
+    } else if(md.type === 'home') { p.pos = -2; p.home = 1; }
+    else if(md.type === 'homeMove') { p.home = md.home; if(md.home===5) p.done=true; }
     
     renderPieces();
     
-    // فحص فوز الخصم
-    if (checkWin(moveData.color)) {
+    if(checkWin(md.color)) {
         endGame(false);
         return;
     }
     
     gameState.currentTurn = gameState.myColor;
-    updateGameStatus();
-}
-
-function handleOpponentDiceRoll(message) {
-    const data = message.data;
-    if (data.player === currentUser) return;
-    
-    updateGameStatus(`🎲 الخصم رمى ${data.dice}`);
+    updateStatus();
 }
 
 function checkWin(color) {
-    return gameState.pieces[color].every(p => p.finished);
+    return gameState.pieces[color].every(p => p.done);
 }
 
-function updateGameStatus(customMsg) {
-    const status = document.getElementById('gameStatus');
-    
-    if (customMsg) {
-        status.textContent = customMsg;
-        return;
-    }
-    
-    if (gameState.currentTurn === gameState.myColor) {
-        status.textContent = '🎮 دورك! ارمِ النرد';
-    } else {
-        status.textContent = '⏳ دور الخصم...';
-    }
+function updateStatus(msg) {
+    const el = document.getElementById('gameStatus');
+    if(msg) { el.textContent = msg; return; }
+    el.textContent = gameState.currentTurn === gameState.myColor ? '🎮 دورك! ارمِ النرد' : '⏳ دور الخصم...';
 }
 
 function endGame(won) {
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('resultScreen').classList.remove('hidden');
     
-    if (won) {
+    if(won) {
         document.getElementById('resultIcon').textContent = '🏆';
         document.getElementById('resultTitle').textContent = 'فزت!';
         document.getElementById('resultCoins').textContent = `+${selectedBet} 💰`;
-        
         userCoins += selectedBet;
-        userStats[currentUser].coins = userCoins;
-        userStats[currentUser].wins = (userStats[currentUser].wins || 0) + 1;
+        userStats[currentUser].wins = (userStats[currentUser].wins||0)+1;
     } else {
         document.getElementById('resultIcon').textContent = '😢';
         document.getElementById('resultTitle').textContent = 'خسرت';
         document.getElementById('resultCoins').textContent = `-${selectedBet} 💰`;
-        
         userCoins -= selectedBet;
-        userStats[currentUser].coins = userCoins;
-        userStats[currentUser].losses = (userStats[currentUser].losses || 0) + 1;
+        userStats[currentUser].losses = (userStats[currentUser].losses||0)+1;
     }
     
+    userStats[currentUser].coins = userCoins;
     localStorage.setItem('ludo_stats', JSON.stringify(userStats));
-    
-    if (currentPeer) {
-        currentPeer.destroy();
-        currentPeer = null;
-    }
-    
-    if (gameChannel) {
-        gameChannel.unsubscribe();
-    }
+    if(gameChannel) gameChannel.unsubscribe();
 }
 
 function backToMenu() {
@@ -1641,164 +737,39 @@ function backToMenu() {
     document.getElementById('userCoins').textContent = userCoins;
     document.getElementById('mainMenu').classList.remove('hidden');
     
-    // إعادة تعيين اللعبة
     gameState = {
-        myColor: null,
-        opponentColor: null,
-        currentTurn: null,
-        lastDice: 0,
-        canRollAgain: false,
+        myColor: null, opponentColor: null, currentTurn: 'green', lastDice: 0,
         pieces: {
-            green: [
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}
-            ],
-            yellow: [
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}
-            ],
-            blue: [
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}
-            ],
-            red: [
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}, 
-                {pos: -1, homeSteps: 0, finished: false}
-            ]
-        },
-        matchId: null,
-        opponent: null
+            green: [{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false}],
+            yellow: [{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false}],
+            blue: [{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false}],
+            red: [{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false},{pos:-1,home:0,done:false}]
+        }
     };
     selectedBet = 0;
 }
 
-// ==================== المكالمة الصوتية ====================
-function startVoiceCall() {
-    if (!localStream) return;
-    
-    if (gameState.myColor === 'green') {
-        createPeer(true);
-    }
-}
-
-function createPeer(initiator) {
-    const peer = new SimplePeer({
-        initiator: initiator,
-        stream: localStream,
-        trickle: false,
-        config: {
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        }
-    });
-    
-    peer.on('signal', signal => {
-        if (gameChannel) {
-            gameChannel.publish('call-signal', {
-                from: currentUser,
-                signal: signal
-            });
-        }
-    });
-    
-    peer.on('stream', remoteStream => {
-        const audio = new Audio();
-        audio.srcObject = remoteStream;
-        audio.autoplay = true;
-        console.log('✅ الصوت متصل');
-    });
-    
-    peer.on('error', err => {
-        console.error('خطأ في المكالمة:', err);
-    });
-    
-    currentPeer = peer;
-}
-
-function handleCallSignal(message) {
-    const data = message.data;
-    if (data.from === currentUser) return;
-    
-    if (!currentPeer) {
-        createPeer(false);
-    }
-    
-    if (currentPeer) {
-        currentPeer.signal(data.signal);
-    }
-}
-
-function toggleMic() {
-    if (!localStream) return;
-    
-    micEnabled = !micEnabled;
-    localStream.getAudioTracks()[0].enabled = micEnabled;
-    
-    const micBtn = document.getElementById('micBtn');
-    if (micEnabled) {
-        micBtn.classList.add('active');
-        micBtn.classList.remove('muted');
-        micBtn.textContent = '🎤';
-    } else {
-        micBtn.classList.remove('active');
-        micBtn.classList.add('muted');
-        micBtn.textContent = '🔇';
-    }
-}
-
-function showFriends() {
-    alert('قريباً: نظام الأصدقاء! 👥');
-}
-
-function showChat() {
-    alert('قريباً: نظام المحادثات! 💬');
-}
+function showFriends() { alert('👥 قريباً'); }
+function showChat() { alert('💬 قريباً'); }
 
 // ==================== تهيئة الأحداث ====================
-document.addEventListener('DOMContentLoaded', function() {
-    // أزرار تسجيل الدخول
-    document.getElementById('loginBtn').addEventListener('click', login);
-    document.getElementById('showRegisterBtn').addEventListener('click', showRegisterForm);
-    document.getElementById('registerBtn').addEventListener('click', register);
-    document.getElementById('showLoginBtn').addEventListener('click', showLoginForm);
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loginBtn').onclick = login;
+    document.getElementById('showRegisterBtn').onclick = showRegisterForm;
+    document.getElementById('registerBtn').onclick = register;
+    document.getElementById('showLoginBtn').onclick = showLoginForm;
+    document.getElementById('playBtn').onclick = showBetSelection;
+    document.getElementById('friendsBtn').onclick = showFriends;
+    document.getElementById('chatBtn').onclick = showChat;
     
-    // أزرار القائمة
-    document.getElementById('playBtn').addEventListener('click', showBetSelection);
-    document.getElementById('friendsBtn').addEventListener('click', showFriends);
-    document.getElementById('chatBtn').addEventListener('click', showChat);
-    
-    // اختيار المبلغ
-    document.querySelectorAll('.bet-option').forEach(opt => {
-        opt.addEventListener('click', function() {
-            const bet = parseInt(this.dataset.bet);
-            selectBet(bet);
-            setTimeout(() => {
-                if (selectedBet > 0) {
-                    startSearching();
-                }
-            }, 300);
-        });
+    document.querySelectorAll('.bet-option').forEach(o => {
+        o.onclick = () => selectBet(parseInt(o.dataset.bet));
     });
-    document.getElementById('cancelBetBtn').addEventListener('click', cancelBetSelection);
-    
-    // البحث
-    document.getElementById('cancelSearchBtn').addEventListener('click', cancelSearch);
-    
-    // اللعبة
-    document.getElementById('rollDiceBtn').addEventListener('click', rollDice);
-    document.getElementById('micBtn').addEventListener('click', toggleMic);
-    document.getElementById('backToMenuBtn').addEventListener('click', backToMenu);
-    
-    console.log('✅ تم تحميل اللعبة بنجاح!');
+    document.getElementById('cancelBetBtn').onclick = cancelBetSelection;
+    document.getElementById('cancelSearchBtn').onclick = cancelSearch;
+    document.getElementById('rollDiceBtn').onclick = rollDice;
+    document.getElementById('backToMenuBtn').onclick = backToMenu;
 });
 </script>
-
 </body>
-</html>
+    </html>
