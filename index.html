@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎲 لودو أونلاين</title>
+    <title>🎲 لودو - 1 ضد 1</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         body { font-family:'Cairo',sans-serif; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); overflow:hidden; position:fixed; width:100%; height:100%; }
+        
+        /* شاشة تسجيل الدخول */
         .login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000; }
         .login-box { background:rgba(255,255,255,0.95); border-radius:30px; padding:40px 30px; max-width:400px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.5); }
         .login-logo { text-align:center; margin-bottom:30px; }
@@ -18,83 +21,83 @@
         .login-btn { width:100%; padding:15px; border:none; border-radius:15px; font-size:18px; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; margin-bottom:10px; }
         .btn-login { background:linear-gradient(135deg,#4CAF50,#45a049); color:white; }
         .btn-register { background:linear-gradient(135deg,#2196F3,#1976D2); color:white; }
-        .login-btn:active { transform:scale(0.98); }
-        .login-message { text-align:center; margin-top:10px; padding:10px; border-radius:10px; font-size:14px; font-weight:600; }
-        .message-error { background:rgba(244,67,54,0.1); color:#f44336; }
-        .message-success { background:rgba(76,175,80,0.1); color:#4CAF50; }
+        
+        /* القائمة الرئيسية */
         .main-menu { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
         .menu-header { text-align:center; margin-bottom:40px; }
-        .menu-header h1 { font-size:3rem; color:#FFD700; text-shadow:0 4px 15px rgba(0,0,0,0.5); margin-bottom:10px; }
-        .menu-header p { color:rgba(255,255,255,0.8); font-size:1.2rem; }
+        .menu-header h1 { font-size:3rem; color:#FFD700; text-shadow:0 4px 15px rgba(0,0,0,0.5); }
+        .menu-header p { color:white; font-size:1.2rem; }
         .menu-coins { background:rgba(255,215,0,0.2); border:2px solid #FFD700; border-radius:20px; padding:15px 30px; margin-bottom:40px; display:flex; align-items:center; gap:10px; }
-        .menu-coins .coin-icon { font-size:2rem; }
-        .menu-coins .coin-amount { font-size:1.8rem; font-weight:700; color:#FFD700; }
+        .coin-amount { font-size:1.8rem; font-weight:700; color:#FFD700; }
         .menu-buttons { display:flex; flex-direction:column; gap:15px; width:100%; max-width:350px; }
         .menu-btn { padding:20px; border:none; border-radius:20px; font-size:1.5rem; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; box-shadow:0 8px 20px rgba(0,0,0,0.3); }
-        .menu-btn:active { transform:translateY(2px); }
         .btn-play { background:linear-gradient(135deg,#4CAF50,#45a049); color:white; }
         .btn-friends { background:linear-gradient(135deg,#2196F3,#1976D2); color:white; }
-        .btn-chat { background:linear-gradient(135deg,#FF9800,#F57C00); color:white; }
-        .bet-selection { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:2000; padding:20px; }
-        .bet-box { background:white; border-radius:30px; padding:40px 30px; max-width:400px; width:100%; text-align:center; }
-        .bet-box h2 { font-size:2rem; color:#1a5f2e; margin-bottom:30px; }
-        .bet-options { display:flex; flex-direction:column; gap:15px; margin-bottom:20px; }
-        .bet-option { padding:20px; border:3px solid #ddd; border-radius:20px; cursor:pointer; background:white; }
-        .bet-option.selected { border-color:#4CAF50; background:rgba(76,175,80,0.1); }
-        .bet-amount { font-size:2rem; font-weight:700; color:#FFD700; }
-        .bet-cancel { padding:15px; background:#f44336; color:white; border:none; border-radius:15px; font-size:1.2rem; font-weight:700; cursor:pointer; width:100%; margin-top:10px; }
-        .searching-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:2000; }
-        .searching-content { text-align:center; }
-        .searching-spinner { width:100px; height:100px; border:8px solid rgba(255,215,0,0.2); border-top-color:#FFD700; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 30px; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        .searching-text { font-size:2rem; color:white; margin-bottom:20px; }
-        .searching-cancel { margin-top:40px; padding:15px 40px; background:#f44336; color:white; border:none; border-radius:20px; font-size:1.2rem; font-weight:700; cursor:pointer; }
+        .btn-logout { background:linear-gradient(135deg,#f44336,#d32f2f); color:white; }
+        
+        /* شاشة اللعبة */
         .game-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#2d7a3f 0%,#1a5f2e 100%); display:flex; flex-direction:column; }
         .game-header { background:rgba(0,0,0,0.3); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; }
         .player-info { display:flex; align-items:center; gap:10px; }
-        .player-avatar { width:50px; height:50px; background:linear-gradient(135deg,#FFD700,#FFA500); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; border:3px solid white; }
-        .player-name { color:white; font-weight:700; font-size:1.1rem; }
+        .player-avatar { width:50px; height:50px; background:linear-gradient(135deg,#4CAF50,#45a049); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; border:3px solid white; }
+        .player-name { color:white; font-weight:700; }
         .game-bet { background:rgba(255,215,0,0.2); border:2px solid #FFD700; border-radius:15px; padding:8px 15px; color:#FFD700; font-weight:700; }
+        
+        /* لوحة اللعبة - فقط أخضر وأصفر */
         .game-board-container { flex:1; display:flex; align-items:center; justify-content:center; padding:10px; position:relative; }
         .game-board { width:min(95vw,95vh,500px); height:min(95vw,95vh,500px); background:white; border-radius:15px; padding:8px; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
         .board-grid { width:100%; height:100%; display:grid; grid-template-columns:repeat(15,1fr); grid-template-rows:repeat(15,1fr); gap:1px; background:#e0e0e0; }
-        .cell { background:white; display:flex; align-items:center; justify-content:center; position:relative; font-size:0.6rem; }
+        .cell { background:white; display:flex; align-items:center; justify-content:center; position:relative; }
         .base-green { background:linear-gradient(135deg,#4CAF50,#45a049) !important; border-radius:15px; }
         .base-yellow { background:linear-gradient(135deg,#FFD700,#FFA500) !important; border-radius:15px; }
-        .base-blue { background:linear-gradient(135deg,#2196F3,#1976D2) !important; border-radius:15px; }
-        .base-red { background:linear-gradient(135deg,#f44336,#d32f2f) !important; border-radius:15px; }
         .path-cell { background:#f5f5f5 !important; }
         .start-green { background:#4CAF50 !important; }
         .start-yellow { background:#FFD700 !important; }
-        .start-blue { background:#2196F3 !important; }
-        .start-red { background:#f44336 !important; }
-        .center-cell { background:linear-gradient(45deg,#4CAF50,#FFD700,#2196F3,#f44336) !important; font-size:1.2rem; }
+        .center-cell { background:linear-gradient(45deg,#4CAF50,#FFD700) !important; font-size:1.2rem; }
+        
+        /* القطع */
         .piece { width:80%; height:80%; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; border:2px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.4); cursor:pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
         .piece-green { background:radial-gradient(circle at 30% 30%,#66bb6a,#4CAF50); }
-        .piece-yellow { background:radial-gradient(circle at 30% 30%,#ffd54f,#FFD700); }
-        .piece-blue { background:radial-gradient(circle at 30% 30%,#42a5f5,#2196F3); }
-        .piece-red { background:radial-gradient(circle at 30% 30%,#ef5350,#f44336); }
-        .piece.can-move { animation:pulsePiece 0.8s infinite; }
-        @keyframes pulsePiece { 0%,100%{ transform:translate(-50%,-50%) scale(1); } 50%{ transform:translate(-50%,-50%) scale(1.15); } }
-        .dice-area { background:rgba(0,0,0,0.3); padding:15px; display:flex; align-items:center; justify-content:space-around; }
-        .dice-container { text-align:center; }
-        .dice { width:70px; height:70px; background:white; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; box-shadow:0 5px 15px rgba(0,0,0,0.4); margin:0 auto 10px; border:3px solid #FFD700; }
-        .dice.rolling { animation:diceRoll 0.5s; }
-        @keyframes diceRoll { 0%,100%{ transform:rotate(0); } 25%{ transform:rotate(90deg); } 50%{ transform:rotate(180deg); } 75%{ transform:rotate(270deg); } }
-        .roll-btn { padding:12px 30px; background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a5f2e; border:none; border-radius:15px; font-size:1.2rem; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; }
-        .roll-btn:disabled { opacity:0.5; cursor:not-allowed; }
-        .game-status { color:white; font-weight:700; font-size:1.1rem; text-align:center; background:rgba(0,0,0,0.4); padding:10px; border-radius:10px; }
-        .opponent-info { position:absolute; top:80px; right:15px; background:rgba(0,0,0,0.6); border-radius:15px; padding:10px 15px; display:flex; align-items:center; gap:10px; z-index:100; }
-        .opponent-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:2px solid white; }
-        .opponent-name { color:white; font-weight:700; }
-        .result-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; align-items:center; justify-content:center; z-index:3000; }
-        .result-box { background:white; border-radius:30px; padding:50px 40px; text-align:center; max-width:400px; width:90%; }
-        .result-icon { font-size:5rem; margin-bottom:20px; }
-        .result-title { font-size:2.5rem; margin-bottom:10px; color:#1a5f2e; }
-        .result-coins { font-size:2rem; color:#FFD700; font-weight:700; margin-bottom:30px; }
-        .result-btn { padding:15px 40px; background:linear-gradient(135deg,#4CAF50,#45a049); color:white; border:none; border-radius:15px; font-size:1.3rem; font-weight:700; cursor:pointer; }
+        .piece-yellow { background:radial-gradient(circle at 30% 30%,#ffd54f,#FFD700); color:#333; }
+        .piece.can-move { animation:pulse 0.8s infinite; }
+        @keyframes pulse { 50% { transform:translate(-50%,-50%) scale(1.15); } }
+        
+        /* منطقة التحكم */
+        .game-footer { background:rgba(0,0,0,0.3); padding:15px; }
+        .dice-area { display:flex; align-items:center; justify-content:space-around; }
+        .game-status { color:white; font-weight:700; padding:10px; background:rgba(0,0,0,0.4); border-radius:10px; }
+        .dice { width:70px; height:70px; background:white; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; border:3px solid #FFD700; }
+        .roll-btn { padding:12px 30px; background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a5f2e; border:none; border-radius:15px; font-size:1.2rem; font-weight:700; cursor:pointer; }
+        .roll-btn:disabled { opacity:0.5; }
+        
+        /* المايك والدردشة */
+        .chat-mic-bar { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px; }
+        .mic-btn { width:50px; height:50px; background:#4CAF50; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; cursor:pointer; color:white; }
+        .mic-btn.muted { background:#f44336; }
+        .chat-input { flex:1; padding:12px; border:none; border-radius:25px; font-family:'Cairo',sans-serif; }
+        .send-btn { padding:12px 20px; background:#2196F3; color:white; border:none; border-radius:25px; cursor:pointer; }
+        
+        /* شاشة الأصدقاء */
+        .friends-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:2000; }
+        .friends-box { background:white; border-radius:30px; padding:30px; max-width:400px; width:90%; max-height:80vh; overflow-y:auto; }
+        .friends-box h2 { color:#1a5f2e; margin-bottom:20px; text-align:center; }
+        .friend-item { display:flex; align-items:center; justify-content:space-between; padding:15px; border-bottom:1px solid #eee; }
+        .friend-name { font-weight:700; }
+        .friend-actions { display:flex; gap:10px; }
+        .btn-small { padding:8px 15px; border:none; border-radius:10px; cursor:pointer; font-size:0.9rem; }
+        .btn-accept { background:#4CAF50; color:white; }
+        .btn-reject { background:#f44336; color:white; }
+        .btn-add { background:#2196F3; color:white; }
+        
         .hidden { display:none !important; }
-        .note-text { text-align:center; margin-top:15px; color:#666; font-size:0.9rem; }
+        .opponent-info { position:absolute; top:80px; right:15px; background:rgba(0,0,0,0.6); border-radius:15px; padding:10px 15px; display:flex; align-items:center; gap:10px; z-index:100; }
+        .opponent-avatar { width:40px; height:40px; background:linear-gradient(135deg,#FFD700,#FFA500); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; }
+        .opponent-name { color:white; font-weight:700; }
+        
+        /* رسائل الشات */
+        .chat-messages { height:200px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:15px; padding:10px; margin-bottom:10px; color:white; }
+        .chat-message { margin-bottom:5px; }
+        .chat-sender { font-weight:700; color:#FFD700; }
     </style>
 </head>
 <body>
@@ -103,23 +106,22 @@
 <div id="loginScreen" class="login-screen">
     <div class="login-box">
         <div class="login-logo">
-            <h1>🎲 لودو أونلاين</h1>
-            <p>العب واربح!</p>
+            <h1>🎲 لودو 1 ضد 1</h1>
+            <p>تحدى أصدقائك!</p>
         </div>
         <div id="loginForm">
-            <input type="text" id="loginUsername" class="login-input" placeholder="اسم المستخدم" value="لاعب">
-            <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور" value="123">
+            <input type="text" id="loginUsername" class="login-input" placeholder="اسم المستخدم">
+            <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
             <button class="login-btn btn-login" id="loginBtn">دخول 🎮</button>
             <button class="login-btn btn-register" id="showRegisterBtn">تسجيل جديد 📝</button>
-            <div id="loginMessage" class="login-message hidden"></div>
-            <div class="note-text">👆 استخدم: لاعب / 123 للتجربة</div>
+            <div id="loginMessage" style="margin-top:15px;color:red;text-align:center;"></div>
         </div>
         <div id="registerForm" class="hidden">
             <input type="text" id="regUsername" class="login-input" placeholder="اسم المستخدم">
             <input type="password" id="regPassword" class="login-input" placeholder="كلمة المرور">
             <button class="login-btn btn-register" id="registerBtn">تسجيل ✅</button>
             <button class="login-btn btn-login" id="showLoginBtn">رجوع ↩️</button>
-            <div id="regMessage" class="login-message hidden"></div>
+            <div id="regMessage" style="margin-top:15px;color:red;text-align:center;"></div>
         </div>
     </div>
 </div>
@@ -127,39 +129,41 @@
 <!-- القائمة الرئيسية -->
 <div id="mainMenu" class="main-menu hidden">
     <div class="menu-header">
-        <h1>🎲 لودو أونلاين</h1>
+        <h1>🎲 لودو 1 ضد 1</h1>
         <p>مرحباً <span id="menuUsername"></span></p>
     </div>
     <div class="menu-coins">
-        <span class="coin-icon">💰</span>
+        <span>💰</span>
         <span class="coin-amount" id="userCoins">10000</span>
     </div>
     <div class="menu-buttons">
         <button class="menu-btn btn-play" id="playBtn">🎲 العب الآن</button>
         <button class="menu-btn btn-friends" id="friendsBtn">👥 الأصدقاء</button>
-        <button class="menu-btn btn-chat" id="chatBtn">💬 المحادثات</button>
+        <button class="menu-btn btn-logout" id="logoutBtn">🚪 تسجيل خروج</button>
     </div>
 </div>
 
-<!-- اختيار المبلغ -->
-<div id="betSelection" class="bet-selection hidden">
-    <div class="bet-box">
-        <h2>اختر مبلغ المباراة</h2>
-        <div class="bet-options">
-            <div class="bet-option" data-bet="500"><div class="bet-amount">💰 500</div><div>مباراة عادية</div></div>
-            <div class="bet-option" data-bet="1000"><div class="bet-amount">💰 1000</div><div>مباراة كبيرة</div></div>
-            <div class="bet-option" data-bet="5000"><div class="bet-amount">💰 5000</div><div>مباراة ضخمة</div></div>
+<!-- شاشة الأصدقاء -->
+<div id="friendsScreen" class="friends-screen hidden">
+    <div class="friends-box">
+        <h2>👥 الأصدقاء</h2>
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+            <input type="text" id="friendUsername" class="login-input" placeholder="اسم الصديق" style="flex:1;">
+            <button class="btn-small btn-add" id="addFriendBtn">إضافة</button>
         </div>
-        <button class="bet-cancel" id="cancelBetBtn">إلغاء</button>
+        <div id="friendsList"></div>
+        <h3 style="margin-top:20px;">📨 طلبات الصداقة</h3>
+        <div id="requestsList"></div>
+        <button class="bet-cancel" id="closeFriendsBtn" style="margin-top:20px;">إغلاق</button>
     </div>
 </div>
 
-<!-- البحث عن لاعب -->
-<div id="searchingScreen" class="searching-screen hidden">
-    <div class="searching-content">
-        <div class="searching-spinner"></div>
-        <div class="searching-text">جاري البحث عن لاعب</div>
-        <button class="searching-cancel" id="cancelSearchBtn">إلغاء</button>
+<!-- شاشة البحث -->
+<div id="searchingScreen" class="searching-screen hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:2000;">
+    <div style="text-align:center;color:white;">
+        <div class="searching-spinner" style="width:80px;height:80px;border:8px solid rgba(255,215,0,0.2);border-top-color:#FFD700;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 30px;"></div>
+        <div style="font-size:2rem;">جاري البحث عن لاعب</div>
+        <button id="cancelSearchBtn" style="margin-top:40px;padding:15px 40px;background:#f44336;color:white;border:none;border-radius:20px;font-size:1.2rem;cursor:pointer;">إلغاء</button>
     </div>
 </div>
 
@@ -184,22 +188,20 @@
         </div>
     </div>
     
-    <div class="dice-area">
-        <div class="game-status" id="gameStatus">انتظر دورك...</div>
-        <div class="dice-container">
+    <div class="game-footer">
+        <div class="dice-area">
+            <div class="game-status" id="gameStatus">انتظر دورك...</div>
             <div class="dice" id="diceDisplay">🎲</div>
             <button class="roll-btn" id="rollDiceBtn">رمي النرد</button>
         </div>
-    </div>
-</div>
-
-<!-- شاشة النتيجة -->
-<div id="resultScreen" class="result-screen hidden">
-    <div class="result-box">
-        <div class="result-icon" id="resultIcon">🏆</div>
-        <div class="result-title" id="resultTitle">فزت!</div>
-        <div class="result-coins" id="resultCoins">+0 💰</div>
-        <button class="result-btn" id="backToMenuBtn">العودة للقائمة</button>
+        
+        <!-- دردشة ومايك -->
+        <div id="chatMessages" class="chat-messages"></div>
+        <div class="chat-mic-bar">
+            <div class="mic-btn" id="micBtn">🎤</div>
+            <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة...">
+            <button class="send-btn" id="sendChatBtn">إرسال</button>
+        </div>
     </div>
 </div>
 
@@ -209,12 +211,15 @@ const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
 
 let currentUser = null;
 let userCoins = 10000;
-let selectedBet = 0;
 let ably = null;
 let channel = null;
 let gameChannel = null;
-let isSearching = false;
+let chatChannel = null;
+let localStream = null;
+let currentPeer = null;
+let micEnabled = true;
 
+// المسار - 52 خانة
 const PATH = [
     {r:6,c:1},{r:6,c:2},{r:6,c:3},{r:6,c:4},{r:6,c:5},
     {r:5,c:6},{r:4,c:6},{r:3,c:6},{r:2,c:6},{r:1,c:6},{r:0,c:6},
@@ -226,91 +231,105 @@ const PATH = [
     {r:8,c:5},{r:8,c:4},{r:8,c:3},{r:8,c:2},{r:8,c:1},{r:8,c:0},
     {r:7,c:0},{r:6,c:0}
 ];
-const STARTS = { green:0, yellow:12, red:25, blue:38 };
-const SAFE = [0,12,25,38,8,17,30,43];
+const STARTS = { green:0, yellow:12 };
+const SAFE = [0,12,8,17,30,43];
 const HOME = {
     green: [{r:7,c:1},{r:7,c:2},{r:7,c:3},{r:7,c:4},{r:7,c:5}],
-    yellow: [{r:1,c:7},{r:2,c:7},{r:3,c:7},{r:4,c:7},{r:5,c:7}],
-    red: [{r:7,c:13},{r:7,c:12},{r:7,c:11},{r:7,c:10},{r:7,c:9}],
-    blue: [{r:13,c:7},{r:12,c:7},{r:11,c:7},{r:10,c:7},{r:9,c:7}]
+    yellow: [{r:1,c:7},{r:2,c:7},{r:3,c:7},{r:4,c:7},{r:5,c:7}]
 };
 
 let gameState = {
-    myColor: null, opponentColor: null, currentTurn: 'green', lastDice: 0,
+    myColor: null, opponentColor: null, lastDice: 0, myTurn: false,
     pieces: {
         green: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
-        yellow: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
-        blue: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
-        red: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}]
+        yellow: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}]
     },
-    matchId: null, opponent: null,
-    myTurn: false // مهم: هل هذا دوري؟
+    opponent: null
 };
 
-// تهيئة localStorage
-if(!localStorage.getItem('ludo_users')) {
-    localStorage.setItem('ludo_users', JSON.stringify({'لاعب':'123'}));
-    localStorage.setItem('ludo_stats', JSON.stringify({'لاعب':{coins:10000,wins:0,losses:0}}));
-}
-let users = JSON.parse(localStorage.getItem('ludo_users'));
-let userStats = JSON.parse(localStorage.getItem('ludo_stats'));
+let users = JSON.parse(localStorage.getItem('ludo_users')) || {};
+let userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
+let friends = JSON.parse(localStorage.getItem('ludo_friends')) || {};
+let friendRequests = JSON.parse(localStorage.getItem('ludo_requests')) || {};
 
-// ==================== دوال الواجهة ====================
-function showMessage(id, text, type) {
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.textContent = text;
-    el.className = `login-message message-${type}`;
-    el.classList.remove('hidden');
-    setTimeout(() => el.classList.add('hidden'), 3000);
+// حفظ تلقائي لآخر مستخدم
+const savedUser = localStorage.getItem('ludo_lastUser');
+if(savedUser) {
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('loginUsername').value = savedUser;
+    });
 }
 
-function showRegisterForm() {
-    document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('registerForm').classList.remove('hidden');
+// ==================== تسجيل الدخول التلقائي ====================
+async function autoLogin() {
+    const lastUser = localStorage.getItem('ludo_lastUser');
+    const lastPass = localStorage.getItem('ludo_lastPass');
+    if(lastUser && lastPass && users[lastUser] === lastPass) {
+        currentUser = lastUser;
+        userCoins = userStats[currentUser]?.coins || 10000;
+        await connectAbly();
+        showMainMenu();
+        document.getElementById('loginScreen').classList.add('hidden');
+    }
 }
 
-function showLoginForm() {
-    document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('loginForm').classList.remove('hidden');
+// ==================== الاتصال ====================
+async function connectAbly() {
+    return new Promise((resolve, reject) => {
+        ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
+        ably.connection.on('connected', () => {
+            channel = ably.channels.get('ludo-1v1');
+            channel.subscribe('match-found', handleMatchFound);
+            channel.subscribe('friend-request', handleFriendRequest);
+            channel.subscribe('friend-accept', handleFriendAccept);
+            channel.presence.enter({ username: currentUser });
+            resolve();
+        });
+        ably.connection.on('failed', reject);
+    });
 }
 
-function register() {
-    const username = document.getElementById('regUsername').value.trim();
-    const password = document.getElementById('regPassword').value;
-    if(!username||!password){showMessage('regMessage','❌ املأ الحقول','error');return;}
-    users = JSON.parse(localStorage.getItem('ludo_users')) || {};
-    if(users[username]){showMessage('regMessage','❌ الاسم موجود','error');return;}
-    users[username]=password;
-    userStats[username]={coins:10000,wins:0,losses:0};
-    localStorage.setItem('ludo_users',JSON.stringify(users));
-    localStorage.setItem('ludo_stats',JSON.stringify(userStats));
-    showMessage('regMessage','✅ تم التسجيل','success');
-    setTimeout(()=>{document.getElementById('loginUsername').value=username;showLoginForm();},1500);
-}
-
+// ==================== تسجيل الدخول ====================
 async function login() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
-    users = JSON.parse(localStorage.getItem('ludo_users')) || {'لاعب':'123'};
-    userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {'لاعب':{coins:10000,wins:0,losses:0}};
     
-    if(!users[username]||users[username]!==password){
-        showMessage('loginMessage','❌ خطأ في البيانات','error');return;
+    if(!username || !password) {
+        document.getElementById('loginMessage').textContent = '❌ املأ جميع الحقول';
+        return;
     }
+    
+    if(!users[username]) {
+        users[username] = password;
+        userStats[username] = { coins: 10000, wins: 0, losses: 0 };
+        localStorage.setItem('ludo_users', JSON.stringify(users));
+        localStorage.setItem('ludo_stats', JSON.stringify(userStats));
+    }
+    
+    if(users[username] !== password) {
+        document.getElementById('loginMessage').textContent = '❌ كلمة مرور خاطئة';
+        return;
+    }
+    
     currentUser = username;
     userCoins = userStats[currentUser]?.coins || 10000;
     
+    // حفظ تلقائي
+    localStorage.setItem('ludo_lastUser', username);
+    localStorage.setItem('ludo_lastPass', password);
+    
     try {
-        ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
-        ably.connection.on('connected', () => {
-            channel = ably.channels.get('ludo-main');
-            channel.subscribe('match-found', handleMatchFound);
-            channel.presence.enter({ username: currentUser });
-            showMainMenu();
-        });
-        ably.connection.on('failed', (e) => showMessage('loginMessage','❌ فشل الاتصال','error'));
-    } catch(e) { showMessage('loginMessage','❌ خطأ','error'); }
+        await connectAbly();
+        
+        // طلب المايك
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch(e) {}
+        
+        showMainMenu();
+    } catch(e) {
+        document.getElementById('loginMessage').textContent = '❌ فشل الاتصال';
+    }
 }
 
 function showMainMenu() {
@@ -320,75 +339,148 @@ function showMainMenu() {
     document.getElementById('userCoins').textContent = userCoins;
 }
 
-function showBetSelection() { document.getElementById('betSelection').classList.remove('hidden'); }
-function cancelBetSelection() { document.getElementById('betSelection').classList.add('hidden'); }
-
-function selectBet(amount) {
-    if(userCoins < amount) { alert('❌ عملات غير كافية'); return; }
-    selectedBet = amount;
-    document.querySelectorAll('.bet-option').forEach(o=>o.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
-    setTimeout(() => { if(selectedBet>0) startSearching(); }, 300);
+function logout() {
+    localStorage.removeItem('ludo_lastUser');
+    localStorage.removeItem('ludo_lastPass');
+    if(ably) ably.close();
+    document.getElementById('mainMenu').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
 }
 
+// ==================== الأصدقاء ====================
+function showFriends() {
+    document.getElementById('friendsScreen').classList.remove('hidden');
+    renderFriendsList();
+}
+
+function renderFriendsList() {
+    const myFriends = friends[currentUser] || [];
+    const myRequests = friendRequests[currentUser] || [];
+    
+    const friendsDiv = document.getElementById('friendsList');
+    friendsDiv.innerHTML = myFriends.map(f => `
+        <div class="friend-item">
+            <span class="friend-name">${f}</span>
+            <span>🟢 متصل</span>
+        </div>
+    `).join('') || '<p>لا يوجد أصدقاء</p>';
+    
+    const requestsDiv = document.getElementById('requestsList');
+    requestsDiv.innerHTML = myRequests.map(r => `
+        <div class="friend-item">
+            <span class="friend-name">${r.from}</span>
+            <div class="friend-actions">
+                <button class="btn-small btn-accept" onclick="acceptFriend('${r.from}')">قبول</button>
+                <button class="btn-small btn-reject" onclick="rejectFriend('${r.from}')">رفض</button>
+            </div>
+        </div>
+    `).join('') || '<p>لا توجد طلبات</p>';
+}
+
+function addFriend() {
+    const friendName = document.getElementById('friendUsername').value.trim();
+    if(!friendName || friendName === currentUser) return;
+    
+    channel.publish('friend-request', { from: currentUser, to: friendName });
+    alert('✅ تم إرسال طلب الصداقة');
+}
+
+function handleFriendRequest(msg) {
+    const { from, to } = msg.data;
+    if(to !== currentUser) return;
+    
+    if(!friendRequests[currentUser]) friendRequests[currentUser] = [];
+    if(!friendRequests[currentUser].find(r => r.from === from)) {
+        friendRequests[currentUser].push({ from });
+        localStorage.setItem('ludo_requests', JSON.stringify(friendRequests));
+    }
+}
+
+function acceptFriend(from) {
+    if(!friends[currentUser]) friends[currentUser] = [];
+    if(!friends[from]) friends[from] = [];
+    
+    friends[currentUser].push(from);
+    friends[from].push(currentUser);
+    
+    friendRequests[currentUser] = friendRequests[currentUser].filter(r => r.from !== from);
+    
+    localStorage.setItem('ludo_friends', JSON.stringify(friends));
+    localStorage.setItem('ludo_requests', JSON.stringify(friendRequests));
+    
+    channel.publish('friend-accept', { from: currentUser, to: from });
+    renderFriendsList();
+}
+
+function rejectFriend(from) {
+    friendRequests[currentUser] = friendRequests[currentUser].filter(r => r.from !== from);
+    localStorage.setItem('ludo_requests', JSON.stringify(friendRequests));
+    renderFriendsList();
+}
+
+function handleFriendAccept(msg) {
+    const { from, to } = msg.data;
+    if(to !== currentUser) return;
+    
+    if(!friends[currentUser]) friends[currentUser] = [];
+    friends[currentUser].push(from);
+    localStorage.setItem('ludo_friends', JSON.stringify(friends));
+}
+
+// ==================== اللعبة ====================
 function startSearching() {
-    document.getElementById('betSelection').classList.add('hidden');
     document.getElementById('searchingScreen').classList.remove('hidden');
-    isSearching = true;
-    channel.subscribe('search-match', (msg) => {
-        if(!isSearching) return;
+    channel.subscribe('search-1v1', (msg) => {
         const d = msg.data;
         if(d.username === currentUser) return;
-        if(d.bet !== selectedBet) return;
+        
         const matchId = 'm_'+Date.now();
-        channel.publish('match-found', {player1:currentUser, player2:d.username, bet:selectedBet, matchId});
+        channel.publish('match-found', {
+            player1: currentUser,
+            player2: d.username,
+            matchId
+        });
     });
-    channel.publish('search-match', {username:currentUser, bet:selectedBet});
-}
-
-function cancelSearch() {
-    isSearching = false;
-    channel.unsubscribe('search-match');
-    document.getElementById('searchingScreen').classList.add('hidden');
+    channel.publish('search-1v1', { username: currentUser });
 }
 
 function handleMatchFound(msg) {
     const d = msg.data;
     if(d.player1 !== currentUser && d.player2 !== currentUser) return;
-    isSearching = false;
-    channel.unsubscribe('search-match');
+    
+    channel.unsubscribe('search-1v1');
+    document.getElementById('searchingScreen').classList.add('hidden');
     
     if(d.player1 === currentUser) {
         gameState.myColor = 'green';
         gameState.opponentColor = 'yellow';
         gameState.opponent = d.player2;
-        gameState.myTurn = true; // اللاعب الأول يبدأ
+        gameState.myTurn = true;
     } else {
         gameState.myColor = 'yellow';
         gameState.opponentColor = 'green';
         gameState.opponent = d.player1;
-        gameState.myTurn = false; // اللاعب الثاني ينتظر
+        gameState.myTurn = false;
     }
-    
-    gameState.matchId = d.matchId;
-    gameState.currentTurn = 'green';
     
     gameChannel = ably.channels.get('game-'+d.matchId);
     gameChannel.subscribe('dice', handleOpponentDice);
     gameChannel.subscribe('move', handleOpponentMove);
     
-    document.getElementById('searchingScreen').classList.add('hidden');
+    // قناة الدردشة
+    chatChannel = ably.channels.get('chat-'+d.matchId);
+    chatChannel.subscribe('chat', (msg) => {
+        addChatMessage(msg.data.sender, msg.data.text);
+    });
+    
+    startVoiceCall();
     startGame();
 }
 
 function startGame() {
     document.getElementById('gameScreen').classList.remove('hidden');
     document.getElementById('myPlayerName').textContent = currentUser;
-    document.getElementById('opponentName').textContent = gameState.opponent || 'منافس';
-    document.getElementById('gameBetDisplay').textContent = `💰 ${selectedBet}`;
-    
-    const oppAvatar = document.getElementById('opponentAvatar');
-    oppAvatar.style.background = gameState.opponentColor === 'green' ? 'linear-gradient(135deg,#4CAF50,#45a049)' : 'linear-gradient(135deg,#FFD700,#FFA500)';
+    document.getElementById('opponentName').textContent = gameState.opponent;
     
     initBoard();
     updateStatus();
@@ -397,22 +489,30 @@ function startGame() {
 function initBoard() {
     const board = document.getElementById('gameBoard');
     board.innerHTML = '';
+    
     for(let r=0; r<15; r++) {
         for(let c=0; c<15; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            if(r<6&&c<6){cell.classList.add('base-green');if((r===1&&c===1)||(r===1&&c===4)||(r===4&&c===1)||(r===4&&c===4))cell.dataset.base='green';}
-            if(r<6&&c>=9){cell.classList.add('base-yellow');if((r===1&&c===10)||(r===1&&c===13)||(r===4&&c===10)||(r===4&&c===13))cell.dataset.base='yellow';}
-            if(r>=9&&c<6){cell.classList.add('base-blue');if((r===10&&c===1)||(r===10&&c===4)||(r===13&&c===1)||(r===13&&c===4))cell.dataset.base='blue';}
-            if(r>=9&&c>=9){cell.classList.add('base-red');if((r===10&&c===10)||(r===10&&c===13)||(r===13&&c===10)||(r===13&&c===13))cell.dataset.base='red';}
+            
+            // فقط أخضر وأصفر
+            if(r<6 && c<6) {
+                cell.classList.add('base-green');
+                if((r===1&&c===1)||(r===1&&c===4)||(r===4&&c===1)||(r===4&&c===4)) cell.dataset.base='green';
+            }
+            if(r<6 && c>=9) {
+                cell.classList.add('base-yellow');
+                if((r===1&&c===10)||(r===1&&c===13)||(r===4&&c===10)||(r===4&&c===13)) cell.dataset.base='yellow';
+            }
+            
             const pathIdx = PATH.findIndex(p=>p.r===r&&p.c===c);
-            if(pathIdx>=0){cell.classList.add('path-cell');cell.dataset.path=pathIdx;}
-            if(r===6&&c===1)cell.classList.add('start-green');
-            if(r===1&&c===8)cell.classList.add('start-yellow');
-            if(r===8&&c===13)cell.classList.add('start-red');
-            if(r===13&&c===6)cell.classList.add('start-blue');
-            Object.entries(HOME).forEach(([color,cells])=>{cells.forEach((pos,i)=>{if(pos.r===r&&pos.c===c){cell.dataset.home=color;cell.dataset.homeIdx=i;}})});
-            if(r===7&&c===7){cell.classList.add('center-cell');cell.innerHTML='🏆';}
+            if(pathIdx>=0) { cell.classList.add('path-cell'); cell.dataset.path=pathIdx; }
+            
+            if(r===6&&c===1) cell.classList.add('start-green');
+            if(r===1&&c===8) cell.classList.add('start-yellow');
+            
+            if(r===7&&c===7) { cell.classList.add('center-cell'); cell.innerHTML='🏆'; }
+            
             board.appendChild(cell);
         }
     }
@@ -421,13 +521,17 @@ function initBoard() {
 
 function renderPieces() {
     document.querySelectorAll('.piece').forEach(p=>p.remove());
-    Object.entries(gameState.pieces).forEach(([color,pieces])=>{
-        pieces.forEach((p,idx)=>{
+    
+    ['green','yellow'].forEach(color => {
+        gameState.pieces[color].forEach((p, idx) => {
             if(p.done) return;
             let target = null;
-            if(p.pos === -1) { const bases = document.querySelectorAll(`[data-base="${color}"]`); if(bases[idx]) target = bases[idx]; }
-            else if(p.home > 0) { target = document.querySelector(`[data-home="${color}"][data-home-idx="${p.home-1}"]`); }
-            else if(p.pos >= 0 && p.pos < 52) { target = document.querySelector(`.cell[data-path="${p.pos}"]`); }
+            if(p.pos === -1) {
+                const bases = document.querySelectorAll(`[data-base="${color}"]`);
+                if(bases[idx]) target = bases[idx];
+            } else if(p.pos >= 0 && p.pos < 52) {
+                target = document.querySelector(`.cell[data-path="${p.pos}"]`);
+            }
             if(target) {
                 const piece = document.createElement('div');
                 piece.className = `piece piece-${color}`;
@@ -442,11 +546,7 @@ function renderPieces() {
 }
 
 function rollDice() {
-    // فحص مهم: هل هذا دوري؟
-    if(!gameState.myTurn) {
-        updateStatus('⏳ ليس دورك!');
-        return;
-    }
+    if(!gameState.myTurn) { updateStatus('⏳ ليس دورك!'); return; }
     
     const btn = document.getElementById('rollDiceBtn');
     const dice = document.getElementById('diceDisplay');
@@ -463,28 +563,19 @@ function rollDice() {
             dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][val-1];
             dice.classList.remove('rolling');
             
-            // إرسال النرد للخصم
-            gameChannel.publish('dice', { player: currentUser, dice: val });
+            gameChannel.publish('dice', { dice: val });
             
             if(!checkHasMove()) {
-                updateStatus('😕 لا توجد حركة - انتقل الدور');
+                updateStatus('😕 لا توجد حركة');
                 gameState.myTurn = false;
-                gameChannel.publish('move', { player: currentUser, moveData: { type: 'pass' } });
+                gameChannel.publish('move', { type: 'pass' });
                 btn.disabled = false;
-                updateStatus();
                 return;
             }
             
             highlightMovable();
             updateStatus(`🎲 رميت ${val}`);
-            
-            if(val !== 6) {
-                // إذا مو 6، نخلي الزر شغال لكن ننتظر اللاعب يختار قطعة
-                // بعد ما يختار القطعة راح ينتقل الدور
-                btn.disabled = false;
-            } else {
-                btn.disabled = false;
-            }
+            btn.disabled = false;
         }
     }, 80);
 }
@@ -492,15 +583,12 @@ function rollDice() {
 function checkHasMove() {
     const color = gameState.myColor;
     const dice = gameState.lastDice;
-    if(dice === 6 && gameState.pieces[color].some(p=>p.pos===-1&&!p.done)) return true;
+    if(dice === 6 && gameState.pieces[color].some(p=>p.pos===-1)) return true;
     return gameState.pieces[color].some(p=>{
-        if(p.done) return false;
-        if(p.pos>=0 && p.pos<52 && p.home===0) {
+        if(p.pos>=0 && p.pos<52) {
             const np = p.pos + dice;
-            if(np<52) return true;
-            if(np === 52 + STARTS[color]) return true;
+            return np < 52;
         }
-        if(p.home > 0) return p.home + dice <= 5;
         return false;
     });
 }
@@ -508,195 +596,176 @@ function checkHasMove() {
 function highlightMovable() {
     document.querySelectorAll('.piece').forEach(el=>{
         el.classList.remove('can-move');
-        // مهم: نفحص فقط قطع اللاعب الحالي
         if(el.dataset.color !== gameState.myColor) return;
         const idx = parseInt(el.dataset.idx);
         const p = gameState.pieces[gameState.myColor][idx];
-        if(p.done) return;
         if(p.pos===-1 && gameState.lastDice===6) el.classList.add('can-move');
-        else if(p.pos>=0 && p.pos<52 && p.home===0) {
+        else if(p.pos>=0 && p.pos<52) {
             const np = p.pos + gameState.lastDice;
-            if(np<52 || np === 52 + STARTS[gameState.myColor]) el.classList.add('can-move');
-        } else if(p.home>0) {
-            if(p.home + gameState.lastDice <= 5) el.classList.add('can-move');
+            if(np < 52) el.classList.add('can-move');
         }
     });
 }
 
 function selectPiece(color, idx) {
-    // فحص مهم: هل هذا دوري؟ وهل القطعة من لوني؟
-    if(!gameState.myTurn) { updateStatus('⏳ ليس دورك!'); return; }
-    if(color !== gameState.myColor) { updateStatus('❌ هذه ليست قطعتك!'); return; }
-    if(gameState.lastDice === 0) return;
+    if(!gameState.myTurn || color !== gameState.myColor || gameState.lastDice === 0) return;
     
     const p = gameState.pieces[color][idx];
-    if(p.done) return;
-    
-    let moved = false;
-    let moveData = null;
     
     if(p.pos === -1 && gameState.lastDice === 6) {
         p.pos = STARTS[color];
-        moved = true;
-        moveData = { type: 'exit', color, idx, pos: p.pos };
-    } else if(p.pos >= 0 && p.pos < 52 && p.home === 0) {
+        gameChannel.publish('move', { type: 'exit', color, idx, pos: p.pos });
+    } else if(p.pos >= 0 && p.pos < 52) {
         const np = p.pos + gameState.lastDice;
         if(np < 52) {
-            // أكل قطع الخصم فقط
+            // أكل
             const opp = gameState.opponentColor;
             gameState.pieces[opp].forEach(oppP => {
-                if(oppP.pos === np && oppP.home === 0 && !oppP.done && !SAFE.includes(np)) {
+                if(oppP.pos === np && !SAFE.includes(np)) {
                     oppP.pos = -1;
-                    updateStatus('🍴 أكلت قطعة!');
                 }
             });
             p.pos = np;
-            moved = true;
-            moveData = { type: 'move', color, idx, pos: np };
-        } else if(np === 52 + STARTS[color]) {
-            p.pos = -2; p.home = 1;
-            moved = true;
-            moveData = { type: 'home', color, idx, home: 1 };
+            gameChannel.publish('move', { type: 'move', color, idx, pos: np });
         }
-    } else if(p.home > 0) {
-        const nh = p.home + gameState.lastDice;
-        if(nh <= 5) {
-            p.home = nh;
-            moved = true;
-            moveData = { type: 'homeMove', color, idx, home: nh };
-            if(nh === 5) { p.done = true; updateStatus('🎉 قطعة وصلت!'); }
-        }
+    } else { return; }
+    
+    renderPieces();
+    
+    if(gameState.lastDice !== 6) {
+        gameState.myTurn = false;
     }
     
-    if(moved) {
-        // إرسال الحركة للخصم
-        gameChannel.publish('move', { player: currentUser, moveData });
-        renderPieces();
-        
-        if(checkWin(color)) { endGame(true); return; }
-        
-        // تبديل الدور إذا مو 6
-        if(gameState.lastDice !== 6) {
-            gameState.myTurn = false;
-        }
-        
-        gameState.lastDice = 0;
-        document.querySelectorAll('.can-move').forEach(e=>e.classList.remove('can-move'));
-        updateStatus();
-    }
+    gameState.lastDice = 0;
+    document.querySelectorAll('.can-move').forEach(e=>e.classList.remove('can-move'));
+    updateStatus();
 }
 
 function handleOpponentDice(msg) {
-    const d = msg.data;
-    if(d.player === currentUser) return;
-    updateStatus(`🎲 الخصم رمى ${d.dice}`);
+    updateStatus(`🎲 الخصم رمى ${msg.data.dice}`);
 }
 
 function handleOpponentMove(msg) {
     const d = msg.data;
-    if(d.player === currentUser) return;
-    
-    const md = d.moveData;
-    
-    if(md.type === 'pass') {
-        // الخصم ما عنده حركة - دوري الآن
+    if(d.type === 'pass') {
         gameState.myTurn = true;
         updateStatus();
         return;
     }
     
-    const p = gameState.pieces[md.color][md.idx];
-    
-    if(md.type === 'exit') p.pos = md.pos;
-    else if(md.type === 'move') {
-        // أكل قطعة من لوني إذا انأكلت
+    const p = gameState.pieces[d.color][d.idx];
+    if(d.type === 'exit') p.pos = d.pos;
+    else if(d.type === 'move') {
+        // أكل قطعتي
         gameState.pieces[gameState.myColor].forEach(myP => {
-            if(myP.pos === md.pos && myP.home === 0 && !myP.done && !SAFE.includes(md.pos)) {
+            if(myP.pos === d.pos && !SAFE.includes(d.pos)) {
                 myP.pos = -1;
-                updateStatus('😢 انأكلت قطعتك!');
             }
         });
-        p.pos = md.pos;
-    } else if(md.type === 'home') { p.pos = -2; p.home = 1; }
-    else if(md.type === 'homeMove') { p.home = md.home; if(md.home===5) p.done=true; }
+        p.pos = d.pos;
+    }
     
     renderPieces();
-    
-    if(checkWin(md.color)) { endGame(false); return; }
-    
-    // مهم: بعد حركة الخصم، إذا ما رمى 6 يصير دوري
-    // (هذه المعلومة نعرفها من خلال gameState.lastDice اللي عند الخصم)
-    // بما إننا ما نعرف، نعتمد إنه بعد أي حركة دوري يصير true
     gameState.myTurn = true;
     updateStatus();
 }
 
-function checkWin(color) {
-    return gameState.pieces[color].every(p => p.done);
-}
-
 function updateStatus(msg) {
     const el = document.getElementById('gameStatus');
-    if(msg) { el.textContent = msg; return; }
-    el.textContent = gameState.myTurn ? '🎮 دورك! ارمِ النرد' : '⏳ دور الخصم...';
+    el.textContent = msg || (gameState.myTurn ? '🎮 دورك!' : '⏳ دور الخصم');
 }
 
-function endGame(won) {
-    document.getElementById('gameScreen').classList.add('hidden');
-    document.getElementById('resultScreen').classList.remove('hidden');
-    if(won) {
-        document.getElementById('resultIcon').textContent = '🏆';
-        document.getElementById('resultTitle').textContent = 'فزت!';
-        document.getElementById('resultCoins').textContent = `+${selectedBet} 💰`;
-        userCoins += selectedBet;
-        userStats[currentUser].wins = (userStats[currentUser].wins||0)+1;
-    } else {
-        document.getElementById('resultIcon').textContent = '😢';
-        document.getElementById('resultTitle').textContent = 'خسرت';
-        document.getElementById('resultCoins').textContent = `-${selectedBet} 💰`;
-        userCoins -= selectedBet;
-        userStats[currentUser].losses = (userStats[currentUser].losses||0)+1;
+// ==================== دردشة ومايك ====================
+function addChatMessage(sender, text) {
+    const div = document.getElementById('chatMessages');
+    div.innerHTML += `<div class="chat-message"><span class="chat-sender">${sender}:</span> ${text}</div>`;
+    div.scrollTop = div.scrollHeight;
+}
+
+function sendChat() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    
+    chatChannel.publish('chat', { sender: currentUser, text });
+    addChatMessage(currentUser, text);
+    input.value = '';
+}
+
+function startVoiceCall() {
+    if(!localStream) return;
+    if(gameState.myColor === 'green') {
+        const peer = new SimplePeer({ initiator: true, stream: localStream, trickle: false });
+        setupPeer(peer);
     }
-    userStats[currentUser].coins = userCoins;
-    localStorage.setItem('ludo_stats', JSON.stringify(userStats));
-    if(gameChannel) gameChannel.unsubscribe();
 }
 
-function backToMenu() {
-    document.getElementById('resultScreen').classList.add('hidden');
-    document.getElementById('userCoins').textContent = userCoins;
-    document.getElementById('mainMenu').classList.remove('hidden');
-    gameState = {
-        myColor: null, opponentColor: null, currentTurn: 'green', lastDice: 0, myTurn: false,
-        pieces: {
-            green: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
-            yellow: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
-            blue: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
-            red: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}]
-        }
-    };
-    selectedBet = 0;
+function setupPeer(peer) {
+    peer.on('signal', signal => {
+        gameChannel.publish('signal', { signal });
+    });
+    peer.on('stream', remoteStream => {
+        const audio = new Audio();
+        audio.srcObject = remoteStream;
+        audio.autoplay = true;
+    });
+    currentPeer = peer;
 }
 
-function showFriends() { alert('👥 قريباً'); }
-function showChat() { alert('💬 قريباً'); }
+function toggleMic() {
+    if(!localStream) return;
+    micEnabled = !micEnabled;
+    localStream.getAudioTracks()[0].enabled = micEnabled;
+    document.getElementById('micBtn').classList.toggle('muted', !micEnabled);
+    document.getElementById('micBtn').textContent = micEnabled ? '🎤' : '🔇';
+}
 
 // ==================== تهيئة ====================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginBtn').onclick = login;
-    document.getElementById('showRegisterBtn').onclick = showRegisterForm;
-    document.getElementById('registerBtn').onclick = register;
-    document.getElementById('showLoginBtn').onclick = showLoginForm;
-    document.getElementById('playBtn').onclick = showBetSelection;
+    document.getElementById('showRegisterBtn').onclick = () => {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+    };
+    document.getElementById('showLoginBtn').onclick = () => {
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+    };
+    document.getElementById('registerBtn').onclick = () => {
+        const u = document.getElementById('regUsername').value.trim();
+        const p = document.getElementById('regPassword').value;
+        if(!u||!p) return;
+        users[u] = p;
+        userStats[u] = { coins:10000, wins:0, losses:0 };
+        localStorage.setItem('ludo_users', JSON.stringify(users));
+        localStorage.setItem('ludo_stats', JSON.stringify(userStats));
+        alert('✅ تم التسجيل');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('loginUsername').value = u;
+    };
+    
+    document.getElementById('playBtn').onclick = startSearching;
     document.getElementById('friendsBtn').onclick = showFriends;
-    document.getElementById('chatBtn').onclick = showChat;
-    document.querySelectorAll('.bet-option').forEach(o=>o.onclick=(e)=>selectBet(parseInt(e.currentTarget.dataset.bet)));
-    document.getElementById('cancelBetBtn').onclick = cancelBetSelection;
-    document.getElementById('cancelSearchBtn').onclick = cancelSearch;
+    document.getElementById('logoutBtn').onclick = logout;
+    document.getElementById('closeFriendsBtn').onclick = () => document.getElementById('friendsScreen').classList.add('hidden');
+    document.getElementById('addFriendBtn').onclick = addFriend;
+    document.getElementById('cancelSearchBtn').onclick = () => {
+        channel.unsubscribe('search-1v1');
+        document.getElementById('searchingScreen').classList.add('hidden');
+    };
     document.getElementById('rollDiceBtn').onclick = rollDice;
-    document.getElementById('backToMenuBtn').onclick = backToMenu;
+    document.getElementById('sendChatBtn').onclick = sendChat;
+    document.getElementById('chatInput').onkeypress = (e) => { if(e.key==='Enter') sendChat(); };
+    document.getElementById('micBtn').onclick = toggleMic;
+    
+    // محاولة تسجيل تلقائي
+    autoLogin();
 });
-</script>
 
+// دوال عامة
+window.acceptFriend = acceptFriend;
+window.rejectFriend = rejectFriend;
+</script>
 </body>
 </html>
