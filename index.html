@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎲 لودو أونلاين - العب الآن!</title>
+    <title>🎲 لودو أونلاين</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         body { font-family:'Cairo',sans-serif; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); overflow:hidden; position:fixed; width:100%; height:100%; }
-        
-        /* شاشة تسجيل الدخول */
         .login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000; }
         .login-box { background:rgba(255,255,255,0.95); border-radius:30px; padding:40px 30px; max-width:400px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.5); }
         .login-logo { text-align:center; margin-bottom:30px; }
@@ -24,8 +22,6 @@
         .login-message { text-align:center; margin-top:10px; padding:10px; border-radius:10px; font-size:14px; font-weight:600; }
         .message-error { background:rgba(244,67,54,0.1); color:#f44336; }
         .message-success { background:rgba(76,175,80,0.1); color:#4CAF50; }
-        
-        /* القائمة الرئيسية */
         .main-menu { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
         .menu-header { text-align:center; margin-bottom:40px; }
         .menu-header h1 { font-size:3rem; color:#FFD700; text-shadow:0 4px 15px rgba(0,0,0,0.5); margin-bottom:10px; }
@@ -39,8 +35,6 @@
         .btn-play { background:linear-gradient(135deg,#4CAF50,#45a049); color:white; }
         .btn-friends { background:linear-gradient(135deg,#2196F3,#1976D2); color:white; }
         .btn-chat { background:linear-gradient(135deg,#FF9800,#F57C00); color:white; }
-        
-        /* باقي الستايلات */
         .bet-selection { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:2000; padding:20px; }
         .bet-box { background:white; border-radius:30px; padding:40px 30px; max-width:400px; width:100%; text-align:center; }
         .bet-box h2 { font-size:2rem; color:#1a5f2e; margin-bottom:30px; }
@@ -249,7 +243,8 @@ let gameState = {
         blue: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
         red: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}]
     },
-    matchId: null, opponent: null
+    matchId: null, opponent: null,
+    myTurn: false // مهم: هل هذا دوري؟
 };
 
 // تهيئة localStorage
@@ -273,89 +268,49 @@ function showMessage(id, text, type) {
 function showRegisterForm() {
     document.getElementById('loginForm').classList.add('hidden');
     document.getElementById('registerForm').classList.remove('hidden');
-    document.getElementById('regMessage').classList.add('hidden');
 }
 
 function showLoginForm() {
     document.getElementById('registerForm').classList.add('hidden');
     document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('loginMessage').classList.add('hidden');
 }
 
 function register() {
     const username = document.getElementById('regUsername').value.trim();
     const password = document.getElementById('regPassword').value;
-    
-    if(!username || !password) {
-        showMessage('regMessage', '❌ الرجاء ملء جميع الحقول', 'error');
-        return;
-    }
-    
+    if(!username||!password){showMessage('regMessage','❌ املأ الحقول','error');return;}
     users = JSON.parse(localStorage.getItem('ludo_users')) || {};
-    userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
-    
-    if(users[username]) {
-        showMessage('regMessage', '❌ اسم المستخدم موجود مسبقاً', 'error');
-        return;
-    }
-    
-    users[username] = password;
-    userStats[username] = { coins: 10000, wins: 0, losses: 0 };
-    
-    localStorage.setItem('ludo_users', JSON.stringify(users));
-    localStorage.setItem('ludo_stats', JSON.stringify(userStats));
-    
-    showMessage('regMessage', '✅ تم التسجيل بنجاح!', 'success');
-    
-    setTimeout(() => {
-        document.getElementById('loginUsername').value = username;
-        document.getElementById('loginPassword').value = '';
-        showLoginForm();
-    }, 1500);
+    if(users[username]){showMessage('regMessage','❌ الاسم موجود','error');return;}
+    users[username]=password;
+    userStats[username]={coins:10000,wins:0,losses:0};
+    localStorage.setItem('ludo_users',JSON.stringify(users));
+    localStorage.setItem('ludo_stats',JSON.stringify(userStats));
+    showMessage('regMessage','✅ تم التسجيل','success');
+    setTimeout(()=>{document.getElementById('loginUsername').value=username;showLoginForm();},1500);
 }
 
 async function login() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
-    
     users = JSON.parse(localStorage.getItem('ludo_users')) || {'لاعب':'123'};
     userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {'لاعب':{coins:10000,wins:0,losses:0}};
     
-    if(!username || !password) {
-        showMessage('loginMessage', '❌ الرجاء ملء جميع الحقول', 'error');
-        return;
+    if(!users[username]||users[username]!==password){
+        showMessage('loginMessage','❌ خطأ في البيانات','error');return;
     }
-    
-    if(!users[username] || users[username] !== password) {
-        showMessage('loginMessage', '❌ اسم مستخدم أو كلمة مرور خاطئة', 'error');
-        return;
-    }
-    
     currentUser = username;
     userCoins = userStats[currentUser]?.coins || 10000;
     
-    showMessage('loginMessage', '✅ جاري الاتصال...', 'success');
-    
     try {
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
-        
         ably.connection.on('connected', () => {
-            console.log('✅ متصل بـ Ably');
             channel = ably.channels.get('ludo-main');
             channel.subscribe('match-found', handleMatchFound);
             channel.presence.enter({ username: currentUser });
             showMainMenu();
         });
-        
-        ably.connection.on('failed', (err) => {
-            console.error('فشل الاتصال:', err);
-            showMessage('loginMessage', '❌ فشل الاتصال بالخادم', 'error');
-        });
-        
-    } catch(e) {
-        console.error('خطأ:', e);
-        showMessage('loginMessage', '❌ حدث خطأ في الاتصال', 'error');
-    }
+        ably.connection.on('failed', (e) => showMessage('loginMessage','❌ فشل الاتصال','error'));
+    } catch(e) { showMessage('loginMessage','❌ خطأ','error'); }
 }
 
 function showMainMenu() {
@@ -365,47 +320,30 @@ function showMainMenu() {
     document.getElementById('userCoins').textContent = userCoins;
 }
 
-// ==================== البحث ====================
-function showBetSelection() {
-    document.getElementById('betSelection').classList.remove('hidden');
-}
-
-function cancelBetSelection() {
-    document.getElementById('betSelection').classList.add('hidden');
-}
+function showBetSelection() { document.getElementById('betSelection').classList.remove('hidden'); }
+function cancelBetSelection() { document.getElementById('betSelection').classList.add('hidden'); }
 
 function selectBet(amount) {
-    if(userCoins < amount) {
-        alert('❌ ليس لديك عملات كافية!');
-        return;
-    }
+    if(userCoins < amount) { alert('❌ عملات غير كافية'); return; }
     selectedBet = amount;
-    document.querySelectorAll('.bet-option').forEach(o => o.classList.remove('selected'));
+    document.querySelectorAll('.bet-option').forEach(o=>o.classList.remove('selected'));
     event.currentTarget.classList.add('selected');
-    setTimeout(() => { if(selectedBet > 0) startSearching(); }, 300);
+    setTimeout(() => { if(selectedBet>0) startSearching(); }, 300);
 }
 
 function startSearching() {
     document.getElementById('betSelection').classList.add('hidden');
     document.getElementById('searchingScreen').classList.remove('hidden');
     isSearching = true;
-    
     channel.subscribe('search-match', (msg) => {
         if(!isSearching) return;
-        const data = msg.data;
-        if(data.username === currentUser) return;
-        if(data.bet !== selectedBet) return;
-        
-        const matchId = 'm_' + Date.now();
-        channel.publish('match-found', {
-            player1: currentUser,
-            player2: data.username,
-            bet: selectedBet,
-            matchId: matchId
-        });
+        const d = msg.data;
+        if(d.username === currentUser) return;
+        if(d.bet !== selectedBet) return;
+        const matchId = 'm_'+Date.now();
+        channel.publish('match-found', {player1:currentUser, player2:d.username, bet:selectedBet, matchId});
     });
-    
-    channel.publish('search-match', { username: currentUser, bet: selectedBet });
+    channel.publish('search-match', {username:currentUser, bet:selectedBet});
 }
 
 function cancelSearch() {
@@ -415,26 +353,27 @@ function cancelSearch() {
 }
 
 function handleMatchFound(msg) {
-    const data = msg.data;
-    if(data.player1 !== currentUser && data.player2 !== currentUser) return;
-    
+    const d = msg.data;
+    if(d.player1 !== currentUser && d.player2 !== currentUser) return;
     isSearching = false;
     channel.unsubscribe('search-match');
     
-    if(data.player1 === currentUser) {
+    if(d.player1 === currentUser) {
         gameState.myColor = 'green';
         gameState.opponentColor = 'yellow';
-        gameState.opponent = data.player2;
+        gameState.opponent = d.player2;
+        gameState.myTurn = true; // اللاعب الأول يبدأ
     } else {
         gameState.myColor = 'yellow';
         gameState.opponentColor = 'green';
-        gameState.opponent = data.player1;
+        gameState.opponent = d.player1;
+        gameState.myTurn = false; // اللاعب الثاني ينتظر
     }
     
-    gameState.matchId = data.matchId;
+    gameState.matchId = d.matchId;
     gameState.currentTurn = 'green';
     
-    gameChannel = ably.channels.get('game-' + data.matchId);
+    gameChannel = ably.channels.get('game-'+d.matchId);
     gameChannel.subscribe('dice', handleOpponentDice);
     gameChannel.subscribe('move', handleOpponentMove);
     
@@ -442,7 +381,6 @@ function handleMatchFound(msg) {
     startGame();
 }
 
-// ==================== اللعبة ====================
 function startGame() {
     document.getElementById('gameScreen').classList.remove('hidden');
     document.getElementById('myPlayerName').textContent = currentUser;
@@ -450,8 +388,7 @@ function startGame() {
     document.getElementById('gameBetDisplay').textContent = `💰 ${selectedBet}`;
     
     const oppAvatar = document.getElementById('opponentAvatar');
-    oppAvatar.style.background = gameState.opponentColor === 'green' ? 
-        'linear-gradient(135deg,#4CAF50,#45a049)' : 'linear-gradient(135deg,#FFD700,#FFA500)';
+    oppAvatar.style.background = gameState.opponentColor === 'green' ? 'linear-gradient(135deg,#4CAF50,#45a049)' : 'linear-gradient(135deg,#FFD700,#FFA500)';
     
     initBoard();
     updateStatus();
@@ -460,84 +397,43 @@ function startGame() {
 function initBoard() {
     const board = document.getElementById('gameBoard');
     board.innerHTML = '';
-    
-    for(let r = 0; r < 15; r++) {
-        for(let c = 0; c < 15; c++) {
+    for(let r=0; r<15; r++) {
+        for(let c=0; c<15; c++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
-            
-            if(r < 6 && c < 6) { 
-                cell.classList.add('base-green');
-                if((r===1&&c===1)||(r===1&&c===4)||(r===4&&c===1)||(r===4&&c===4)) cell.dataset.base = 'green';
-            }
-            if(r < 6 && c >= 9) { 
-                cell.classList.add('base-yellow');
-                if((r===1&&c===10)||(r===1&&c===13)||(r===4&&c===10)||(r===4&&c===13)) cell.dataset.base = 'yellow';
-            }
-            if(r >= 9 && c < 6) { 
-                cell.classList.add('base-blue');
-                if((r===10&&c===1)||(r===10&&c===4)||(r===13&&c===1)||(r===13&&c===4)) cell.dataset.base = 'blue';
-            }
-            if(r >= 9 && c >= 9) { 
-                cell.classList.add('base-red');
-                if((r===10&&c===10)||(r===10&&c===13)||(r===13&&c===10)||(r===13&&c===13)) cell.dataset.base = 'red';
-            }
-            
-            const pathIdx = PATH.findIndex(p => p.r === r && p.c === c);
-            if(pathIdx >= 0) { 
-                cell.classList.add('path-cell'); 
-                cell.dataset.path = pathIdx;
-            }
-            
-            if(r===6&&c===1) cell.classList.add('start-green');
-            if(r===1&&c===8) cell.classList.add('start-yellow');
-            if(r===8&&c===13) cell.classList.add('start-red');
-            if(r===13&&c===6) cell.classList.add('start-blue');
-            
-            Object.entries(HOME).forEach(([color, cells]) => {
-                cells.forEach((pos, i) => {
-                    if(pos.r === r && pos.c === c) {
-                        cell.dataset.home = color;
-                        cell.dataset.homeIdx = i;
-                    }
-                });
-            });
-            
-            if(r === 7 && c === 7) {
-                cell.classList.add('center-cell');
-                cell.innerHTML = '🏆';
-            }
-            
+            if(r<6&&c<6){cell.classList.add('base-green');if((r===1&&c===1)||(r===1&&c===4)||(r===4&&c===1)||(r===4&&c===4))cell.dataset.base='green';}
+            if(r<6&&c>=9){cell.classList.add('base-yellow');if((r===1&&c===10)||(r===1&&c===13)||(r===4&&c===10)||(r===4&&c===13))cell.dataset.base='yellow';}
+            if(r>=9&&c<6){cell.classList.add('base-blue');if((r===10&&c===1)||(r===10&&c===4)||(r===13&&c===1)||(r===13&&c===4))cell.dataset.base='blue';}
+            if(r>=9&&c>=9){cell.classList.add('base-red');if((r===10&&c===10)||(r===10&&c===13)||(r===13&&c===10)||(r===13&&c===13))cell.dataset.base='red';}
+            const pathIdx = PATH.findIndex(p=>p.r===r&&p.c===c);
+            if(pathIdx>=0){cell.classList.add('path-cell');cell.dataset.path=pathIdx;}
+            if(r===6&&c===1)cell.classList.add('start-green');
+            if(r===1&&c===8)cell.classList.add('start-yellow');
+            if(r===8&&c===13)cell.classList.add('start-red');
+            if(r===13&&c===6)cell.classList.add('start-blue');
+            Object.entries(HOME).forEach(([color,cells])=>{cells.forEach((pos,i)=>{if(pos.r===r&&pos.c===c){cell.dataset.home=color;cell.dataset.homeIdx=i;}})});
+            if(r===7&&c===7){cell.classList.add('center-cell');cell.innerHTML='🏆';}
             board.appendChild(cell);
         }
     }
-    
     renderPieces();
 }
 
 function renderPieces() {
-    document.querySelectorAll('.piece').forEach(p => p.remove());
-    
-    Object.entries(gameState.pieces).forEach(([color, pieces]) => {
-        pieces.forEach((p, idx) => {
+    document.querySelectorAll('.piece').forEach(p=>p.remove());
+    Object.entries(gameState.pieces).forEach(([color,pieces])=>{
+        pieces.forEach((p,idx)=>{
             if(p.done) return;
-            
             let target = null;
-            if(p.pos === -1) {
-                const bases = document.querySelectorAll(`[data-base="${color}"]`);
-                if(bases[idx]) target = bases[idx];
-            } else if(p.home > 0) {
-                target = document.querySelector(`[data-home="${color}"][data-home-idx="${p.home-1}"]`);
-            } else if(p.pos >= 0 && p.pos < 52) {
-                target = document.querySelector(`.cell[data-path="${p.pos}"]`);
-            }
-            
+            if(p.pos === -1) { const bases = document.querySelectorAll(`[data-base="${color}"]`); if(bases[idx]) target = bases[idx]; }
+            else if(p.home > 0) { target = document.querySelector(`[data-home="${color}"][data-home-idx="${p.home-1}"]`); }
+            else if(p.pos >= 0 && p.pos < 52) { target = document.querySelector(`.cell[data-path="${p.pos}"]`); }
             if(target) {
                 const piece = document.createElement('div');
                 piece.className = `piece piece-${color}`;
                 piece.dataset.color = color;
                 piece.dataset.idx = idx;
-                piece.textContent = idx + 1;
+                piece.textContent = idx+1;
                 piece.onclick = () => selectPiece(color, idx);
                 target.appendChild(piece);
             }
@@ -546,8 +442,9 @@ function renderPieces() {
 }
 
 function rollDice() {
-    if(gameState.currentTurn !== gameState.myColor) {
-        updateStatus('⏳ ليس دورك');
+    // فحص مهم: هل هذا دوري؟
+    if(!gameState.myTurn) {
+        updateStatus('⏳ ليس دورك!');
         return;
     }
     
@@ -558,20 +455,21 @@ function rollDice() {
     
     let count = 0;
     const int = setInterval(() => {
-        dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][Math.floor(Math.random() * 6)];
+        dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][Math.floor(Math.random()*6)];
         if(++count >= 10) {
             clearInterval(int);
-            const val = Math.floor(Math.random() * 6) + 1;
+            const val = Math.floor(Math.random()*6)+1;
             gameState.lastDice = val;
             dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][val-1];
             dice.classList.remove('rolling');
             
+            // إرسال النرد للخصم
             gameChannel.publish('dice', { player: currentUser, dice: val });
             
             if(!checkHasMove()) {
-                updateStatus('😕 لا توجد حركة');
-                gameState.currentTurn = gameState.opponentColor;
-                gameState.lastDice = 0;
+                updateStatus('😕 لا توجد حركة - انتقل الدور');
+                gameState.myTurn = false;
+                gameChannel.publish('move', { player: currentUser, moveData: { type: 'pass' } });
                 btn.disabled = false;
                 updateStatus();
                 return;
@@ -581,13 +479,9 @@ function rollDice() {
             updateStatus(`🎲 رميت ${val}`);
             
             if(val !== 6) {
-                setTimeout(() => {
-                    if(document.querySelectorAll('.piece.can-move').length === 0) {
-                        gameState.currentTurn = gameState.opponentColor;
-                        updateStatus();
-                    }
-                    btn.disabled = false;
-                }, 500);
+                // إذا مو 6، نخلي الزر شغال لكن ننتظر اللاعب يختار قطعة
+                // بعد ما يختار القطعة راح ينتقل الدور
+                btn.disabled = false;
             } else {
                 btn.disabled = false;
             }
@@ -598,14 +492,12 @@ function rollDice() {
 function checkHasMove() {
     const color = gameState.myColor;
     const dice = gameState.lastDice;
-    
-    if(dice === 6 && gameState.pieces[color].some(p => p.pos === -1 && !p.done)) return true;
-    
-    return gameState.pieces[color].some(p => {
+    if(dice === 6 && gameState.pieces[color].some(p=>p.pos===-1&&!p.done)) return true;
+    return gameState.pieces[color].some(p=>{
         if(p.done) return false;
-        if(p.pos >= 0 && p.pos < 52 && p.home === 0) {
+        if(p.pos>=0 && p.pos<52 && p.home===0) {
             const np = p.pos + dice;
-            if(np < 52) return true;
+            if(np<52) return true;
             if(np === 52 + STARTS[color]) return true;
         }
         if(p.home > 0) return p.home + dice <= 5;
@@ -614,26 +506,28 @@ function checkHasMove() {
 }
 
 function highlightMovable() {
-    document.querySelectorAll('.piece').forEach(el => {
+    document.querySelectorAll('.piece').forEach(el=>{
         el.classList.remove('can-move');
+        // مهم: نفحص فقط قطع اللاعب الحالي
         if(el.dataset.color !== gameState.myColor) return;
-        
         const idx = parseInt(el.dataset.idx);
         const p = gameState.pieces[gameState.myColor][idx];
         if(p.done) return;
-        
-        if(p.pos === -1 && gameState.lastDice === 6) el.classList.add('can-move');
-        else if(p.pos >= 0 && p.pos < 52 && p.home === 0) {
+        if(p.pos===-1 && gameState.lastDice===6) el.classList.add('can-move');
+        else if(p.pos>=0 && p.pos<52 && p.home===0) {
             const np = p.pos + gameState.lastDice;
-            if(np < 52 || np === 52 + STARTS[gameState.myColor]) el.classList.add('can-move');
-        } else if(p.home > 0) {
+            if(np<52 || np === 52 + STARTS[gameState.myColor]) el.classList.add('can-move');
+        } else if(p.home>0) {
             if(p.home + gameState.lastDice <= 5) el.classList.add('can-move');
         }
     });
 }
 
 function selectPiece(color, idx) {
-    if(color !== gameState.myColor || gameState.lastDice === 0) return;
+    // فحص مهم: هل هذا دوري؟ وهل القطعة من لوني؟
+    if(!gameState.myTurn) { updateStatus('⏳ ليس دورك!'); return; }
+    if(color !== gameState.myColor) { updateStatus('❌ هذه ليست قطعتك!'); return; }
+    if(gameState.lastDice === 0) return;
     
     const p = gameState.pieces[color][idx];
     if(p.done) return;
@@ -648,6 +542,7 @@ function selectPiece(color, idx) {
     } else if(p.pos >= 0 && p.pos < 52 && p.home === 0) {
         const np = p.pos + gameState.lastDice;
         if(np < 52) {
+            // أكل قطع الخصم فقط
             const opp = gameState.opponentColor;
             gameState.pieces[opp].forEach(oppP => {
                 if(oppP.pos === np && oppP.home === 0 && !oppP.done && !SAFE.includes(np)) {
@@ -659,8 +554,7 @@ function selectPiece(color, idx) {
             moved = true;
             moveData = { type: 'move', color, idx, pos: np };
         } else if(np === 52 + STARTS[color]) {
-            p.pos = -2;
-            p.home = 1;
+            p.pos = -2; p.home = 1;
             moved = true;
             moveData = { type: 'home', color, idx, home: 1 };
         }
@@ -670,42 +564,52 @@ function selectPiece(color, idx) {
             p.home = nh;
             moved = true;
             moveData = { type: 'homeMove', color, idx, home: nh };
-            if(nh === 5) {
-                p.done = true;
-                updateStatus('🎉 قطعة وصلت!');
-            }
+            if(nh === 5) { p.done = true; updateStatus('🎉 قطعة وصلت!'); }
         }
     }
     
     if(moved) {
+        // إرسال الحركة للخصم
         gameChannel.publish('move', { player: currentUser, moveData });
         renderPieces();
         
-        if(checkWin(color)) {
-            endGame(true);
-            return;
+        if(checkWin(color)) { endGame(true); return; }
+        
+        // تبديل الدور إذا مو 6
+        if(gameState.lastDice !== 6) {
+            gameState.myTurn = false;
         }
         
-        if(gameState.lastDice !== 6) gameState.currentTurn = gameState.opponentColor;
         gameState.lastDice = 0;
-        document.querySelectorAll('.can-move').forEach(e => e.classList.remove('can-move'));
+        document.querySelectorAll('.can-move').forEach(e=>e.classList.remove('can-move'));
         updateStatus();
     }
 }
 
 function handleOpponentDice(msg) {
-    if(msg.data.player === currentUser) return;
-    updateStatus(`🎲 الخصم رمى ${msg.data.dice}`);
+    const d = msg.data;
+    if(d.player === currentUser) return;
+    updateStatus(`🎲 الخصم رمى ${d.dice}`);
 }
 
 function handleOpponentMove(msg) {
-    if(msg.data.player === currentUser) return;
+    const d = msg.data;
+    if(d.player === currentUser) return;
     
-    const md = msg.data.moveData;
+    const md = d.moveData;
+    
+    if(md.type === 'pass') {
+        // الخصم ما عنده حركة - دوري الآن
+        gameState.myTurn = true;
+        updateStatus();
+        return;
+    }
+    
     const p = gameState.pieces[md.color][md.idx];
     
     if(md.type === 'exit') p.pos = md.pos;
     else if(md.type === 'move') {
+        // أكل قطعة من لوني إذا انأكلت
         gameState.pieces[gameState.myColor].forEach(myP => {
             if(myP.pos === md.pos && myP.home === 0 && !myP.done && !SAFE.includes(md.pos)) {
                 myP.pos = -1;
@@ -714,16 +618,16 @@ function handleOpponentMove(msg) {
         });
         p.pos = md.pos;
     } else if(md.type === 'home') { p.pos = -2; p.home = 1; }
-    else if(md.type === 'homeMove') { p.home = md.home; if(md.home === 5) p.done = true; }
+    else if(md.type === 'homeMove') { p.home = md.home; if(md.home===5) p.done=true; }
     
     renderPieces();
     
-    if(checkWin(md.color)) {
-        endGame(false);
-        return;
-    }
+    if(checkWin(md.color)) { endGame(false); return; }
     
-    gameState.currentTurn = gameState.myColor;
+    // مهم: بعد حركة الخصم، إذا ما رمى 6 يصير دوري
+    // (هذه المعلومة نعرفها من خلال gameState.lastDice اللي عند الخصم)
+    // بما إننا ما نعرف، نعتمد إنه بعد أي حركة دوري يصير true
+    gameState.myTurn = true;
     updateStatus();
 }
 
@@ -734,27 +638,25 @@ function checkWin(color) {
 function updateStatus(msg) {
     const el = document.getElementById('gameStatus');
     if(msg) { el.textContent = msg; return; }
-    el.textContent = gameState.currentTurn === gameState.myColor ? '🎮 دورك! ارمِ النرد' : '⏳ دور الخصم...';
+    el.textContent = gameState.myTurn ? '🎮 دورك! ارمِ النرد' : '⏳ دور الخصم...';
 }
 
 function endGame(won) {
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('resultScreen').classList.remove('hidden');
-    
     if(won) {
         document.getElementById('resultIcon').textContent = '🏆';
         document.getElementById('resultTitle').textContent = 'فزت!';
         document.getElementById('resultCoins').textContent = `+${selectedBet} 💰`;
         userCoins += selectedBet;
-        userStats[currentUser].wins = (userStats[currentUser].wins || 0) + 1;
+        userStats[currentUser].wins = (userStats[currentUser].wins||0)+1;
     } else {
         document.getElementById('resultIcon').textContent = '😢';
         document.getElementById('resultTitle').textContent = 'خسرت';
         document.getElementById('resultCoins').textContent = `-${selectedBet} 💰`;
         userCoins -= selectedBet;
-        userStats[currentUser].losses = (userStats[currentUser].losses || 0) + 1;
+        userStats[currentUser].losses = (userStats[currentUser].losses||0)+1;
     }
-    
     userStats[currentUser].coins = userCoins;
     localStorage.setItem('ludo_stats', JSON.stringify(userStats));
     if(gameChannel) gameChannel.unsubscribe();
@@ -764,9 +666,8 @@ function backToMenu() {
     document.getElementById('resultScreen').classList.add('hidden');
     document.getElementById('userCoins').textContent = userCoins;
     document.getElementById('mainMenu').classList.remove('hidden');
-    
     gameState = {
-        myColor: null, opponentColor: null, currentTurn: 'green', lastDice: 0,
+        myColor: null, opponentColor: null, currentTurn: 'green', lastDice: 0, myTurn: false,
         pieces: {
             green: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
             yellow: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
@@ -777,10 +678,10 @@ function backToMenu() {
     selectedBet = 0;
 }
 
-function showFriends() { alert('👥 قريباً: نظام الأصدقاء!'); }
-function showChat() { alert('💬 قريباً: نظام المحادثات!'); }
+function showFriends() { alert('👥 قريباً'); }
+function showChat() { alert('💬 قريباً'); }
 
-// ==================== تهيئة الأحداث ====================
+// ==================== تهيئة ====================
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginBtn').onclick = login;
     document.getElementById('showRegisterBtn').onclick = showRegisterForm;
@@ -789,17 +690,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('playBtn').onclick = showBetSelection;
     document.getElementById('friendsBtn').onclick = showFriends;
     document.getElementById('chatBtn').onclick = showChat;
-    
-    document.querySelectorAll('.bet-option').forEach(o => {
-        o.onclick = (e) => selectBet(parseInt(e.currentTarget.dataset.bet));
-    });
-    
+    document.querySelectorAll('.bet-option').forEach(o=>o.onclick=(e)=>selectBet(parseInt(e.currentTarget.dataset.bet)));
     document.getElementById('cancelBetBtn').onclick = cancelBetSelection;
     document.getElementById('cancelSearchBtn').onclick = cancelSearch;
     document.getElementById('rollDiceBtn').onclick = rollDice;
     document.getElementById('backToMenuBtn').onclick = backToMenu;
-    
-    console.log('✅ تم تحميل اللعبة بنجاح');
 });
 </script>
 
