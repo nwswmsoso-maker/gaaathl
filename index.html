@@ -3,769 +3,688 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎲 لودو - 1 ضد 1</title>
+    <title>🎲 لودو - تواصل اجتماعي</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
         body { font-family:'Cairo',sans-serif; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); overflow:hidden; position:fixed; width:100%; height:100%; }
         
-        /* شاشة تسجيل الدخول */
+        /* شاشة تسجيل الدخول الاحترافية */
         .login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; align-items:center; justify-content:center; padding:20px; z-index:1000; }
-        .login-box { background:rgba(255,255,255,0.95); border-radius:30px; padding:40px 30px; max-width:400px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.5); }
-        .login-logo { text-align:center; margin-bottom:30px; }
-        .login-logo h1 { font-size:2.5rem; color:#1a5f2e; margin-bottom:10px; }
-        .login-input { width:100%; padding:15px 20px; margin-bottom:15px; border:2px solid #ddd; border-radius:15px; font-size:16px; font-family:'Cairo',sans-serif; }
-        .login-input:focus { outline:none; border-color:#1a5f2e; }
-        .login-btn { width:100%; padding:15px; border:none; border-radius:15px; font-size:18px; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; margin-bottom:10px; }
-        .btn-login { background:linear-gradient(135deg,#4CAF50,#45a049); color:white; }
-        .btn-register { background:linear-gradient(135deg,#2196F3,#1976D2); color:white; }
+        .login-container { width:100%; max-width:400px; }
+        .login-header { text-align:center; margin-bottom:30px; }
+        .login-header h1 { font-size:3rem; color:#FFD700; text-shadow:0 4px 15px rgba(0,0,0,0.5); }
+        .login-header p { color:white; opacity:0.9; }
+        .login-tabs { display:flex; background:rgba(255,255,255,0.1); border-radius:15px; padding:5px; margin-bottom:20px; }
+        .login-tab { flex:1; padding:12px; text-align:center; color:white; cursor:pointer; border-radius:10px; transition:0.3s; }
+        .login-tab.active { background:#4CAF50; }
+        .login-form { background:white; border-radius:20px; padding:30px; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+        .input-group { margin-bottom:20px; }
+        .input-group label { display:block; margin-bottom:8px; color:#333; font-weight:600; }
+        .input-group input { width:100%; padding:15px; border:2px solid #eee; border-radius:12px; font-family:'Cairo',sans-serif; font-size:16px; }
+        .input-group input:focus { outline:none; border-color:#4CAF50; }
+        .login-btn { width:100%; padding:15px; background:linear-gradient(135deg,#4CAF50,#45a049); color:white; border:none; border-radius:12px; font-size:1.2rem; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; }
         
-        /* القائمة الرئيسية */
-        .main-menu { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
-        .menu-header { text-align:center; margin-bottom:40px; }
-        .menu-header h1 { font-size:3rem; color:#FFD700; text-shadow:0 4px 15px rgba(0,0,0,0.5); }
-        .menu-header p { color:white; font-size:1.2rem; }
-        .menu-coins { background:rgba(255,215,0,0.2); border:2px solid #FFD700; border-radius:20px; padding:15px 30px; margin-bottom:40px; display:flex; align-items:center; gap:10px; }
-        .coin-amount { font-size:1.8rem; font-weight:700; color:#FFD700; }
-        .menu-buttons { display:flex; flex-direction:column; gap:15px; width:100%; max-width:350px; }
-        .menu-btn { padding:20px; border:none; border-radius:20px; font-size:1.5rem; font-weight:700; cursor:pointer; font-family:'Cairo',sans-serif; box-shadow:0 8px 20px rgba(0,0,0,0.3); }
-        .btn-play { background:linear-gradient(135deg,#4CAF50,#45a049); color:white; }
-        .btn-friends { background:linear-gradient(135deg,#2196F3,#1976D2); color:white; }
-        .btn-logout { background:linear-gradient(135deg,#f44336,#d32f2f); color:white; }
+        /* التطبيق الرئيسي - مثل الواتساب */
+        .app-container { position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; background:#f0f2f5; }
+        
+        /* هيدر التطبيق */
+        .app-header { background:#075E54; color:white; padding:10px 15px; display:flex; align-items:center; justify-content:space-between; }
+        .app-title { font-size:1.3rem; font-weight:700; }
+        .header-icons { display:flex; gap:20px; }
+        .header-icons i { font-size:1.3rem; cursor:pointer; }
+        
+        /* تبويبات */
+        .tabs { display:flex; background:#075E54; padding:0 10px; }
+        .tab { flex:1; padding:15px; text-align:center; color:rgba(255,255,255,0.7); cursor:pointer; font-weight:600; border-bottom:3px solid transparent; }
+        .tab.active { color:white; border-bottom-color:white; }
+        .tab i { margin-left:5px; }
+        
+        /* المحتوى */
+        .content-area { flex:1; overflow-y:auto; background:white; }
+        
+        /* قسم الدردشة العامة */
+        .public-chat { height:100%; display:flex; flex-direction:column; }
+        .chat-messages { flex:1; overflow-y:auto; padding:15px; }
+        .message { margin-bottom:15px; display:flex; gap:10px; }
+        .message-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; }
+        .message-content { flex:1; }
+        .message-header { display:flex; align-items:center; gap:10px; margin-bottom:5px; }
+        .message-name { font-weight:700; color:#075E54; }
+        .message-time { font-size:0.7rem; color:#999; }
+        .message-text { background:#f0f2f5; padding:10px 15px; border-radius:10px; display:inline-block; }
+        .message-badge { background:#FFD700; color:#333; padding:2px 8px; border-radius:10px; font-size:0.7rem; margin-right:5px; }
+        .chat-input-area { padding:15px; background:#f0f2f5; display:flex; gap:10px; }
+        .chat-input { flex:1; padding:12px; border:none; border-radius:25px; font-family:'Cairo',sans-serif; }
+        .chat-send { width:50px; height:50px; background:#075E54; border:none; border-radius:50%; color:white; font-size:1.2rem; cursor:pointer; }
+        
+        /* قسم المنشورات */
+        .posts { padding:15px; }
+        .post { background:white; border-radius:15px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+        .post-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+        .post-text { margin-bottom:15px; }
+        .post-actions { display:flex; gap:20px; color:#666; }
+        .post-actions i { cursor:pointer; }
+        .create-post { background:#075E54; color:white; padding:12px; border-radius:10px; margin-bottom:15px; cursor:pointer; text-align:center; }
+        
+        /* قسم الأصدقاء */
+        .friends-list { padding:10px; }
+        .friend-item { display:flex; align-items:center; justify-content:space-between; padding:15px; border-bottom:1px solid #eee; }
+        .friend-info { display:flex; align-items:center; gap:15px; }
+        .friend-avatar { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; }
+        .friend-details { }
+        .friend-name { font-weight:700; }
+        .friend-status { font-size:0.8rem; color:#4CAF50; }
+        .friend-status.offline { color:#999; }
+        .friend-actions { display:flex; gap:5px; }
+        .btn-icon { width:40px; height:40px; border-radius:50%; border:none; cursor:pointer; font-size:1rem; }
+        .btn-call { background:#4CAF50; color:white; }
+        .btn-chat { background:#2196F3; color:white; }
+        .btn-accept { background:#4CAF50; color:white; padding:8px 15px; border-radius:20px; border:none; cursor:pointer; }
+        
+        /* قسم الأعضاء النشطين */
+        .active-members { padding:10px; }
+        .member-item { display:flex; align-items:center; gap:15px; padding:10px; border-bottom:1px solid #eee; }
+        .online-dot { width:10px; height:10px; background:#4CAF50; border-radius:50%; margin-left:auto; }
+        
+        /* شاشة المكالمة */
+        .call-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#1a5f2e 0%,#0d3318 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:3000; }
+        .call-avatar { width:120px; height:120px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:3rem; color:white; margin-bottom:20px; border:4px solid #FFD700; }
+        .call-name { color:white; font-size:1.5rem; margin-bottom:10px; }
+        .call-status { color:#FFD700; margin-bottom:40px; }
+        .call-actions { display:flex; gap:30px; }
+        .call-btn { width:70px; height:70px; border-radius:50%; border:none; font-size:1.8rem; cursor:pointer; }
+        .call-end { background:#f44336; color:white; }
+        .call-mute { background:rgba(255,255,255,0.2); color:white; }
         
         /* شاشة اللعبة */
-        .game-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#2d7a3f 0%,#1a5f2e 100%); display:flex; flex-direction:column; }
-        .game-header { background:rgba(0,0,0,0.3); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; }
-        .player-info { display:flex; align-items:center; gap:10px; }
-        .player-avatar { width:50px; height:50px; background:linear-gradient(135deg,#4CAF50,#45a049); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; border:3px solid white; }
-        .player-name { color:white; font-weight:700; }
-        .game-bet { background:rgba(255,215,0,0.2); border:2px solid #FFD700; border-radius:15px; padding:8px 15px; color:#FFD700; font-weight:700; }
-        
-        /* لوحة اللعبة - فقط أخضر وأصفر */
-        .game-board-container { flex:1; display:flex; align-items:center; justify-content:center; padding:10px; position:relative; }
-        .game-board { width:min(95vw,95vh,500px); height:min(95vw,95vh,500px); background:white; border-radius:15px; padding:8px; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
-        .board-grid { width:100%; height:100%; display:grid; grid-template-columns:repeat(15,1fr); grid-template-rows:repeat(15,1fr); gap:1px; background:#e0e0e0; }
-        .cell { background:white; display:flex; align-items:center; justify-content:center; position:relative; }
-        .base-green { background:linear-gradient(135deg,#4CAF50,#45a049) !important; border-radius:15px; }
-        .base-yellow { background:linear-gradient(135deg,#FFD700,#FFA500) !important; border-radius:15px; }
-        .path-cell { background:#f5f5f5 !important; }
-        .start-green { background:#4CAF50 !important; }
-        .start-yellow { background:#FFD700 !important; }
-        .center-cell { background:linear-gradient(45deg,#4CAF50,#FFD700) !important; font-size:1.2rem; }
-        
-        /* القطع */
-        .piece { width:80%; height:80%; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; color:white; border:2px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.4); cursor:pointer; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
-        .piece-green { background:radial-gradient(circle at 30% 30%,#66bb6a,#4CAF50); }
-        .piece-yellow { background:radial-gradient(circle at 30% 30%,#ffd54f,#FFD700); color:#333; }
-        .piece.can-move { animation:pulse 0.8s infinite; }
-        @keyframes pulse { 50% { transform:translate(-50%,-50%) scale(1.15); } }
-        
-        /* منطقة التحكم */
-        .game-footer { background:rgba(0,0,0,0.3); padding:15px; }
-        .dice-area { display:flex; align-items:center; justify-content:space-around; }
-        .game-status { color:white; font-weight:700; padding:10px; background:rgba(0,0,0,0.4); border-radius:10px; }
-        .dice { width:70px; height:70px; background:white; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; border:3px solid #FFD700; }
-        .roll-btn { padding:12px 30px; background:linear-gradient(135deg,#FFD700,#FFA500); color:#1a5f2e; border:none; border-radius:15px; font-size:1.2rem; font-weight:700; cursor:pointer; }
-        .roll-btn:disabled { opacity:0.5; }
-        
-        /* المايك والدردشة */
-        .chat-mic-bar { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px; }
-        .mic-btn { width:50px; height:50px; background:#4CAF50; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; cursor:pointer; color:white; }
-        .mic-btn.muted { background:#f44336; }
-        .chat-input { flex:1; padding:12px; border:none; border-radius:25px; font-family:'Cairo',sans-serif; }
-        .send-btn { padding:12px 20px; background:#2196F3; color:white; border:none; border-radius:25px; cursor:pointer; }
-        
-        /* شاشة الأصدقاء */
-        .friends-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:2000; }
-        .friends-box { background:white; border-radius:30px; padding:30px; max-width:400px; width:90%; max-height:80vh; overflow-y:auto; }
-        .friends-box h2 { color:#1a5f2e; margin-bottom:20px; text-align:center; }
-        .friend-item { display:flex; align-items:center; justify-content:space-between; padding:15px; border-bottom:1px solid #eee; }
-        .friend-name { font-weight:700; }
-        .friend-actions { display:flex; gap:10px; }
-        .btn-small { padding:8px 15px; border:none; border-radius:10px; cursor:pointer; font-size:0.9rem; }
-        .btn-accept { background:#4CAF50; color:white; }
-        .btn-reject { background:#f44336; color:white; }
-        .btn-add { background:#2196F3; color:white; }
+        .game-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#2d7a3f 0%,#1a5f2e 100%); z-index:2000; }
         
         .hidden { display:none !important; }
-        .opponent-info { position:absolute; top:80px; right:15px; background:rgba(0,0,0,0.6); border-radius:15px; padding:10px 15px; display:flex; align-items:center; gap:10px; z-index:100; }
-        .opponent-avatar { width:40px; height:40px; background:linear-gradient(135deg,#FFD700,#FFA500); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid white; }
-        .opponent-name { color:white; font-weight:700; }
         
-        /* رسائل الشات */
-        .chat-messages { height:200px; overflow-y:auto; background:rgba(0,0,0,0.2); border-radius:15px; padding:10px; margin-bottom:10px; color:white; }
-        .chat-message { margin-bottom:5px; }
-        .chat-sender { font-weight:700; color:#FFD700; }
+        /* ألوان الآفاتار */
+        .bg-1 { background:#e74c3c; } .bg-2 { background:#3498db; } .bg-3 { background:#2ecc71; }
+        .bg-4 { background:#f39c12; } .bg-5 { background:#9b59b6; } .bg-6 { background:#1abc9c; }
+        
+        /* شارة المشرف */
+        .admin-badge { background:#FFD700; color:#333; padding:2px 8px; border-radius:10px; font-size:0.7rem; margin-right:5px; }
+        
+        /* نافذة الدردشة الخاصة */
+        .private-chat-window { position:fixed; bottom:0; left:0; right:0; background:white; border-radius:20px 20px 0 0; height:70%; z-index:2500; display:flex; flex-direction:column; box-shadow:0 -5px 20px rgba(0,0,0,0.2); }
+        .private-header { background:#075E54; color:white; padding:15px; border-radius:20px 20px 0 0; display:flex; align-items:center; justify-content:space-between; }
+        .private-messages { flex:1; overflow-y:auto; padding:15px; }
+        .private-input { padding:15px; background:#f0f2f5; display:flex; gap:10px; }
+        .close-chat { cursor:pointer; font-size:1.5rem; }
     </style>
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
+<!-- شاشة تسجيل الدخول الاحترافية -->
 <div id="loginScreen" class="login-screen">
-    <div class="login-box">
-        <div class="login-logo">
-            <h1>🎲 لودو 1 ضد 1</h1>
-            <p>تحدى أصدقائك!</p>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🎲 لودو</h1>
+            <p>تواصل اجتماعي وألعاب</p>
         </div>
-        <div id="loginForm">
-            <input type="text" id="loginUsername" class="login-input" placeholder="اسم المستخدم">
-            <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
-            <button class="login-btn btn-login" id="loginBtn">دخول 🎮</button>
-            <button class="login-btn btn-register" id="showRegisterBtn">تسجيل جديد 📝</button>
-            <div id="loginMessage" style="margin-top:15px;color:red;text-align:center;"></div>
+        <div class="login-tabs">
+            <div class="login-tab active" onclick="switchLoginTab('login')">دخول</div>
+            <div class="login-tab" onclick="switchLoginTab('register')">تسجيل</div>
         </div>
-        <div id="registerForm" class="hidden">
-            <input type="text" id="regUsername" class="login-input" placeholder="اسم المستخدم">
-            <input type="password" id="regPassword" class="login-input" placeholder="كلمة المرور">
-            <button class="login-btn btn-register" id="registerBtn">تسجيل ✅</button>
-            <button class="login-btn btn-login" id="showLoginBtn">رجوع ↩️</button>
-            <div id="regMessage" style="margin-top:15px;color:red;text-align:center;"></div>
+        <div class="login-form">
+            <div id="loginForm">
+                <div class="input-group">
+                    <label>👤 اسم المستخدم</label>
+                    <input type="text" id="loginUsername" placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="input-group">
+                    <label>🔒 كلمة المرور</label>
+                    <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور">
+                </div>
+                <button class="login-btn" onclick="login()">دخول 🎮</button>
+                <p style="text-align:center;margin-top:15px;color:#666;">مشرف: 3tx / 11</p>
+            </div>
+            <div id="registerForm" class="hidden">
+                <div class="input-group">
+                    <label>👤 اسم المستخدم</label>
+                    <input type="text" id="regUsername" placeholder="اختر اسم المستخدم">
+                </div>
+                <div class="input-group">
+                    <label>🔒 كلمة المرور</label>
+                    <input type="password" id="regPassword" placeholder="اختر كلمة مرور">
+                </div>
+                <div class="input-group">
+                    <label>📧 البريد الإلكتروني (اختياري)</label>
+                    <input type="email" id="regEmail" placeholder="بريدك الإلكتروني">
+                </div>
+                <button class="login-btn" onclick="register()">تسجيل حساب جديد</button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- القائمة الرئيسية -->
-<div id="mainMenu" class="main-menu hidden">
-    <div class="menu-header">
-        <h1>🎲 لودو 1 ضد 1</h1>
-        <p>مرحباً <span id="menuUsername"></span></p>
-    </div>
-    <div class="menu-coins">
-        <span>💰</span>
-        <span class="coin-amount" id="userCoins">10000</span>
-    </div>
-    <div class="menu-buttons">
-        <button class="menu-btn btn-play" id="playBtn">🎲 العب الآن</button>
-        <button class="menu-btn btn-friends" id="friendsBtn">👥 الأصدقاء</button>
-        <button class="menu-btn btn-logout" id="logoutBtn">🚪 تسجيل خروج</button>
-    </div>
-</div>
-
-<!-- شاشة الأصدقاء -->
-<div id="friendsScreen" class="friends-screen hidden">
-    <div class="friends-box">
-        <h2>👥 الأصدقاء</h2>
-        <div style="display:flex;gap:10px;margin-bottom:20px;">
-            <input type="text" id="friendUsername" class="login-input" placeholder="اسم الصديق" style="flex:1;">
-            <button class="btn-small btn-add" id="addFriendBtn">إضافة</button>
-        </div>
-        <div id="friendsList"></div>
-        <h3 style="margin-top:20px;">📨 طلبات الصداقة</h3>
-        <div id="requestsList"></div>
-        <button class="bet-cancel" id="closeFriendsBtn" style="margin-top:20px;">إغلاق</button>
-    </div>
-</div>
-
-<!-- شاشة البحث -->
-<div id="searchingScreen" class="searching-screen hidden" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:2000;">
-    <div style="text-align:center;color:white;">
-        <div class="searching-spinner" style="width:80px;height:80px;border:8px solid rgba(255,215,0,0.2);border-top-color:#FFD700;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 30px;"></div>
-        <div style="font-size:2rem;">جاري البحث عن لاعب</div>
-        <button id="cancelSearchBtn" style="margin-top:40px;padding:15px 40px;background:#f44336;color:white;border:none;border-radius:20px;font-size:1.2rem;cursor:pointer;">إلغاء</button>
-    </div>
-</div>
-
-<!-- شاشة اللعبة -->
-<div id="gameScreen" class="game-screen hidden">
-    <div class="game-header">
-        <div class="player-info">
-            <div class="player-avatar" id="myAvatar">👤</div>
-            <div class="player-name" id="myPlayerName">أنت</div>
-        </div>
-        <div class="game-bet" id="gameBetDisplay">💰 0</div>
-    </div>
-    
-    <div class="opponent-info">
-        <div class="opponent-avatar" id="opponentAvatar">🎮</div>
-        <div class="opponent-name" id="opponentName">في الانتظار...</div>
-    </div>
-    
-    <div class="game-board-container">
-        <div class="game-board">
-            <div class="board-grid" id="gameBoard"></div>
+<!-- التطبيق الرئيسي -->
+<div id="appContainer" class="app-container hidden">
+    <div class="app-header">
+        <div class="app-title">🎲 لودو</div>
+        <div class="header-icons">
+            <i class="fas fa-search"></i>
+            <i class="fas fa-ellipsis-v"></i>
         </div>
     </div>
     
-    <div class="game-footer">
-        <div class="dice-area">
-            <div class="game-status" id="gameStatus">انتظر دورك...</div>
-            <div class="dice" id="diceDisplay">🎲</div>
-            <button class="roll-btn" id="rollDiceBtn">رمي النرد</button>
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('chat')"><i class="fas fa-comments"></i> الدردشة</div>
+        <div class="tab" onclick="switchTab('posts')"><i class="fas fa-newspaper"></i> المنشورات</div>
+        <div class="tab" onclick="switchTab('friends')"><i class="fas fa-users"></i> الأصدقاء</div>
+        <div class="tab" onclick="switchTab('active')"><i class="fas fa-circle"></i> نشط الآن</div>
+    </div>
+    
+    <div class="content-area">
+        <!-- تبويب الدردشة العامة -->
+        <div id="chatTab" class="public-chat">
+            <div class="chat-messages" id="publicChatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="publicChatInput" placeholder="اكتب رسالة للجميع...">
+                <button class="chat-send" onclick="sendPublicMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
         </div>
         
-        <!-- دردشة ومايك -->
-        <div id="chatMessages" class="chat-messages"></div>
-        <div class="chat-mic-bar">
-            <div class="mic-btn" id="micBtn">🎤</div>
-            <input type="text" id="chatInput" class="chat-input" placeholder="اكتب رسالة...">
-            <button class="send-btn" id="sendChatBtn">إرسال</button>
+        <!-- تبويب المنشورات -->
+        <div id="postsTab" class="posts hidden">
+            <div class="create-post" onclick="createPost()">
+                <i class="fas fa-plus-circle"></i> إنشاء منشور جديد
+            </div>
+            <div id="postsList"></div>
         </div>
+        
+        <!-- تبويب الأصدقاء -->
+        <div id="friendsTab" class="friends-list hidden">
+            <div style="padding:15px;display:flex;gap:10px;">
+                <input type="text" id="addFriendInput" placeholder="اسم الصديق" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:25px;">
+                <button onclick="sendFriendRequest()" style="padding:12px 20px;background:#075E54;color:white;border:none;border-radius:25px;"><i class="fas fa-user-plus"></i></button>
+            </div>
+            <div id="friendsList"></div>
+            <h3 style="padding:15px;">📨 طلبات الصداقة</h3>
+            <div id="friendRequestsList"></div>
+        </div>
+        
+        <!-- تبويب الأعضاء النشطين -->
+        <div id="activeTab" class="active-members hidden">
+            <div id="activeMembersList"></div>
+        </div>
+    </div>
+    
+    <!-- زر اللعبة العائم -->
+    <div style="position:fixed;bottom:20px;right:20px;">
+        <button onclick="startLudoGame()" style="width:60px;height:60px;background:#FFD700;border:none;border-radius:50%;font-size:1.8rem;box-shadow:0 4px 15px rgba(0,0,0,0.3);cursor:pointer;">🎲</button>
+    </div>
+</div>
+
+<!-- نافذة الدردشة الخاصة -->
+<div id="privateChatWindow" class="private-chat-window hidden">
+    <div class="private-header">
+        <span id="privateChatName">محادثة خاصة</span>
+        <i class="fas fa-times close-chat" onclick="closePrivateChat()"></i>
+    </div>
+    <div class="private-messages" id="privateChatMessages"></div>
+    <div class="private-input">
+        <input type="text" id="privateChatInput" placeholder="اكتب رسالة...">
+        <button onclick="sendPrivateMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<!-- شاشة المكالمة -->
+<div id="callScreen" class="call-screen hidden">
+    <div class="call-avatar" id="callAvatar">👤</div>
+    <div class="call-name" id="callName">جاري الاتصال...</div>
+    <div class="call-status" id="callStatus">📞 جاري الاتصال...</div>
+    <div class="call-actions">
+        <button class="call-btn call-mute" onclick="toggleMute()"><i class="fas fa-microphone"></i></button>
+        <button class="call-btn call-end" onclick="endCall()"><i class="fas fa-phone-slash"></i></button>
     </div>
 </div>
 
 <script>
 // ==================== المتغيرات ====================
 const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
+const ADMIN_USER = '3tx';
+const ADMIN_CODE = '11';
 
 let currentUser = null;
-let userCoins = 10000;
+let isAdmin = false;
 let ably = null;
-let channel = null;
-let gameChannel = null;
-let chatChannel = null;
+let publicChannel = null;
+let privateChannel = null;
+let currentPrivateChat = null;
 let localStream = null;
 let currentPeer = null;
-let micEnabled = true;
+let currentCall = null;
 
-// المسار - 52 خانة
-const PATH = [
-    {r:6,c:1},{r:6,c:2},{r:6,c:3},{r:6,c:4},{r:6,c:5},
-    {r:5,c:6},{r:4,c:6},{r:3,c:6},{r:2,c:6},{r:1,c:6},{r:0,c:6},
-    {r:0,c:7},{r:0,c:8},{r:1,c:8},{r:2,c:8},{r:3,c:8},{r:4,c:8},{r:5,c:8},
-    {r:6,c:9},{r:6,c:10},{r:6,c:11},{r:6,c:12},{r:6,c:13},{r:6,c:14},
-    {r:7,c:14},{r:8,c:14},{r:8,c:13},{r:8,c:12},{r:8,c:11},{r:8,c:10},{r:8,c:9},
-    {r:9,c:8},{r:10,c:8},{r:11,c:8},{r:12,c:8},{r:13,c:8},{r:14,c:8},
-    {r:14,c:7},{r:14,c:6},{r:13,c:6},{r:12,c:6},{r:11,c:6},{r:10,c:6},{r:9,c:6},
-    {r:8,c:5},{r:8,c:4},{r:8,c:3},{r:8,c:2},{r:8,c:1},{r:8,c:0},
-    {r:7,c:0},{r:6,c:0}
-];
-const STARTS = { green:0, yellow:12 };
-const SAFE = [0,12,8,17,30,43];
-const HOME = {
-    green: [{r:7,c:1},{r:7,c:2},{r:7,c:3},{r:7,c:4},{r:7,c:5}],
-    yellow: [{r:1,c:7},{r:2,c:7},{r:3,c:7},{r:4,c:7},{r:5,c:7}]
-};
+// البيانات
+let users = JSON.parse(localStorage.getItem('social_users')) || {};
+let posts = JSON.parse(localStorage.getItem('social_posts')) || [];
+let friends = JSON.parse(localStorage.getItem('social_friends')) || {};
+let friendRequests = JSON.parse(localStorage.getItem('social_requests')) || {};
+let messages = JSON.parse(localStorage.getItem('social_messages')) || {};
 
-let gameState = {
-    myColor: null, opponentColor: null, lastDice: 0, myTurn: false,
-    pieces: {
-        green: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}],
-        yellow: [{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0},{pos:-1,home:0,done:0}]
-    },
-    opponent: null
-};
-
-let users = JSON.parse(localStorage.getItem('ludo_users')) || {};
-let userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
-let friends = JSON.parse(localStorage.getItem('ludo_friends')) || {};
-let friendRequests = JSON.parse(localStorage.getItem('ludo_requests')) || {};
-
-// حفظ تلقائي لآخر مستخدم
-const savedUser = localStorage.getItem('ludo_lastUser');
+// حفظ تلقائي
+const savedUser = localStorage.getItem('social_lastUser');
 if(savedUser) {
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('loginUsername').value = savedUser;
-    });
-}
-
-// ==================== تسجيل الدخول التلقائي ====================
-async function autoLogin() {
-    const lastUser = localStorage.getItem('ludo_lastUser');
-    const lastPass = localStorage.getItem('ludo_lastPass');
-    if(lastUser && lastPass && users[lastUser] === lastPass) {
-        currentUser = lastUser;
-        userCoins = userStats[currentUser]?.coins || 10000;
-        await connectAbly();
-        showMainMenu();
-        document.getElementById('loginScreen').classList.add('hidden');
-    }
-}
-
-// ==================== الاتصال ====================
-async function connectAbly() {
-    return new Promise((resolve, reject) => {
-        ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
-        ably.connection.on('connected', () => {
-            channel = ably.channels.get('ludo-1v1');
-            channel.subscribe('match-found', handleMatchFound);
-            channel.subscribe('friend-request', handleFriendRequest);
-            channel.subscribe('friend-accept', handleFriendAccept);
-            channel.presence.enter({ username: currentUser });
-            resolve();
-        });
-        ably.connection.on('failed', reject);
-    });
+    users[savedUser] = users[savedUser] || '123';
 }
 
 // ==================== تسجيل الدخول ====================
+function switchLoginTab(tab) {
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    if(tab === 'login') {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+    } else {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+    }
+}
+
+function register() {
+    const username = document.getElementById('regUsername').value.trim();
+    const password = document.getElementById('regPassword').value;
+    
+    if(!username || !password) { alert('املأ الحقول'); return; }
+    if(users[username]) { alert('الاسم موجود'); return; }
+    
+    users[username] = password;
+    localStorage.setItem('social_users', JSON.stringify(users));
+    alert('✅ تم التسجيل! يمكنك الدخول الآن');
+    switchLoginTab('login');
+    document.getElementById('loginUsername').value = username;
+}
+
 async function login() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
     
-    if(!username || !password) {
-        document.getElementById('loginMessage').textContent = '❌ املأ جميع الحقول';
-        return;
-    }
-    
-    if(!users[username]) {
-        users[username] = password;
-        userStats[username] = { coins: 10000, wins: 0, losses: 0 };
-        localStorage.setItem('ludo_users', JSON.stringify(users));
-        localStorage.setItem('ludo_stats', JSON.stringify(userStats));
-    }
-    
-    if(users[username] !== password) {
-        document.getElementById('loginMessage').textContent = '❌ كلمة مرور خاطئة';
-        return;
+    // فحص المشرف
+    if(username === ADMIN_USER && password === ADMIN_CODE) {
+        isAdmin = true;
+    } else {
+        if(!users[username] || users[username] !== password) {
+            alert('❌ بيانات خاطئة');
+            return;
+        }
+        isAdmin = false;
     }
     
     currentUser = username;
-    userCoins = userStats[currentUser]?.coins || 10000;
+    localStorage.setItem('social_lastUser', username);
     
-    // حفظ تلقائي
-    localStorage.setItem('ludo_lastUser', username);
-    localStorage.setItem('ludo_lastPass', password);
-    
+    // طلب المايك
     try {
-        await connectAbly();
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch(e) {}
+    
+    // الاتصال
+    ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
+    ably.connection.on('connected', () => {
+        publicChannel = ably.channels.get('public-chat');
+        publicChannel.subscribe('message', (msg) => {
+            addPublicMessage(msg.data.sender, msg.data.text, msg.data.isAdmin);
+        });
+        publicChannel.subscribe('post', (msg) => {
+            addPost(msg.data);
+        });
+        publicChannel.subscribe('presence', () => {
+            updateActiveMembers();
+        });
+        publicChannel.presence.enter({ username: currentUser, isAdmin });
         
-        // طلب المايك
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        } catch(e) {}
-        
-        showMainMenu();
-    } catch(e) {
-        document.getElementById('loginMessage').textContent = '❌ فشل الاتصال';
-    }
-}
-
-function showMainMenu() {
+        privateChannel = ably.channels.get(`private-${currentUser}`);
+        privateChannel.subscribe('message', (msg) => {
+            if(currentPrivateChat === msg.data.sender) {
+                addPrivateMessage(msg.data.sender, msg.data.text);
+            }
+        });
+        privateChannel.subscribe('call', handleIncomingCall);
+        privateChannel.subscribe('friend-request', handleFriendRequest);
+        privateChannel.subscribe('friend-accept', handleFriendAccept);
+    });
+    
     document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('mainMenu').classList.remove('hidden');
-    document.getElementById('menuUsername').textContent = currentUser;
-    document.getElementById('userCoins').textContent = userCoins;
+    document.getElementById('appContainer').classList.remove('hidden');
+    
+    loadData();
+    updateActiveMembers();
 }
 
-function logout() {
-    localStorage.removeItem('ludo_lastUser');
-    localStorage.removeItem('ludo_lastPass');
-    if(ably) ably.close();
-    document.getElementById('mainMenu').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
+// ==================== تبويبات ====================
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    document.getElementById('chatTab').classList.add('hidden');
+    document.getElementById('postsTab').classList.add('hidden');
+    document.getElementById('friendsTab').classList.add('hidden');
+    document.getElementById('activeTab').classList.add('hidden');
+    
+    if(tab === 'chat') document.getElementById('chatTab').classList.remove('hidden');
+    else if(tab === 'posts') { document.getElementById('postsTab').classList.remove('hidden'); renderPosts(); }
+    else if(tab === 'friends') { document.getElementById('friendsTab').classList.remove('hidden'); renderFriends(); }
+    else if(tab === 'active') { document.getElementById('activeTab').classList.remove('hidden'); renderActiveMembers(); }
+}
+
+// ==================== الدردشة العامة ====================
+function sendPublicMessage() {
+    const input = document.getElementById('publicChatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    
+    publicChannel.publish('message', { sender: currentUser, text, isAdmin });
+    addPublicMessage(currentUser, text, isAdmin);
+    input.value = '';
+}
+
+function addPublicMessage(sender, text, admin) {
+    const div = document.getElementById('publicChatMessages');
+    const color = getAvatarColor(sender);
+    div.innerHTML += `
+        <div class="message">
+            <div class="message-avatar ${color}">${sender[0].toUpperCase()}</div>
+            <div class="message-content">
+                <div class="message-header">
+                    <span class="message-name">${sender}</span>
+                    ${admin ? '<span class="admin-badge">👑 مشرف</span>' : ''}
+                    <span class="message-time">الآن</span>
+                </div>
+                <div class="message-text">${text}</div>
+            </div>
+        </div>
+    `;
+    div.scrollTop = div.scrollHeight;
+}
+
+// ==================== المنشورات ====================
+function createPost() {
+    const text = prompt('اكتب منشورك:');
+    if(!text) return;
+    
+    const post = { id: Date.now(), author: currentUser, text, likes: 0, comments: [], time: new Date().toLocaleString() };
+    posts.unshift(post);
+    localStorage.setItem('social_posts', JSON.stringify(posts));
+    publicChannel.publish('post', post);
+    renderPosts();
+}
+
+function addPost(post) {
+    posts.unshift(post);
+    localStorage.setItem('social_posts', JSON.stringify(posts));
+    renderPosts();
+}
+
+function renderPosts() {
+    const div = document.getElementById('postsList');
+    div.innerHTML = posts.map(p => `
+        <div class="post">
+            <div class="post-header">
+                <div class="friend-avatar ${getAvatarColor(p.author)}">${p.author[0]}</div>
+                <div>
+                    <div class="friend-name">${p.author}</div>
+                    <div style="font-size:0.7rem;color:#999;">${p.time}</div>
+                </div>
+            </div>
+            <div class="post-text">${p.text}</div>
+            <div class="post-actions">
+                <span onclick="likePost('${p.id}')"><i class="far fa-heart"></i> ${p.likes}</span>
+                <span><i class="far fa-comment"></i> ${p.comments.length}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function likePost(id) {
+    const post = posts.find(p => p.id == id);
+    if(post) { post.likes++; localStorage.setItem('social_posts', JSON.stringify(posts)); renderPosts(); }
 }
 
 // ==================== الأصدقاء ====================
-function showFriends() {
-    document.getElementById('friendsScreen').classList.remove('hidden');
-    renderFriendsList();
-}
-
-function renderFriendsList() {
-    const myFriends = friends[currentUser] || [];
-    const myRequests = friendRequests[currentUser] || [];
+function sendFriendRequest() {
+    const name = document.getElementById('addFriendInput').value.trim();
+    if(!name || name === currentUser) return;
     
-    const friendsDiv = document.getElementById('friendsList');
-    friendsDiv.innerHTML = myFriends.map(f => `
-        <div class="friend-item">
-            <span class="friend-name">${f}</span>
-            <span>🟢 متصل</span>
-        </div>
-    `).join('') || '<p>لا يوجد أصدقاء</p>';
-    
-    const requestsDiv = document.getElementById('requestsList');
-    requestsDiv.innerHTML = myRequests.map(r => `
-        <div class="friend-item">
-            <span class="friend-name">${r.from}</span>
-            <div class="friend-actions">
-                <button class="btn-small btn-accept" onclick="acceptFriend('${r.from}')">قبول</button>
-                <button class="btn-small btn-reject" onclick="rejectFriend('${r.from}')">رفض</button>
-            </div>
-        </div>
-    `).join('') || '<p>لا توجد طلبات</p>';
-}
-
-function addFriend() {
-    const friendName = document.getElementById('friendUsername').value.trim();
-    if(!friendName || friendName === currentUser) return;
-    
-    channel.publish('friend-request', { from: currentUser, to: friendName });
-    alert('✅ تم إرسال طلب الصداقة');
+    privateChannel = ably.channels.get(`private-${name}`);
+    privateChannel.publish('friend-request', { from: currentUser });
+    alert('✅ تم إرسال الطلب');
 }
 
 function handleFriendRequest(msg) {
-    const { from, to } = msg.data;
-    if(to !== currentUser) return;
-    
     if(!friendRequests[currentUser]) friendRequests[currentUser] = [];
-    if(!friendRequests[currentUser].find(r => r.from === from)) {
-        friendRequests[currentUser].push({ from });
-        localStorage.setItem('ludo_requests', JSON.stringify(friendRequests));
-    }
+    friendRequests[currentUser].push({ from: msg.data.from });
+    localStorage.setItem('social_requests', JSON.stringify(friendRequests));
+    renderFriends();
 }
 
 function acceptFriend(from) {
     if(!friends[currentUser]) friends[currentUser] = [];
     if(!friends[from]) friends[from] = [];
-    
     friends[currentUser].push(from);
     friends[from].push(currentUser);
     
     friendRequests[currentUser] = friendRequests[currentUser].filter(r => r.from !== from);
+    localStorage.setItem('social_friends', JSON.stringify(friends));
+    localStorage.setItem('social_requests', JSON.stringify(friendRequests));
     
-    localStorage.setItem('ludo_friends', JSON.stringify(friends));
-    localStorage.setItem('ludo_requests', JSON.stringify(friendRequests));
-    
-    channel.publish('friend-accept', { from: currentUser, to: from });
-    renderFriendsList();
-}
-
-function rejectFriend(from) {
-    friendRequests[currentUser] = friendRequests[currentUser].filter(r => r.from !== from);
-    localStorage.setItem('ludo_requests', JSON.stringify(friendRequests));
-    renderFriendsList();
+    const peerChannel = ably.channels.get(`private-${from}`);
+    peerChannel.publish('friend-accept', { from: currentUser });
+    renderFriends();
 }
 
 function handleFriendAccept(msg) {
-    const { from, to } = msg.data;
-    if(to !== currentUser) return;
-    
     if(!friends[currentUser]) friends[currentUser] = [];
-    friends[currentUser].push(from);
-    localStorage.setItem('ludo_friends', JSON.stringify(friends));
+    friends[currentUser].push(msg.data.from);
+    localStorage.setItem('social_friends', JSON.stringify(friends));
+    renderFriends();
 }
 
-// ==================== اللعبة ====================
-function startSearching() {
-    document.getElementById('searchingScreen').classList.remove('hidden');
-    channel.subscribe('search-1v1', (msg) => {
-        const d = msg.data;
-        if(d.username === currentUser) return;
-        
-        const matchId = 'm_'+Date.now();
-        channel.publish('match-found', {
-            player1: currentUser,
-            player2: d.username,
-            matchId
-        });
-    });
-    channel.publish('search-1v1', { username: currentUser });
+function renderFriends() {
+    const myFriends = friends[currentUser] || [];
+    const myRequests = friendRequests[currentUser] || [];
+    
+    document.getElementById('friendsList').innerHTML = myFriends.map(f => `
+        <div class="friend-item">
+            <div class="friend-info">
+                <div class="friend-avatar ${getAvatarColor(f)}">${f[0]}</div>
+                <div class="friend-details">
+                    <div class="friend-name">${f}</div>
+                    <div class="friend-status">🟢 متصل</div>
+                </div>
+            </div>
+            <div class="friend-actions">
+                <button class="btn-icon btn-call" onclick="startCall('${f}')"><i class="fas fa-phone"></i></button>
+                <button class="btn-icon btn-chat" onclick="openPrivateChat('${f}')"><i class="fas fa-comment"></i></button>
+            </div>
+        </div>
+    `).join('') || '<p>لا يوجد أصدقاء</p>';
+    
+    document.getElementById('friendRequestsList').innerHTML = myRequests.map(r => `
+        <div class="friend-item">
+            <span>${r.from}</span>
+            <button class="btn-accept" onclick="acceptFriend('${r.from}')">قبول</button>
+        </div>
+    `).join('') || '<p>لا توجد طلبات</p>';
 }
 
-function handleMatchFound(msg) {
-    const d = msg.data;
-    if(d.player1 !== currentUser && d.player2 !== currentUser) return;
-    
-    channel.unsubscribe('search-1v1');
-    document.getElementById('searchingScreen').classList.add('hidden');
-    
-    if(d.player1 === currentUser) {
-        gameState.myColor = 'green';
-        gameState.opponentColor = 'yellow';
-        gameState.opponent = d.player2;
-        gameState.myTurn = true;
-    } else {
-        gameState.myColor = 'yellow';
-        gameState.opponentColor = 'green';
-        gameState.opponent = d.player1;
-        gameState.myTurn = false;
-    }
-    
-    gameChannel = ably.channels.get('game-'+d.matchId);
-    gameChannel.subscribe('dice', handleOpponentDice);
-    gameChannel.subscribe('move', handleOpponentMove);
-    
-    // قناة الدردشة
-    chatChannel = ably.channels.get('chat-'+d.matchId);
-    chatChannel.subscribe('chat', (msg) => {
-        addChatMessage(msg.data.sender, msg.data.text);
-    });
-    
-    startVoiceCall();
-    startGame();
-}
-
-function startGame() {
-    document.getElementById('gameScreen').classList.remove('hidden');
-    document.getElementById('myPlayerName').textContent = currentUser;
-    document.getElementById('opponentName').textContent = gameState.opponent;
-    
-    initBoard();
-    updateStatus();
-}
-
-function initBoard() {
-    const board = document.getElementById('gameBoard');
-    board.innerHTML = '';
-    
-    for(let r=0; r<15; r++) {
-        for(let c=0; c<15; c++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            
-            // فقط أخضر وأصفر
-            if(r<6 && c<6) {
-                cell.classList.add('base-green');
-                if((r===1&&c===1)||(r===1&&c===4)||(r===4&&c===1)||(r===4&&c===4)) cell.dataset.base='green';
-            }
-            if(r<6 && c>=9) {
-                cell.classList.add('base-yellow');
-                if((r===1&&c===10)||(r===1&&c===13)||(r===4&&c===10)||(r===4&&c===13)) cell.dataset.base='yellow';
-            }
-            
-            const pathIdx = PATH.findIndex(p=>p.r===r&&p.c===c);
-            if(pathIdx>=0) { cell.classList.add('path-cell'); cell.dataset.path=pathIdx; }
-            
-            if(r===6&&c===1) cell.classList.add('start-green');
-            if(r===1&&c===8) cell.classList.add('start-yellow');
-            
-            if(r===7&&c===7) { cell.classList.add('center-cell'); cell.innerHTML='🏆'; }
-            
-            board.appendChild(cell);
-        }
-    }
-    renderPieces();
-}
-
-function renderPieces() {
-    document.querySelectorAll('.piece').forEach(p=>p.remove());
-    
-    ['green','yellow'].forEach(color => {
-        gameState.pieces[color].forEach((p, idx) => {
-            if(p.done) return;
-            let target = null;
-            if(p.pos === -1) {
-                const bases = document.querySelectorAll(`[data-base="${color}"]`);
-                if(bases[idx]) target = bases[idx];
-            } else if(p.pos >= 0 && p.pos < 52) {
-                target = document.querySelector(`.cell[data-path="${p.pos}"]`);
-            }
-            if(target) {
-                const piece = document.createElement('div');
-                piece.className = `piece piece-${color}`;
-                piece.dataset.color = color;
-                piece.dataset.idx = idx;
-                piece.textContent = idx+1;
-                piece.onclick = () => selectPiece(color, idx);
-                target.appendChild(piece);
-            }
-        });
+// ==================== الأعضاء النشطين ====================
+function updateActiveMembers() {
+    publicChannel.presence.get((err, members) => {
+        window.activeMembers = members || [];
+        renderActiveMembers();
     });
 }
 
-function rollDice() {
-    if(!gameState.myTurn) { updateStatus('⏳ ليس دورك!'); return; }
-    
-    const btn = document.getElementById('rollDiceBtn');
-    const dice = document.getElementById('diceDisplay');
-    btn.disabled = true;
-    dice.classList.add('rolling');
-    
-    let count = 0;
-    const int = setInterval(() => {
-        dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][Math.floor(Math.random()*6)];
-        if(++count >= 10) {
-            clearInterval(int);
-            const val = Math.floor(Math.random()*6)+1;
-            gameState.lastDice = val;
-            dice.textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][val-1];
-            dice.classList.remove('rolling');
-            
-            gameChannel.publish('dice', { dice: val });
-            
-            if(!checkHasMove()) {
-                updateStatus('😕 لا توجد حركة');
-                gameState.myTurn = false;
-                gameChannel.publish('move', { type: 'pass' });
-                btn.disabled = false;
-                return;
-            }
-            
-            highlightMovable();
-            updateStatus(`🎲 رميت ${val}`);
-            btn.disabled = false;
-        }
-    }, 80);
+function renderActiveMembers() {
+    const members = window.activeMembers || [];
+    const div = document.getElementById('activeMembersList');
+    div.innerHTML = members.map(m => `
+        <div class="member-item">
+            <div class="friend-avatar ${getAvatarColor(m.clientId)}">${m.clientId[0]}</div>
+            <div>
+                <div class="friend-name">${m.clientId}</div>
+                ${m.data?.isAdmin ? '<span class="admin-badge">👑 مشرف</span>' : ''}
+            </div>
+            <div class="online-dot"></div>
+        </div>
+    `).join('');
 }
 
-function checkHasMove() {
-    const color = gameState.myColor;
-    const dice = gameState.lastDice;
-    if(dice === 6 && gameState.pieces[color].some(p=>p.pos===-1)) return true;
-    return gameState.pieces[color].some(p=>{
-        if(p.pos>=0 && p.pos<52) {
-            const np = p.pos + dice;
-            return np < 52;
-        }
-        return false;
-    });
+// ==================== الدردشة الخاصة ====================
+function openPrivateChat(user) {
+    currentPrivateChat = user;
+    document.getElementById('privateChatName').textContent = `💬 ${user}`;
+    document.getElementById('privateChatWindow').classList.remove('hidden');
+    loadPrivateMessages(user);
 }
 
-function highlightMovable() {
-    document.querySelectorAll('.piece').forEach(el=>{
-        el.classList.remove('can-move');
-        if(el.dataset.color !== gameState.myColor) return;
-        const idx = parseInt(el.dataset.idx);
-        const p = gameState.pieces[gameState.myColor][idx];
-        if(p.pos===-1 && gameState.lastDice===6) el.classList.add('can-move');
-        else if(p.pos>=0 && p.pos<52) {
-            const np = p.pos + gameState.lastDice;
-            if(np < 52) el.classList.add('can-move');
-        }
-    });
+function closePrivateChat() {
+    document.getElementById('privateChatWindow').classList.add('hidden');
+    currentPrivateChat = null;
 }
 
-function selectPiece(color, idx) {
-    if(!gameState.myTurn || color !== gameState.myColor || gameState.lastDice === 0) return;
-    
-    const p = gameState.pieces[color][idx];
-    
-    if(p.pos === -1 && gameState.lastDice === 6) {
-        p.pos = STARTS[color];
-        gameChannel.publish('move', { type: 'exit', color, idx, pos: p.pos });
-    } else if(p.pos >= 0 && p.pos < 52) {
-        const np = p.pos + gameState.lastDice;
-        if(np < 52) {
-            // أكل
-            const opp = gameState.opponentColor;
-            gameState.pieces[opp].forEach(oppP => {
-                if(oppP.pos === np && !SAFE.includes(np)) {
-                    oppP.pos = -1;
-                }
-            });
-            p.pos = np;
-            gameChannel.publish('move', { type: 'move', color, idx, pos: np });
-        }
-    } else { return; }
-    
-    renderPieces();
-    
-    if(gameState.lastDice !== 6) {
-        gameState.myTurn = false;
-    }
-    
-    gameState.lastDice = 0;
-    document.querySelectorAll('.can-move').forEach(e=>e.classList.remove('can-move'));
-    updateStatus();
-}
-
-function handleOpponentDice(msg) {
-    updateStatus(`🎲 الخصم رمى ${msg.data.dice}`);
-}
-
-function handleOpponentMove(msg) {
-    const d = msg.data;
-    if(d.type === 'pass') {
-        gameState.myTurn = true;
-        updateStatus();
-        return;
-    }
-    
-    const p = gameState.pieces[d.color][d.idx];
-    if(d.type === 'exit') p.pos = d.pos;
-    else if(d.type === 'move') {
-        // أكل قطعتي
-        gameState.pieces[gameState.myColor].forEach(myP => {
-            if(myP.pos === d.pos && !SAFE.includes(d.pos)) {
-                myP.pos = -1;
-            }
-        });
-        p.pos = d.pos;
-    }
-    
-    renderPieces();
-    gameState.myTurn = true;
-    updateStatus();
-}
-
-function updateStatus(msg) {
-    const el = document.getElementById('gameStatus');
-    el.textContent = msg || (gameState.myTurn ? '🎮 دورك!' : '⏳ دور الخصم');
-}
-
-// ==================== دردشة ومايك ====================
-function addChatMessage(sender, text) {
-    const div = document.getElementById('chatMessages');
-    div.innerHTML += `<div class="chat-message"><span class="chat-sender">${sender}:</span> ${text}</div>`;
-    div.scrollTop = div.scrollHeight;
-}
-
-function sendChat() {
-    const input = document.getElementById('chatInput');
+function sendPrivateMessage() {
+    const input = document.getElementById('privateChatInput');
     const text = input.value.trim();
-    if(!text) return;
+    if(!text || !currentPrivateChat) return;
     
-    chatChannel.publish('chat', { sender: currentUser, text });
-    addChatMessage(currentUser, text);
+    const peerChannel = ably.channels.get(`private-${currentPrivateChat}`);
+    peerChannel.publish('message', { sender: currentUser, text });
+    addPrivateMessage(currentUser, text);
     input.value = '';
 }
 
-function startVoiceCall() {
-    if(!localStream) return;
-    if(gameState.myColor === 'green') {
-        const peer = new SimplePeer({ initiator: true, stream: localStream, trickle: false });
-        setupPeer(peer);
+function addPrivateMessage(sender, text) {
+    const div = document.getElementById('privateChatMessages');
+    div.innerHTML += `<div class="message-text" style="margin-bottom:10px;"><strong>${sender}:</strong> ${text}</div>`;
+    div.scrollTop = div.scrollHeight;
+}
+
+function loadPrivateMessages(user) {
+    const key = [currentUser, user].sort().join('-');
+    const msgs = messages[key] || [];
+    const div = document.getElementById('privateChatMessages');
+    div.innerHTML = msgs.map(m => `<div class="message-text"><strong>${m.sender}:</strong> ${m.text}</div>`).join('');
+}
+
+// ==================== المكالمات ====================
+function startCall(user) {
+    currentCall = user;
+    document.getElementById('callScreen').classList.remove('hidden');
+    document.getElementById('callName').textContent = user;
+    document.getElementById('callAvatar').textContent = user[0];
+    document.getElementById('callAvatar').className = `call-avatar ${getAvatarColor(user)}`;
+    
+    const peer = new SimplePeer({ initiator: true, stream: localStream, trickle: false });
+    setupCallPeer(peer, user);
+    
+    const peerChannel = ably.channels.get(`private-${user}`);
+    peerChannel.publish('call', { from: currentUser, type: 'offer' });
+}
+
+function handleIncomingCall(msg) {
+    const { from } = msg.data;
+    if(confirm(`${from} يتصل بك! هل تريد الرد؟`)) {
+        currentCall = from;
+        document.getElementById('callScreen').classList.remove('hidden');
+        document.getElementById('callName').textContent = from;
+        document.getElementById('callStatus').textContent = '📞 متصل';
+        
+        const peer = new SimplePeer({ initiator: false, stream: localStream, trickle: false });
+        setupCallPeer(peer, from);
     }
 }
 
-function setupPeer(peer) {
+function setupCallPeer(peer, user) {
     peer.on('signal', signal => {
-        gameChannel.publish('signal', { signal });
+        const peerChannel = ably.channels.get(`private-${user}`);
+        peerChannel.publish('call-signal', { signal });
     });
+    
     peer.on('stream', remoteStream => {
         const audio = new Audio();
         audio.srcObject = remoteStream;
         audio.autoplay = true;
+        document.getElementById('callStatus').textContent = '📞 متصل';
     });
+    
     currentPeer = peer;
+    
+    privateChannel.subscribe('call-signal', (msg) => {
+        if(currentPeer) currentPeer.signal(msg.data.signal);
+    });
 }
 
-function toggleMic() {
-    if(!localStream) return;
-    micEnabled = !micEnabled;
-    localStream.getAudioTracks()[0].enabled = micEnabled;
-    document.getElementById('micBtn').classList.toggle('muted', !micEnabled);
-    document.getElementById('micBtn').textContent = micEnabled ? '🎤' : '🔇';
+function toggleMute() {
+    if(localStream) {
+        const track = localStream.getAudioTracks()[0];
+        track.enabled = !track.enabled;
+    }
 }
 
-// ==================== تهيئة ====================
+function endCall() {
+    document.getElementById('callScreen').classList.add('hidden');
+    if(currentPeer) currentPeer.destroy();
+    currentPeer = null;
+    currentCall = null;
+}
+
+// ==================== اللعبة ====================
+function startLudoGame() {
+    alert('🎲 اللعبة قيد التطوير... قريباً!');
+}
+
+// ==================== دوال مساعدة ====================
+function getAvatarColor(name) {
+    const colors = ['bg-1','bg-2','bg-3','bg-4','bg-5','bg-6'];
+    return colors[name.length % colors.length];
+}
+
+function loadData() {
+    renderPosts();
+    renderFriends();
+    // تحميل رسائل الدردشة العامة القديمة
+}
+
+// حفظ تلقائي
+setInterval(() => {
+    localStorage.setItem('social_posts', JSON.stringify(posts));
+    localStorage.setItem('social_friends', JSON.stringify(friends));
+    localStorage.setItem('social_requests', JSON.stringify(friendRequests));
+}, 5000);
+
+// تهيئة
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('loginBtn').onclick = login;
-    document.getElementById('showRegisterBtn').onclick = () => {
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('registerForm').classList.remove('hidden');
-    };
-    document.getElementById('showLoginBtn').onclick = () => {
-        document.getElementById('registerForm').classList.add('hidden');
-        document.getElementById('loginForm').classList.remove('hidden');
-    };
-    document.getElementById('registerBtn').onclick = () => {
-        const u = document.getElementById('regUsername').value.trim();
-        const p = document.getElementById('regPassword').value;
-        if(!u||!p) return;
-        users[u] = p;
-        userStats[u] = { coins:10000, wins:0, losses:0 };
-        localStorage.setItem('ludo_users', JSON.stringify(users));
-        localStorage.setItem('ludo_stats', JSON.stringify(userStats));
-        alert('✅ تم التسجيل');
-        document.getElementById('registerForm').classList.add('hidden');
-        document.getElementById('loginForm').classList.remove('hidden');
-        document.getElementById('loginUsername').value = u;
-    };
-    
-    document.getElementById('playBtn').onclick = startSearching;
-    document.getElementById('friendsBtn').onclick = showFriends;
-    document.getElementById('logoutBtn').onclick = logout;
-    document.getElementById('closeFriendsBtn').onclick = () => document.getElementById('friendsScreen').classList.add('hidden');
-    document.getElementById('addFriendBtn').onclick = addFriend;
-    document.getElementById('cancelSearchBtn').onclick = () => {
-        channel.unsubscribe('search-1v1');
-        document.getElementById('searchingScreen').classList.add('hidden');
-    };
-    document.getElementById('rollDiceBtn').onclick = rollDice;
-    document.getElementById('sendChatBtn').onclick = sendChat;
-    document.getElementById('chatInput').onkeypress = (e) => { if(e.key==='Enter') sendChat(); };
-    document.getElementById('micBtn').onclick = toggleMic;
-    
-    // محاولة تسجيل تلقائي
-    autoLogin();
+    if(savedUser) {
+        document.getElementById('loginUsername').value = savedUser;
+    }
 });
 
-// دوال عامة
+// تصدير الدوال
+window.switchLoginTab = switchLoginTab;
+window.login = login;
+window.register = register;
+window.switchTab = switchTab;
+window.sendPublicMessage = sendPublicMessage;
+window.createPost = createPost;
+window.sendFriendRequest = sendFriendRequest;
 window.acceptFriend = acceptFriend;
-window.rejectFriend = rejectFriend;
+window.openPrivateChat = openPrivateChat;
+window.closePrivateChat = closePrivateChat;
+window.sendPrivateMessage = sendPrivateMessage;
+window.startCall = startCall;
+window.toggleMute = toggleMute;
+window.endCall = endCall;
+window.startLudoGame = startLudoGame;
+window.likePost = likePost;
 </script>
 </body>
 </html>
