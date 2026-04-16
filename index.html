@@ -357,7 +357,6 @@
             flex-direction: column;
         }
         
-        /* الهيدر */
         .game-header {
             background: rgba(0, 0, 0, 0.3);
             padding: 10px 15px;
@@ -401,7 +400,6 @@
             font-size: 1.1rem;
         }
         
-        /* لوحة اللعبة */
         .game-board-container {
             flex: 1;
             display: flex;
@@ -441,13 +439,11 @@
             font-size: 0.6rem;
         }
         
-        /* القواعد */
         .base-green { background: linear-gradient(135deg, #4CAF50, #45a049) !important; border-radius: 15px; }
         .base-yellow { background: linear-gradient(135deg, #FFD700, #FFA500) !important; border-radius: 15px; }
         .base-blue { background: linear-gradient(135deg, #2196F3, #1976D2) !important; border-radius: 15px; }
         .base-red { background: linear-gradient(135deg, #f44336, #d32f2f) !important; border-radius: 15px; }
         
-        /* المسار */
         .path-cell { background: #f5f5f5 !important; }
         .safe-green { background: rgba(76, 175, 80, 0.3) !important; }
         .safe-yellow { background: rgba(255, 215, 0, 0.3) !important; }
@@ -459,7 +455,6 @@
         .start-blue { background: #2196F3 !important; }
         .start-red { background: #f44336 !important; }
         
-        /* مسار النهاية */
         .home-green { background: linear-gradient(to right, white, #4CAF50) !important; }
         .home-yellow { background: linear-gradient(to right, white, #FFD700) !important; }
         .home-blue { background: linear-gradient(to right, white, #2196F3) !important; }
@@ -470,7 +465,6 @@
             font-size: 1.2rem;
         }
         
-        /* القطع */
         .piece {
             width: 80%;
             height: 80%;
@@ -508,7 +502,6 @@
             50% { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
         }
         
-        /* منطقة النرد */
         .dice-area {
             background: rgba(0, 0, 0, 0.3);
             padding: 15px;
@@ -578,7 +571,6 @@
             border-radius: 10px;
         }
         
-        /* المايك */
         .voice-control {
             position: absolute;
             top: 15px;
@@ -616,7 +608,6 @@
             50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(76, 175, 80, 0.6); }
         }
         
-        /* معلومات اللاعب المنافس */
         .opponent-info {
             position: absolute;
             top: 80px;
@@ -646,7 +637,6 @@
             font-weight: 700;
         }
         
-        /* شاشة النتيجة */
         .result-screen {
             position: fixed;
             top: 0;
@@ -715,16 +705,16 @@
         <div id="loginForm">
             <input type="text" id="loginUsername" class="login-input" placeholder="اسم المستخدم">
             <input type="password" id="loginPassword" class="login-input" placeholder="كلمة المرور">
-            <button class="login-btn btn-login" onclick="login()">دخول 🎮</button>
-            <button class="login-btn btn-register" onclick="showRegisterForm()">تسجيل جديد 📝</button>
+            <button class="login-btn btn-login" id="loginBtn">دخول 🎮</button>
+            <button class="login-btn btn-register" id="showRegisterBtn">تسجيل جديد 📝</button>
             <div id="loginMessage" class="login-message hidden"></div>
         </div>
         
         <div id="registerForm" class="hidden">
             <input type="text" id="regUsername" class="login-input" placeholder="اسم المستخدم">
             <input type="password" id="regPassword" class="login-input" placeholder="كلمة المرور">
-            <button class="login-btn btn-register" onclick="register()">تسجيل ✅</button>
-            <button class="login-btn btn-login" onclick="showLoginForm()">رجوع ↩️</button>
+            <button class="login-btn btn-register" id="registerBtn">تسجيل ✅</button>
+            <button class="login-btn btn-login" id="showLoginBtn">رجوع ↩️</button>
             <div id="regMessage" class="login-message hidden"></div>
         </div>
     </div>
@@ -743,13 +733,13 @@
     </div>
     
     <div class="menu-buttons">
-        <button class="menu-btn btn-play" onclick="showBetSelection()">
+        <button class="menu-btn btn-play" id="playBtn">
             🎲 العب الآن
         </button>
-        <button class="menu-btn btn-friends" onclick="showFriends()">
+        <button class="menu-btn btn-friends" id="friendsBtn">
             👥 الأصدقاء
         </button>
-        <button class="menu-btn btn-chat" onclick="showChat()">
+        <button class="menu-btn btn-chat" id="chatBtn">
             💬 المحادثات
         </button>
     </div>
@@ -760,20 +750,20 @@
     <div class="bet-box">
         <h2>اختر مبلغ المباراة</h2>
         <div class="bet-options">
-            <div class="bet-option" onclick="selectBet(500)">
+            <div class="bet-option" data-bet="500">
                 <div class="bet-amount">💰 500</div>
                 <div>مباراة عادية</div>
             </div>
-            <div class="bet-option" onclick="selectBet(1000)">
+            <div class="bet-option" data-bet="1000">
                 <div class="bet-amount">💰 1000</div>
                 <div>مباراة كبيرة</div>
             </div>
-            <div class="bet-option" onclick="selectBet(5000)">
+            <div class="bet-option" data-bet="5000">
                 <div class="bet-amount">💰 5000</div>
                 <div>مباراة ضخمة</div>
             </div>
         </div>
-        <button class="bet-cancel" onclick="cancelBetSelection()">إلغاء</button>
+        <button class="bet-cancel" id="cancelBetBtn">إلغاء</button>
     </div>
 </div>
 
@@ -787,13 +777,12 @@
             <span class="dot">.</span>
             <span class="dot">.</span>
         </div>
-        <button class="searching-cancel" onclick="cancelSearch()">إلغاء</button>
+        <button class="searching-cancel" id="cancelSearchBtn">إلغاء</button>
     </div>
 </div>
 
 <!-- ============ شاشة اللعبة ============ -->
 <div id="gameScreen" class="game-screen hidden">
-    <!-- الهيدر -->
     <div class="game-header">
         <div class="player-info">
             <div class="player-avatar" id="myAvatar">👤</div>
@@ -802,32 +791,28 @@
         <div class="game-bet" id="gameBetDisplay">💰 0</div>
     </div>
     
-    <!-- زر المايك -->
     <div class="voice-control">
-        <div class="mic-btn active" id="micBtn" onclick="toggleMic()">
+        <div class="mic-btn active" id="micBtn">
             🎤
         </div>
     </div>
     
-    <!-- معلومات المنافس -->
     <div class="opponent-info">
         <div class="opponent-avatar">🎮</div>
         <div class="opponent-name" id="opponentName">منافس</div>
     </div>
     
-    <!-- لوحة اللعبة -->
     <div class="game-board-container">
         <div class="game-board">
             <div class="board-grid" id="gameBoard"></div>
         </div>
     </div>
     
-    <!-- منطقة النرد -->
     <div class="dice-area">
         <div class="game-status" id="gameStatus">انتظر دورك...</div>
         <div class="dice-container">
             <div class="dice" id="diceDisplay">🎲</div>
-            <button class="roll-btn" id="rollDiceBtn" onclick="rollDice()">رمي النرد</button>
+            <button class="roll-btn" id="rollDiceBtn">رمي النرد</button>
         </div>
     </div>
 </div>
@@ -838,7 +823,7 @@
         <div class="result-icon" id="resultIcon">🏆</div>
         <div class="result-title" id="resultTitle">فزت!</div>
         <div class="result-coins" id="resultCoins">+500 💰</div>
-        <button class="result-btn" onclick="backToMenu()">العودة للقائمة</button>
+        <button class="result-btn" id="backToMenuBtn">العودة للقائمة</button>
     </div>
 </div>
 
@@ -853,12 +838,10 @@ let ably = null;
 let channel = null;
 let gameChannel = null;
 
-// المايك
 let localStream = null;
 let micEnabled = true;
 let currentPeer = null;
 
-// اللعبة
 let gameState = {
     myColor: null,
     opponentColor: null,
@@ -874,29 +857,32 @@ let gameState = {
     opponent: null
 };
 
-// قاعدة بيانات محلية
 let users = JSON.parse(localStorage.getItem('ludo_users')) || {};
 let userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
 
-// ==================== تسجيل الدخول ====================
-function showRegisterForm() {
-    document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('registerForm').classList.remove('hidden');
-}
-
-function showLoginForm() {
-    document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('loginForm').classList.remove('hidden');
-}
-
+// ==================== دوال مساعدة ====================
 function showMessage(elementId, text, type) {
     const el = document.getElementById(elementId);
+    if (!el) return;
     el.textContent = text;
     el.className = `login-message message-${type}`;
     el.classList.remove('hidden');
     setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
+function showRegisterForm() {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerForm').classList.remove('hidden');
+    document.getElementById('regMessage').classList.add('hidden');
+}
+
+function showLoginForm() {
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('loginMessage').classList.add('hidden');
+}
+
+// ==================== تسجيل الدخول والتسجيل ====================
 function register() {
     const username = document.getElementById('regUsername').value.trim();
     const password = document.getElementById('regPassword').value;
@@ -906,8 +892,12 @@ function register() {
         return;
     }
     
+    // إعادة تحميل البيانات
+    users = JSON.parse(localStorage.getItem('ludo_users')) || {};
+    userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
+    
     if (users[username]) {
-        showMessage('regMessage', '❌ اسم المستخدم موجود', 'error');
+        showMessage('regMessage', '❌ اسم المستخدم موجود مسبقاً', 'error');
         return;
     }
     
@@ -917,10 +907,11 @@ function register() {
     localStorage.setItem('ludo_users', JSON.stringify(users));
     localStorage.setItem('ludo_stats', JSON.stringify(userStats));
     
-    showMessage('regMessage', '✅ تم التسجيل! سجل الدخول الآن', 'success');
+    showMessage('regMessage', '✅ تم التسجيل بنجاح! سجل الدخول الآن', 'success');
     
     setTimeout(() => {
         document.getElementById('loginUsername').value = username;
+        document.getElementById('loginPassword').value = '';
         showLoginForm();
     }, 1500);
 }
@@ -928,6 +919,17 @@ function register() {
 async function login() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
+    
+    console.log("🔑 محاولة تسجيل الدخول:", username);
+    
+    // إعادة تحميل البيانات من localStorage
+    users = JSON.parse(localStorage.getItem('ludo_users')) || {};
+    userStats = JSON.parse(localStorage.getItem('ludo_stats')) || {};
+    
+    if (!username || !password) {
+        showMessage('loginMessage', '❌ الرجاء ملء جميع الحقول', 'error');
+        return;
+    }
     
     if (!users[username] || users[username] !== password) {
         showMessage('loginMessage', '❌ اسم مستخدم أو كلمة مرور خاطئة', 'error');
@@ -943,33 +945,45 @@ async function login() {
     
     userCoins = userStats[currentUser].coins;
     
+    showMessage('loginMessage', '✅ جاري الاتصال...', 'success');
+    
     // طلب المايك
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         console.log('✅ تم الحصول على المايك');
     } catch (e) {
-        console.log('❌ لا يمكن الوصول للمايك:', e);
-        alert('⚠️ لن تتمكن من استخدام المايك في اللعبة');
+        console.log('⚠️ لا يمكن الوصول للمايك:', e);
     }
     
     // الاتصال بـ Ably
-    ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
-    
-    ably.connection.on('connected', () => {
-        console.log('✅ متصل بـ Ably');
-        channel = ably.channels.get('ludo-main');
+    try {
+        ably = new Ably.Realtime({ key: ABLY_KEY, clientId: currentUser });
         
-        // الاشتراك في الأحداث
-        channel.subscribe('match-found', handleMatchFound);
-        channel.subscribe('game-start', handleGameStart);
-        channel.subscribe('game-move', handleGameMove);
-        channel.subscribe('game-end', handleGameEnd);
-        channel.subscribe('call-signal', handleCallSignal);
+        ably.connection.on('connected', () => {
+            console.log('✅ متصل بـ Ably بنجاح');
+            channel = ably.channels.get('ludo-main');
+            
+            // الاشتراك في الأحداث
+            channel.subscribe('match-found', handleMatchFound);
+            channel.subscribe('game-start', handleGameStart);
+            channel.subscribe('game-move', handleGameMove);
+            channel.subscribe('game-end', handleGameEnd);
+            channel.subscribe('call-signal', handleCallSignal);
+            
+            channel.presence.enter({ username: currentUser, coins: userCoins });
+            
+            showMainMenu();
+        });
         
-        channel.presence.enter({ username: currentUser, coins: userCoins });
+        ably.connection.on('failed', (err) => {
+            console.error('❌ فشل الاتصال:', err);
+            showMessage('loginMessage', '❌ فشل الاتصال بالخادم. تأكد من الإنترنت.', 'error');
+        });
         
-        showMainMenu();
-    });
+    } catch (e) {
+        console.error('❌ خطأ في إنشاء اتصال Ably:', e);
+        showMessage('loginMessage', '❌ حدث خطأ. حاول مرة أخرى.', 'error');
+    }
 }
 
 function showMainMenu() {
@@ -977,6 +991,66 @@ function showMainMenu() {
     document.getElementById('mainMenu').classList.remove('hidden');
     document.getElementById('menuUsername').textContent = currentUser;
     document.getElementById('userCoins').textContent = userCoins;
+}
+
+// ==================== معالجات أحداث Ably ====================
+function handleMatchFound(message) {
+    const data = message.data;
+    if (data.player1 !== currentUser && data.player2 !== currentUser) return;
+    
+    channel.unsubscribe('search-match');
+    
+    if (data.player1 === currentUser) {
+        gameState.myColor = 'green';
+        gameState.opponentColor = 'yellow';
+        gameState.opponent = data.player2;
+    } else {
+        gameState.myColor = 'yellow';
+        gameState.opponentColor = 'green';
+        gameState.opponent = data.player1;
+    }
+    
+    gameState.matchId = data.matchId;
+    gameState.currentTurn = 'green';
+    
+    gameChannel = ably.channels.get(`game-${data.matchId}`);
+    gameChannel.subscribe('move', handleOpponentMove);
+    gameChannel.subscribe('dice-roll', handleOpponentDiceRoll);
+    gameChannel.subscribe('call-signal', handleCallSignal);
+    
+    setTimeout(() => {
+        startVoiceCall();
+    }, 1000);
+    
+    document.getElementById('searchingScreen').classList.add('hidden');
+    startGame();
+}
+
+function handleGameStart(message) {
+    console.log("Game start:", message.data);
+}
+
+function handleGameMove(message) {
+    console.log("Game move:", message.data);
+}
+
+function handleGameEnd(message) {
+    console.log("Game end:", message.data);
+}
+
+function handleSearchMatch(message) {
+    const data = message.data;
+    if (data.username === currentUser) return;
+    if (data.bet !== selectedBet) return;
+    
+    const matchId = `match_${Date.now()}`;
+    
+    channel.publish('match-found', {
+        player1: currentUser,
+        player2: data.username,
+        bet: selectedBet,
+        matchId: matchId
+    });
 }
 
 // ==================== اختيار المبلغ والبحث ====================
@@ -995,77 +1069,25 @@ function selectBet(amount) {
     }
     
     selectedBet = amount;
-    document.getElementById('betSelection').classList.add('hidden');
-    startSearching();
+    document.querySelectorAll('.bet-option').forEach(opt => opt.classList.remove('selected'));
+    document.querySelector(`[data-bet="${amount}"]`).classList.add('selected');
 }
 
 function startSearching() {
+    if (selectedBet === 0) {
+        alert('❌ الرجاء اختيار مبلغ المباراة أولاً');
+        return;
+    }
+    
+    document.getElementById('betSelection').classList.add('hidden');
     document.getElementById('searchingScreen').classList.remove('hidden');
     
-    // نشر طلب مباراة
     channel.publish('search-match', {
         username: currentUser,
         bet: selectedBet
     });
     
-    // الاشتراك في البحث
     channel.subscribe('search-match', handleSearchMatch);
-}
-
-function handleSearchMatch(message) {
-    const data = message.data;
-    
-    // تجاهل طلبك الخاص
-    if (data.username === currentUser) return;
-    
-    // تجاهل إذا كان المبلغ مختلف
-    if (data.bet !== selectedBet) return;
-    
-    // وجدنا مباراة!
-    const matchId = `match_${Date.now()}`;
-    
-    channel.publish('match-found', {
-        player1: currentUser,
-        player2: data.username,
-        bet: selectedBet,
-        matchId: matchId
-    });
-}
-
-function handleMatchFound(message) {
-    const data = message.data;
-    
-    if (data.player1 !== currentUser && data.player2 !== currentUser) return;
-    
-    channel.unsubscribe('search-match');
-    
-    // تحديد الألوان
-    if (data.player1 === currentUser) {
-        gameState.myColor = 'green';
-        gameState.opponentColor = 'yellow';
-        gameState.opponent = data.player2;
-    } else {
-        gameState.myColor = 'yellow';
-        gameState.opponentColor = 'green';
-        gameState.opponent = data.player1;
-    }
-    
-    gameState.matchId = data.matchId;
-    gameState.currentTurn = 'green'; // اللاعب الأخضر يبدأ
-    
-    // الانضمام لقناة اللعبة
-    gameChannel = ably.channels.get(`game-${data.matchId}`);
-    gameChannel.subscribe('move', handleOpponentMove);
-    gameChannel.subscribe('dice-roll', handleOpponentDiceRoll);
-    gameChannel.subscribe('call-signal', handleCallSignal);
-    
-    // بدء المكالمة الصوتية تلقائياً
-    setTimeout(() => {
-        startVoiceCall();
-    }, 1000);
-    
-    document.getElementById('searchingScreen').classList.add('hidden');
-    startGame();
 }
 
 function cancelSearch() {
@@ -1077,7 +1099,7 @@ function cancelSearch() {
 function startGame() {
     document.getElementById('gameScreen').classList.remove('hidden');
     document.getElementById('myPlayerName').textContent = currentUser;
-    document.getElementById('opponentName').textContent = gameState.opponent;
+    document.getElementById('opponentName').textContent = gameState.opponent || 'منافس';
     document.getElementById('gameBetDisplay').textContent = `💰 ${selectedBet}`;
     
     initBoard();
@@ -1088,7 +1110,6 @@ function initBoard() {
     const board = document.getElementById('gameBoard');
     board.innerHTML = '';
     
-    // إنشاء لوحة 15x15
     for (let row = 0; row < 15; row++) {
         for (let col = 0; col < 15; col++) {
             const cell = document.createElement('div');
@@ -1105,9 +1126,6 @@ function initBoard() {
 }
 
 function styleBoardCell(cell, row, col) {
-    // القواعد الأربعة
-    
-    // القاعدة الخضراء (أعلى يسار)
     if (row >= 0 && row < 6 && col >= 0 && col < 6) {
         cell.classList.add('base-green');
         if ((row === 1 && col === 1) || (row === 1 && col === 4) ||
@@ -1116,7 +1134,6 @@ function styleBoardCell(cell, row, col) {
         }
     }
     
-    // القاعدة الصفراء (أعلى يمين)
     if (row >= 0 && row < 6 && col >= 9 && col < 15) {
         cell.classList.add('base-yellow');
         if ((row === 1 && col === 10) || (row === 1 && col === 13) ||
@@ -1125,7 +1142,6 @@ function styleBoardCell(cell, row, col) {
         }
     }
     
-    // القاعدة الزرقاء (أسفل يسار)
     if (row >= 9 && row < 15 && col >= 0 && col < 6) {
         cell.classList.add('base-blue');
         if ((row === 10 && col === 1) || (row === 10 && col === 4) ||
@@ -1134,7 +1150,6 @@ function styleBoardCell(cell, row, col) {
         }
     }
     
-    // القاعدة الحمراء (أسفل يمين)
     if (row >= 9 && row < 15 && col >= 9 && col < 15) {
         cell.classList.add('base-red');
         if ((row === 10 && col === 10) || (row === 10 && col === 13) ||
@@ -1143,56 +1158,33 @@ function styleBoardCell(cell, row, col) {
         }
     }
     
-    // المسار الرئيسي
     if ((col === 6 || col === 8) && row < 6) cell.classList.add('path-cell');
     if ((col === 6 || col === 8) && row >= 9) cell.classList.add('path-cell');
     if ((row === 6 || row === 8) && col < 6) cell.classList.add('path-cell');
     if ((row === 6 || row === 8) && col >= 9) cell.classList.add('path-cell');
     
-    // نقاط البداية
     if (row === 6 && col === 1) cell.classList.add('start-green');
     if (row === 1 && col === 8) cell.classList.add('start-yellow');
     if (row === 8 && col === 13) cell.classList.add('start-red');
     if (row === 13 && col === 6) cell.classList.add('start-blue');
     
-    // المركز
     if (row === 7 && col === 7) {
         cell.classList.add('center-cell');
         cell.innerHTML = '🏆';
     }
-    
-    // حفظ الإحداثيات للمسار
-    cell.dataset.pathIndex = getCellPathIndex(row, col);
-}
-
-function getCellPathIndex(row, col) {
-    // هذه دالة مبسطة - يمكن تحسينها لاحقاً
-    // ستعيد رقم الخلية في المسار (0-51) أو -1 إذا لم تكن في المسار
-    
-    // المسار الأخضر يبدأ من (6, 1)
-    // المسار الأصفر من (1, 8)
-    // المسار الأحمر من (8, 13)
-    // المسار الأزرق من (13, 6)
-    
-    return -1; // سنملأها لاحقاً
 }
 
 function renderPieces() {
-    // إزالة القطع القديمة
     document.querySelectorAll('.piece').forEach(p => p.remove());
     
-    // رسم القطع الجديدة
     Object.keys(gameState.pieces).forEach(color => {
         gameState.pieces[color].forEach((piece, index) => {
             if (piece.pos === -1) {
-                // القطعة في القاعدة
                 const bases = document.querySelectorAll(`[data-base="${color}"]`);
                 if (bases[index]) {
                     const pieceEl = createPieceElement(color, index);
                     bases[index].appendChild(pieceEl);
                 }
-            } else if (piece.pos >= 0 && piece.pos < 52) {
-                // القطعة على المسار - سنضيفها لاحقاً
             }
         });
     });
@@ -1236,13 +1228,13 @@ function rollDice() {
             
             updateGameStatus(`🎲 رميت ${finalDice}! اختر قطعة`);
             
-            // إرسال النتيجة للخصم
-            gameChannel.publish('dice-roll', {
-                player: currentUser,
-                dice: finalDice
-            });
+            if (gameChannel) {
+                gameChannel.publish('dice-roll', {
+                    player: currentUser,
+                    dice: finalDice
+                });
+            }
             
-            // تفعيل القطع التي يمكن تحريكها
             highlightMovablePieces();
             
             setTimeout(() => {
@@ -1262,11 +1254,9 @@ function highlightMovablePieces() {
         if (color === gameState.myColor) {
             const piece = gameState.pieces[color][index];
             
-            // إذا كانت في القاعدة ورمي 6
             if (piece.pos === -1 && gameState.lastDice === 6) {
                 p.classList.add('can-move');
             }
-            // إذا كانت على المسار
             else if (piece.pos >= 0 && piece.pos < 52) {
                 p.classList.add('can-move');
             }
@@ -1280,49 +1270,48 @@ function selectPiece(color, index) {
     
     const piece = gameState.pieces[color][index];
     
-    // القطعة في القاعدة
     if (piece.pos === -1) {
         if (gameState.lastDice === 6) {
             piece.pos = 0;
             
-            gameChannel.publish('move', {
-                player: currentUser,
-                color: color,
-                index: index,
-                newPos: 0
-            });
+            if (gameChannel) {
+                gameChannel.publish('move', {
+                    player: currentUser,
+                    color: color,
+                    index: index,
+                    newPos: 0
+                });
+            }
             
             renderPieces();
             updateGameStatus('✅ أخرجت القطعة!');
             
-            // دور إضافي إذا رمي 6
             gameState.lastDice = 0;
             document.querySelectorAll('.can-move').forEach(p => p.classList.remove('can-move'));
         }
     }
-    // القطعة على المسار
     else if (piece.pos >= 0 && piece.pos < 52) {
         const newPos = piece.pos + gameState.lastDice;
         
-        if (newPos <= 57) { // 52 خلية + 5 للنهاية
+        if (newPos <= 57) {
             piece.pos = newPos;
             
-            gameChannel.publish('move', {
-                player: currentUser,
-                color: color,
-                index: index,
-                newPos: newPos
-            });
+            if (gameChannel) {
+                gameChannel.publish('move', {
+                    player: currentUser,
+                    color: color,
+                    index: index,
+                    newPos: newPos
+                });
+            }
             
             renderPieces();
             
-            // التحقق من الفوز
             if (checkWin()) {
                 endGame(true);
                 return;
             }
             
-            // تبديل الدور
             if (gameState.lastDice !== 6) {
                 gameState.currentTurn = gameState.opponentColor;
             }
@@ -1341,7 +1330,6 @@ function handleOpponentMove(message) {
     gameState.pieces[data.color][data.index].pos = data.newPos;
     renderPieces();
     
-    // التحقق من فوز الخصم
     if (checkWin(data.color)) {
         endGame(false);
         return;
@@ -1402,7 +1390,6 @@ function endGame(won) {
     
     localStorage.setItem('ludo_stats', JSON.stringify(userStats));
     
-    // إغلاق المكالمة
     if (currentPeer) {
         currentPeer.destroy();
         currentPeer = null;
@@ -1414,7 +1401,6 @@ function backToMenu() {
     document.getElementById('userCoins').textContent = userCoins;
     document.getElementById('mainMenu').classList.remove('hidden');
     
-    // إعادة تعيين اللعبة
     gameState = {
         myColor: null,
         opponentColor: null,
@@ -1433,12 +1419,8 @@ function backToMenu() {
 
 // ==================== المكالمة الصوتية ====================
 function startVoiceCall() {
-    if (!localStream) {
-        console.log('المايك غير متوفر');
-        return;
-    }
+    if (!localStream) return;
     
-    // اللاعب الأول يبدأ المكالمة
     if (gameState.myColor === 'green') {
         createPeer(true);
     }
@@ -1455,10 +1437,12 @@ function createPeer(initiator) {
     });
     
     peer.on('signal', signal => {
-        gameChannel.publish('call-signal', {
-            from: currentUser,
-            signal: signal
-        });
+        if (gameChannel) {
+            gameChannel.publish('call-signal', {
+                from: currentUser,
+                signal: signal
+            });
+        }
     });
     
     peer.on('stream', remoteStream => {
@@ -1506,7 +1490,6 @@ function toggleMic() {
     }
 }
 
-// ==================== الأصدقاء والمحادثات ====================
 function showFriends() {
     alert('قريباً: نظام الأصدقاء! 👥');
 }
@@ -1514,6 +1497,48 @@ function showFriends() {
 function showChat() {
     alert('قريباً: نظام المحادثات! 💬');
 }
+
+// ==================== تهيئة الأحداث عند تحميل الصفحة ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // أزرار تسجيل الدخول
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('showRegisterBtn').addEventListener('click', showRegisterForm);
+    document.getElementById('registerBtn').addEventListener('click', register);
+    document.getElementById('showLoginBtn').addEventListener('click', showLoginForm);
+    
+    // أزرار القائمة الرئيسية
+    document.getElementById('playBtn').addEventListener('click', showBetSelection);
+    document.getElementById('friendsBtn').addEventListener('click', showFriends);
+    document.getElementById('chatBtn').addEventListener('click', showChat);
+    
+    // أزرار اختيار المبلغ
+    document.querySelectorAll('.bet-option').forEach(opt => {
+        opt.addEventListener('click', function() {
+            const bet = parseInt(this.dataset.bet);
+            selectBet(bet);
+            
+            // بدء البحث مباشرة بعد الاختيار
+            setTimeout(() => {
+                if (selectedBet > 0) {
+                    startSearching();
+                }
+            }, 300);
+        });
+    });
+    document.getElementById('cancelBetBtn').addEventListener('click', cancelBetSelection);
+    
+    // أزرار البحث
+    document.getElementById('cancelSearchBtn').addEventListener('click', cancelSearch);
+    
+    // أزرار اللعبة
+    document.getElementById('rollDiceBtn').addEventListener('click', rollDice);
+    document.getElementById('micBtn').addEventListener('click', toggleMic);
+    
+    // زر العودة للقائمة
+    document.getElementById('backToMenuBtn').addEventListener('click', backToMenu);
+    
+    console.log('✅ تم تحميل الصفحة وتهيئة جميع الأحداث');
+});
 </script>
 
 </body>
