@@ -34,9 +34,13 @@
         .user-info { display:flex; align-items:center; gap:10px; }
         .user-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; }
         
+        /* شارات الإشعارات */
+        .badge { background:#f44336; color:white; border-radius:50%; padding:2px 6px; font-size:0.7rem; position:absolute; top:-5px; right:-5px; min-width:18px; text-align:center; }
+        .tab { position:relative; }
+        
         /* التبويبات */
         .tabs { display:flex; background:#075E54; padding:0 10px; }
-        .tab { flex:1; padding:15px; text-align:center; color:rgba(255,255,255,0.7); cursor:pointer; font-weight:600; border-bottom:3px solid transparent; }
+        .tab { flex:1; padding:15px; text-align:center; color:rgba(255,255,255,0.7); cursor:pointer; font-weight:600; border-bottom:3px solid transparent; position:relative; }
         .tab i { margin-left:5px; }
         .tab.active { color:white; border-bottom-color:#FFD700; }
         
@@ -48,12 +52,14 @@
         .message { display:flex; gap:10px; margin-bottom:15px; }
         .msg-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; flex-shrink:0; }
         .msg-content { max-width:70%; }
-        .msg-name { font-weight:700; color:#075E54; margin-bottom:3px; }
+        .msg-header { display:flex; align-items:center; gap:5px; margin-bottom:3px; flex-wrap:wrap; }
+        .msg-name { font-weight:700; color:#075E54; }
         .msg-bubble { background:white; padding:10px 15px; border-radius:10px; word-break:break-word; }
         .msg-time { font-size:0.7rem; color:#999; margin-top:3px; }
         .message.own { flex-direction:row-reverse; }
         .message.own .msg-bubble { background:#dcf8c6; }
-        .admin-badge { background:#FFD700; color:#333; padding:2px 8px; border-radius:10px; font-size:0.7rem; margin-right:5px; }
+        .admin-badge { background:#FFD700; color:#333; padding:2px 8px; border-radius:10px; font-size:0.7rem; }
+        .add-friend-btn { background:#2196F3; color:white; border:none; padding:3px 10px; border-radius:15px; font-size:0.7rem; cursor:pointer; margin-right:5px; }
         
         .chat-input-area { padding:15px; background:#f0f2f5; display:flex; gap:10px; }
         .chat-input { flex:1; padding:12px 15px; border:none; border-radius:25px; font-family:'Cairo',sans-serif; }
@@ -74,7 +80,7 @@
         .add-friend { display:flex; gap:10px; margin-bottom:20px; }
         .add-friend input { flex:1; padding:12px; border:1px solid #ddd; border-radius:25px; font-family:'Cairo',sans-serif; }
         .add-friend button { padding:12px 20px; background:#075E54; color:white; border:none; border-radius:25px; cursor:pointer; }
-        .section-title { font-weight:700; margin:20px 0 10px; color:#075E54; }
+        .section-title { font-weight:700; margin:20px 0 10px; color:#075E54; display:flex; align-items:center; gap:10px; }
         .friend-card { display:flex; align-items:center; justify-content:space-between; padding:15px; background:#f8f9fa; border-radius:15px; margin-bottom:10px; }
         .friend-info { display:flex; align-items:center; gap:12px; }
         .friend-avatar { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; }
@@ -91,11 +97,14 @@
         
         /* ============ نشط الآن ============ */
         .active-container { padding:15px; }
+        .active-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:15px; }
+        .refresh-btn { background:#075E54; color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer; }
         .active-card { display:flex; align-items:center; gap:15px; padding:15px; border-bottom:1px solid #eee; }
         .active-avatar { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; }
         .active-info { flex:1; }
         .active-name { font-weight:700; }
         .online-dot { width:12px; height:12px; background:#4CAF50; border-radius:50%; }
+        .add-active-btn { background:#2196F3; color:white; border:none; padding:8px 15px; border-radius:20px; cursor:pointer; font-size:0.9rem; }
         
         /* ============ محادثة خاصة ============ */
         .private-chat { position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:2000; display:flex; flex-direction:column; }
@@ -181,10 +190,20 @@
     </div>
     
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('chat')"><i class="fas fa-comments"></i> الدردشة</div>
-        <div class="tab" onclick="switchTab('posts')"><i class="fas fa-newspaper"></i> المنشورات</div>
-        <div class="tab" onclick="switchTab('friends')"><i class="fas fa-users"></i> الأصدقاء</div>
-        <div class="tab" onclick="switchTab('active')"><i class="fas fa-circle"></i> نشط</div>
+        <div class="tab active" onclick="switchTab('chat')" id="chatTabBtn">
+            <i class="fas fa-comments"></i> الدردشة
+            <span class="badge hidden" id="chatBadge">0</span>
+        </div>
+        <div class="tab" onclick="switchTab('posts')" id="postsTabBtn">
+            <i class="fas fa-newspaper"></i> المنشورات
+        </div>
+        <div class="tab" onclick="switchTab('friends')" id="friendsTabBtn">
+            <i class="fas fa-users"></i> الأصدقاء
+            <span class="badge hidden" id="requestsBadge">0</span>
+        </div>
+        <div class="tab" onclick="switchTab('active')" id="activeTabBtn">
+            <i class="fas fa-circle"></i> نشط
+        </div>
     </div>
     
     <div class="content">
@@ -213,12 +232,16 @@
             </div>
             <div class="section-title">👥 أصدقائي</div>
             <div id="friendsList"></div>
-            <div class="section-title">📨 طلبات الصداقة</div>
+            <div class="section-title">📨 طلبات الصداقة <span id="requestsCount"></span></div>
             <div id="requestsList"></div>
         </div>
         
         <!-- نشط الآن -->
         <div id="activeTab" class="active-container hidden">
+            <div class="active-header">
+                <h3><i class="fas fa-circle" style="color:#4CAF50;"></i> أعضاء نشطون</h3>
+                <button class="refresh-btn" onclick="refreshActive()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            </div>
             <div id="activeList"></div>
         </div>
     </div>
@@ -249,6 +272,11 @@
     </div>
 </div>
 
+<!-- صوت الإشعارات -->
+<audio id="notificationSound" preload="auto">
+    <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+</audio>
+
 <script>
 // ================ المتغيرات ================
 const ABLY_KEY = 'w2taPw.9vCSng:V5of3as_szS00NjTbPi_7fUAFT6qyMgbSwGLZBsVbPM';
@@ -265,15 +293,48 @@ let localStream = null;
 let currentPeer = null;
 let muted = false;
 
+// الإشعارات
+let unreadMessages = 0;
+let pendingRequests = 0;
+let notificationSound = document.getElementById('notificationSound');
+
 // البيانات المحلية
 let users = JSON.parse(localStorage.getItem('chat_users')) || {};
 let posts = JSON.parse(localStorage.getItem('chat_posts')) || [];
 let friends = JSON.parse(localStorage.getItem('chat_friends')) || {};
 let requests = JSON.parse(localStorage.getItem('chat_requests')) || {};
+let privateMessages = JSON.parse(localStorage.getItem('private_msgs')) || {};
 
 // حفظ آخر مستخدم
 const lastUser = localStorage.getItem('chat_lastUser');
 if(lastUser) document.getElementById('loginUsername').value = lastUser;
+
+// ================ تشغيل صوت الإشعار ================
+function playNotification() {
+    notificationSound.currentTime = 0;
+    notificationSound.play().catch(e => console.log('الصوت ما اشتغل'));
+}
+
+// تحديث الشارات
+function updateBadges() {
+    // شارة الدردشة
+    const chatBadge = document.getElementById('chatBadge');
+    if(unreadMessages > 0) {
+        chatBadge.textContent = unreadMessages > 9 ? '9+' : unreadMessages;
+        chatBadge.classList.remove('hidden');
+    } else {
+        chatBadge.classList.add('hidden');
+    }
+    
+    // شارة الطلبات
+    const reqBadge = document.getElementById('requestsBadge');
+    if(pendingRequests > 0) {
+        reqBadge.textContent = pendingRequests > 9 ? '9+' : pendingRequests;
+        reqBadge.classList.remove('hidden');
+    } else {
+        reqBadge.classList.add('hidden');
+    }
+}
 
 // ================ الألوان ================
 function getColor(name) {
@@ -308,7 +369,6 @@ async function login() {
     const u = document.getElementById('loginUsername').value.trim();
     const p = document.getElementById('loginPassword').value;
     
-    // فحص المشرف (مخفي)
     if(u === ADMIN_USER && p === ADMIN_PASS) {
         isAdmin = true;
         if(!users[u]) users[u] = p;
@@ -322,21 +382,19 @@ async function login() {
     currentUser = u;
     localStorage.setItem('chat_lastUser', u);
     
-    // طلب المايك
     try { localStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch(e) {}
     
-    // الاتصال
     ably = new Ably.Realtime({ key: ABLY_KEY, clientId: u });
     ably.connection.on('connected', () => {
         pubChannel = ably.channels.get('public');
-        pubChannel.subscribe('msg', (m) => addMessage(m.data));
+        pubChannel.subscribe('msg', (m) => handlePublicMessage(m.data));
         pubChannel.subscribe('post', (m) => { posts.unshift(m.data); savePosts(); });
         pubChannel.presence.enter({ username: u, admin: isAdmin });
         pubChannel.presence.subscribe('enter', updateActive);
         pubChannel.presence.subscribe('leave', updateActive);
         
         privChannel = ably.channels.get(`priv-${u}`);
-        privChannel.subscribe('msg', (m) => { if(currentChat === m.data.from) addPrivateMsg(m.data); });
+        privChannel.subscribe('msg', (m) => handlePrivateMessage(m.data));
         privChannel.subscribe('call', handleCall);
         privChannel.subscribe('signal', handleSignal);
         privChannel.subscribe('friend-req', handleFriendReq);
@@ -353,6 +411,7 @@ async function login() {
     loadPosts();
     loadMessages();
     updateActive();
+    updateRequestsCount();
 }
 
 function logout() {
@@ -370,7 +429,11 @@ function switchTab(tab) {
     document.getElementById('friendsTab').classList.add('hidden');
     document.getElementById('activeTab').classList.add('hidden');
     
-    if(tab === 'chat') document.getElementById('chatTab').classList.remove('hidden');
+    if(tab === 'chat') { 
+        document.getElementById('chatTab').classList.remove('hidden');
+        unreadMessages = 0;
+        updateBadges();
+    }
     else if(tab === 'posts') { document.getElementById('postsTab').classList.remove('hidden'); renderPosts(); }
     else if(tab === 'friends') { document.getElementById('friendsTab').classList.remove('hidden'); renderFriends(); }
     else if(tab === 'active') { document.getElementById('activeTab').classList.remove('hidden'); renderActive(); }
@@ -384,20 +447,34 @@ function sendMessage() {
     
     const msg = { sender: currentUser, text, admin: isAdmin, time: new Date().toLocaleTimeString() };
     pubChannel.publish('msg', msg);
-    addMessage(msg);
+    addMessage(msg, true);
     inp.value = '';
 }
 
-function addMessage(m) {
+function handlePublicMessage(m) {
+    if(m.sender !== currentUser) {
+        addMessage(m, false);
+        if(document.getElementById('chatTab').classList.contains('hidden')) {
+            unreadMessages++;
+            updateBadges();
+            playNotification();
+        }
+    }
+}
+
+function addMessage(m, isOwn) {
     const div = document.getElementById('messages');
-    const isMe = m.sender === currentUser;
+    const isMe = isOwn || m.sender === currentUser;
+    const isFriend = (friends[currentUser] || []).includes(m.sender);
+    
     div.innerHTML += `
         <div class="message ${isMe ? 'own' : ''}">
             <div class="msg-avatar ${getColor(m.sender)}">${m.sender[0]}</div>
             <div class="msg-content">
-                <div class="msg-name">
-                    ${m.sender}
+                <div class="msg-header">
+                    <span class="msg-name">${m.sender}</span>
                     ${m.admin ? '<span class="admin-badge">👑 مشرف</span>' : ''}
+                    ${!isMe && !isFriend ? `<button class="add-friend-btn" onclick="sendFriendRequestTo('${m.sender}')"><i class="fas fa-user-plus"></i> إضافة</button>` : ''}
                 </div>
                 <div class="msg-bubble">${m.text}</div>
                 <div class="msg-time">${m.time}</div>
@@ -405,6 +482,13 @@ function addMessage(m) {
         </div>
     `;
     div.scrollTop = div.scrollHeight;
+}
+
+function sendFriendRequestTo(user) {
+    if(user === currentUser) return;
+    const ch = ably.channels.get(`priv-${user}`);
+    ch.publish('friend-req', { from: currentUser });
+    alert(`✅ تم إرسال طلب صداقة إلى ${user}`);
 }
 
 function loadMessages() {
@@ -453,10 +537,7 @@ function loadPosts() { renderPosts(); }
 function addFriend() {
     const name = document.getElementById('friendNameInput').value.trim();
     if(!name || name === currentUser) return;
-    
-    const ch = ably.channels.get(`priv-${name}`);
-    ch.publish('friend-req', { from: currentUser });
-    alert('✅ تم إرسال الطلب');
+    sendFriendRequestTo(name);
     document.getElementById('friendNameInput').value = '';
 }
 
@@ -465,6 +546,10 @@ function handleFriendReq(m) {
     if(!requests[currentUser].find(r => r.from === m.data.from)) {
         requests[currentUser].push({ from: m.data.from });
         localStorage.setItem('chat_requests', JSON.stringify(requests));
+        pendingRequests++;
+        updateBadges();
+        updateRequestsCount();
+        playNotification();
         renderFriends();
     }
 }
@@ -480,12 +565,19 @@ function acceptFriend(from) {
     
     const ch = ably.channels.get(`priv-${from}`);
     ch.publish('friend-acc', { from: currentUser });
+    
+    pendingRequests = (requests[currentUser] || []).length;
+    updateBadges();
+    updateRequestsCount();
     renderFriends();
 }
 
 function rejectFriend(from) {
     requests[currentUser] = (requests[currentUser]||[]).filter(r => r.from !== from);
     localStorage.setItem('chat_requests', JSON.stringify(requests));
+    pendingRequests = (requests[currentUser] || []).length;
+    updateBadges();
+    updateRequestsCount();
     renderFriends();
 }
 
@@ -493,7 +585,14 @@ function handleFriendAcc(m) {
     if(!friends[currentUser]) friends[currentUser] = [];
     friends[currentUser].push(m.data.from);
     localStorage.setItem('chat_friends', JSON.stringify(friends));
+    playNotification();
     renderFriends();
+}
+
+function updateRequestsCount() {
+    pendingRequests = (requests[currentUser] || []).length;
+    updateBadges();
+    document.getElementById('requestsCount').textContent = pendingRequests > 0 ? `(${pendingRequests})` : '';
 }
 
 function renderFriends() {
@@ -530,9 +629,16 @@ function renderFriends() {
     `).join('') || '<p style="text-align:center;padding:20px;">لا توجد طلبات</p>';
 }
 
-function loadFriends() { renderFriends(); }
+function loadFriends() { 
+    renderFriends(); 
+    updateRequestsCount();
+}
 
 // ================ نشط الآن ================
+function refreshActive() {
+    updateActive();
+}
+
 function updateActive() {
     pubChannel.presence.get((err, members) => {
         window.activeMembers = members || [];
@@ -542,16 +648,22 @@ function updateActive() {
 
 function renderActive() {
     const members = window.activeMembers || [];
+    const myFriends = friends[currentUser] || [];
     const div = document.getElementById('activeList');
-    div.innerHTML = members.filter(m => m.clientId !== currentUser).map(m => `
-        <div class="active-card">
-            <div class="active-avatar ${getColor(m.clientId)}">${m.clientId[0]}</div>
-            <div class="active-info">
-                <div class="active-name">${m.clientId} ${m.data?.admin ? '👑' : ''}</div>
+    
+    div.innerHTML = members.filter(m => m.clientId !== currentUser).map(m => {
+        const isFriend = myFriends.includes(m.clientId);
+        return `
+            <div class="active-card">
+                <div class="active-avatar ${getColor(m.clientId)}">${m.clientId[0]}</div>
+                <div class="active-info">
+                    <div class="active-name">${m.clientId} ${m.data?.admin ? '👑' : ''}</div>
+                </div>
+                ${!isFriend ? `<button class="add-active-btn" onclick="sendFriendRequestTo('${m.clientId}')"><i class="fas fa-user-plus"></i> إضافة</button>` : ''}
+                <div class="online-dot"></div>
             </div>
-            <div class="online-dot"></div>
-        </div>
-    `).join('') || '<p style="text-align:center;padding:20px;">لا يوجد نشط الآن</p>';
+        `;
+    }).join('') || '<p style="text-align:center;padding:20px;">لا يوجد نشط الآن</p>';
 }
 
 // ================ محادثة خاصة ================
@@ -559,7 +671,7 @@ function openPrivateChat(user) {
     currentChat = user;
     document.getElementById('privateChatName').textContent = user;
     document.getElementById('privateChat').classList.remove('hidden');
-    document.getElementById('privateMessages').innerHTML = '';
+    loadPrivateMessages(user);
 }
 
 function closePrivateChat() {
@@ -572,23 +684,66 @@ function sendPrivateMessage() {
     const text = inp.value.trim();
     if(!text || !currentChat) return;
     
+    const msg = { from: currentUser, to: currentChat, text, time: new Date().toLocaleTimeString() };
+    
+    // حفظ محلي
+    const key = [currentUser, currentChat].sort().join('-');
+    if(!privateMessages[key]) privateMessages[key] = [];
+    privateMessages[key].push(msg);
+    localStorage.setItem('private_msgs', JSON.stringify(privateMessages));
+    
     const ch = ably.channels.get(`priv-${currentChat}`);
-    ch.publish('msg', { from: currentUser, text });
-    addPrivateMsg({ from: currentUser, text });
+    ch.publish('msg', msg);
+    addPrivateMsg(msg, true);
     inp.value = '';
 }
 
-function addPrivateMsg(m) {
+function handlePrivateMessage(m) {
+    if(m.from !== currentUser) {
+        // حفظ محلي
+        const key = [currentUser, m.from].sort().join('-');
+        if(!privateMessages[key]) privateMessages[key] = [];
+        privateMessages[key].push(m);
+        localStorage.setItem('private_msgs', JSON.stringify(privateMessages));
+        
+        playNotification();
+        
+        if(currentChat === m.from) {
+            addPrivateMsg(m, false);
+        } else {
+            alert(`📨 رسالة جديدة من ${m.from}`);
+        }
+    }
+}
+
+function addPrivateMsg(m, isOwn) {
     const div = document.getElementById('privateMessages');
-    const isMe = m.from === currentUser;
+    const isMe = isOwn || m.from === currentUser;
     div.innerHTML += `
         <div class="message ${isMe ? 'own' : ''}">
             <div class="msg-avatar ${getColor(m.from)}">${m.from[0]}</div>
             <div class="msg-content">
                 <div class="msg-bubble">${m.text}</div>
+                <div class="msg-time">${m.time || ''}</div>
             </div>
         </div>
     `;
+    div.scrollTop = div.scrollHeight;
+}
+
+function loadPrivateMessages(user) {
+    const key = [currentUser, user].sort().join('-');
+    const msgs = privateMessages[key] || [];
+    const div = document.getElementById('privateMessages');
+    div.innerHTML = msgs.map(m => `
+        <div class="message ${m.from === currentUser ? 'own' : ''}">
+            <div class="msg-avatar ${getColor(m.from)}">${m.from[0]}</div>
+            <div class="msg-content">
+                <div class="msg-bubble">${m.text}</div>
+                <div class="msg-time">${m.time || ''}</div>
+            </div>
+        </div>
+    `).join('');
     div.scrollTop = div.scrollHeight;
 }
 
@@ -680,6 +835,7 @@ window.login = login;
 window.logout = logout;
 window.switchTab = switchTab;
 window.sendMessage = sendMessage;
+window.sendFriendRequestTo = sendFriendRequestTo;
 window.createPost = createPost;
 window.likePost = likePost;
 window.addFriend = addFriend;
@@ -692,6 +848,7 @@ window.startCall = startCall;
 window.startCallFromChat = startCallFromChat;
 window.toggleMute = toggleMute;
 window.endCall = endCall;
+window.refreshActive = refreshActive;
 </script>
 </body>
 </html>
